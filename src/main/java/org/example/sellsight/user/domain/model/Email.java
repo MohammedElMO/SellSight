@@ -2,7 +2,6 @@ package org.example.sellsight.user.domain.model;
 
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**

@@ -1,5 +1,7 @@
 package org.example.sellsight.user.infrastructure.web;
 
+import org.example.sellsight.product.domain.exception.ProductNotFoundException;
+import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
@@ -44,6 +46,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(400, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProductNotFound(ProductNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(404, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedProductAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedProductAccess(UnauthorizedProductAccessException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
