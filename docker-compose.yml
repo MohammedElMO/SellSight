@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:18.3-alpine
+    container_name: sellsight-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sellsight}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sellsight}
+      POSTGRES_DB: ${POSTGRES_DB:-sellsight_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sellsight -d sellsight_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sellsight-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sellsight_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-sellsight}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-sellsight}
+      JWT_SECRET: ${JWT_SECRET:-c2VsbHNpZ2h0LXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC1zaWduaW5nLTI1Ni1iaXRz}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

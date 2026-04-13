@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: sellsight
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sellsight_db}
+    username: ${SPRING_DATASOURCE_USERNAME:sellsight}
+    password: ${SPRING_DATASOURCE_PASSWORD:sellsight}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+server:
+  port: 8080
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:c2VsbHNpZ2h0LXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC1zaWduaW5nLTI1Ni1iaXRz}
+  expiration: ${JWT_EXPIRATION:86400000}
