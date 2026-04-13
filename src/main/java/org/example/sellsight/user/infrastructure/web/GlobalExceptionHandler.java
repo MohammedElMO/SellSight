@@ -1,5 +1,7 @@
 package org.example.sellsight.user.infrastructure.web;
 
+import org.example.sellsight.order.domain.exception.InvalidOrderStateException;
+import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.shared.exception.ErrorResponse;
@@ -60,6 +62,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponse.of(403, ex.getMessage()));
+    }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(404, ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidOrderStateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOrderState(InvalidOrderStateException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(400, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
