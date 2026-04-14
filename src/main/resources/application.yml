@@ -19,8 +19,23 @@ spring:
 
 server:
   port: 8080
+  address: 0.0.0.0
 
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:c2VsbHNpZ2h0LXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC1zaWduaW5nLTI1Ni1iaXRz}
   expiration: ${JWT_EXPIRATION:86400000}
+
+# SpringDoc OpenAPI / Swagger UI
+# Single flat spec — all endpoints at /v3/api-docs, grouped by @Tag in the UI.
+# Portman fetches this URL directly; splitting into groups would expose only one
+# group to Portman and hide the rest from the default Swagger UI view.
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    doc-expansion: none
+    display-request-duration: true

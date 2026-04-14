@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "globals": {
+    "collectionPreRequestScripts": [
+      "const token = pm.environment.get('jwt_token'); if (token) { pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token }); }"
+    ],
+    "keyValueReplacements": {},
+    "valueReplacements": {},
+    "rawReplacements": [],
+    "portmanReplacements": [],
+    "securityOverwrites": {
+      "bearer": {
+        "token": "{{jwt_token}}"
+      }
+    }
+  },
+  "tests": {
+    "contractTests": [
+      {
+        "statusSuccess": {
+          "enabled": true
+        },
+        "responseTime": {
+          "enabled": true,
+          "maxMs": 3000
+        },
+        "contentType": {
+          "enabled": true
+        },
+        "jsonBody": {
+          "enabled": true
+        },
+        "schemaValidation": {
+          "enabled": true
+        },
+        "headersPresent": {
+          "enabled": true
+        }
+      }
+    ],
+    "contentTests": [],
+    "variationTests": [
+      {
+        "openApiOperationId": "register",
+        "variations": [
+          {
+            "name": "Register as CUSTOMER and capture JWT",
+            "overwrites": [
+              {
+                "overwriteRequestBody": [
+                  { "key": "email",     "value": "test-customer-{{$randomInt}}@sellsight.test", "overwrite": true },
+                  { "key": "password",  "value": "password123",  "overwrite": true },
+                  { "key": "firstName", "value": "Test",         "overwrite": true },
+                  { "key": "lastName",  "value": "Customer",     "overwrite": true },
+                  { "key": "role",      "value": "CUSTOMER",     "overwrite": true }
+                ]
+              }
+            ],
+            "tests": {
+              "contractTests": [
+                { "statusSuccess": { "enabled": true } }
+              ],
+              "assignVariables": [
+                { "responseBodyProp": "token", "name": "jwt_token" }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "openApiOperationId": "login",
+        "variations": [
+          {
+            "name": "Login with test credentials",
+            "overwrites": [
+              {
+                "overwriteRequestBody": [
+                  { "key": "email",    "value": "{{test_email}}",    "overwrite": true },
+                  { "key": "password", "value": "{{test_password}}", "overwrite": true }
+                ]
+              }
+            ],
+            "tests": {
+              "contractTests": [
+                { "statusSuccess": { "enabled": true } }
+              ],
+              "assignVariables": [
+                { "responseBodyProp": "token", "name": "jwt_token" }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "operationPreRequestScripts": [],
+  "assignVariables": [
+    {
+      "openApiOperationId": "register",
+      "collectionVariables": [
+        { "responseBodyProp": "token", "name": "jwt_token" }
+      ]
+    },
+    {
+      "openApiOperationId": "login",
+      "collectionVariables": [
+        { "responseBodyProp": "token", "name": "jwt_token" }
+      ]
+    },
+    {
+      "openApiOperationId": "createProduct",
+      "collectionVariables": [
+        { "responseBodyProp": "id", "name": "product_id" }
+      ]
+    },
+    {
+      "openApiOperationId": "createOrder",
+      "collectionVariables": [
+        { "responseBodyProp": "id", "name": "order_id" }
+      ]
+    }
+  ],
+  "overwrites": [
+    {
+      "openApiOperationId": "getProductById",
+      "overwriteRequestPathVariables": [
+        { "key": "id", "value": "{{product_id}}", "overwrite": true }
+      ]
+    },
+    {
+      "openApiOperationId": "updateProduct",
+      "overwriteRequestPathVariables": [
+        { "key": "id", "value": "{{product_id}}", "overwrite": true }
+      ]
+    },
+    {
+      "openApiOperationId": "deleteProduct",
+      "overwriteRequestPathVariables": [
+        { "key": "id", "value": "{{product_id}}", "overwrite": true }
+      ]
+    },
+    {
+      "openApiOperationId": "getOrderById",
+      "overwriteRequestPathVariables": [
+        { "key": "id", "value": "{{order_id}}", "overwrite": true }
+      ]
+    },
+    {
+      "openApiOperationId": "updateOrderStatus",
+      "overwriteRequestPathVariables": [
+        { "key": "id", "value": "{{order_id}}", "overwrite": true }
+      ],
+      "overwriteRequestBody": [
+        { "key": "status", "value": "SHIPPED", "overwrite": true }
+      ]
+    },
+    {
+      "openApiOperationId": "getStock",
+      "overwriteRequestPathVariables": [
+        { "key": "productId", "value": "{{product_id}}", "overwrite": true }
+      ]
+    },
+    {
+      "openApiOperationId": "updateStock",
+      "overwriteRequestPathVariables": [
+        { "key": "productId", "value": "{{product_id}}", "overwrite": true }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3623 @@
+{
+  "_": {
+    "postman_id": "9118e7fd-2b17-44e7-b9f8-a8e0ac237799"
+  },
+  "item": [
+    {
+      "id": "df54fc51-a35d-449d-9303-72ac249548b6",
+      "name": "Authentication",
+      "description": {
+        "content": "Register a new account or obtain a JWT token",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "32af15b4-90e5-43f4-9d65-5cd8e436a8c6",
+          "name": "Register a new user",
+          "request": {
+            "name": "Register a new user",
+            "description": {
+              "content": "Creates a new account with the requested role (ADMIN | SELLER | CUSTOMER) and returns a signed JWT token.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "abcb8fe5-aa04-4bd5-a1fb-6a978e17bda2",
+              "name": "Account created — JWT returned",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"token\": \"deserunt\",\n  \"email\": \"sed sint cillum ut\",\n  \"role\": \"in laborum dolor Excepteur\",\n  \"firstName\": \"aliqua\",\n  \"lastName\": \"proident adipisicing veniam\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "255139dd-c800-4950-8c92-fb6420750ed8",
+              "name": "Validation error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "0791f5c8-2ea3-473a-8d14-9f3cb6aad134",
+              "name": "Email already in use",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f77ed429-809e-4dc8-8a00-eb66b0087238",
+                "type": "text/javascript",
+                "exec": [
+                  "// Set response object as internal variable\nlet jsonData = {};\ntry {jsonData = pm.response.json();}catch(e){}\n",
+                  "// Set property value as variable\nconst _resToken = jsonData?.token;\n",
+                  "// pm.collectionVariables - Set jwt_token as variable for jsonData.token\nif (_resToken !== undefined) {\n   pm.collectionVariables.set(\"jwt_token\", jsonData.token);\n   console.log(\"- use {{jwt_token}} as collection variable for value\",jsonData.token);\n} else {\n   console.log('INFO - Unable to assign variable {{jwt_token}}, as jsonData.token is undefined.');\n};\n"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "015adc83-f06f-47be-9b23-e686fdb7b87b",
+          "name": "Authenticate (login)",
+          "request": {
+            "name": "Authenticate (login)",
+            "description": {
+              "content": "Validates credentials and returns a signed JWT token valid for 24 hours.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sed qui\",\n  \"password\": \"cupidatat dolore\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "22aff41c-c80a-4aa1-8f38-e8fc1a2cc934",
+              "name": "Authenticated — JWT returned",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"sed qui\",\n  \"password\": \"cupidatat dolore\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"token\": \"deserunt\",\n  \"email\": \"sed sint cillum ut\",\n  \"role\": \"in laborum dolor Excepteur\",\n  \"firstName\": \"aliqua\",\n  \"lastName\": \"proident adipisicing veniam\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "8b0ed3b4-83b5-4c83-83cc-03f84628d003",
+              "name": "Invalid email or password",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"sed qui\",\n  \"password\": \"cupidatat dolore\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "73c6c9f3-1439-475f-9768-fd1d66224762",
+                "type": "text/javascript",
+                "exec": [
+                  "// Set response object as internal variable\nlet jsonData = {};\ntry {jsonData = pm.response.json();}catch(e){}\n",
+                  "// Set property value as variable\nconst _resToken = jsonData?.token;\n",
+                  "// pm.collectionVariables - Set jwt_token as variable for jsonData.token\nif (_resToken !== undefined) {\n   pm.collectionVariables.set(\"jwt_token\", jsonData.token);\n   console.log(\"- use {{jwt_token}} as collection variable for value\",jsonData.token);\n} else {\n   console.log('INFO - Unable to assign variable {{jwt_token}}, as jsonData.token is undefined.');\n};\n"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "4edabbf0-8603-4ea5-a7cc-c316edd431ec",
+      "name": "Products",
+      "description": {
+        "content": "Browse, create, update, and delete product listings",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "e1ddc873-de6b-4c85-a066-888035767a95",
+          "name": "Get product by ID",
+          "request": {
+            "name": "Get product by ID",
+            "description": {
+              "content": "Returns a single product. No authentication required.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Product UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{product_id}}",
+                  "key": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "response": [
+            {
+              "id": "cef8d4a0-9095-4a03-ab96-8f21f64d49bc",
+              "name": "Product found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"dolore\",\n  \"name\": \"adipisi\",\n  \"description\": \"nisi irure\",\n  \"price\": -39292547.28314033,\n  \"category\": \"veniam\",\n  \"sellerId\": \"in in\",\n  \"imageUrl\": \"culpa dolore et proident\",\n  \"active\": false,\n  \"createdAt\": \"2023-04-08T20:40:23.229Z\",\n  \"updatedAt\": \"2004-11-09T06:30:52.055Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "8d5c5203-2acb-4480-9551-cc024dca4ea0",
+              "name": "Product not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "b39d2d8a-653e-415d-9ed7-5fe43fd97b0d",
+          "name": "Update a product",
+          "request": {
+            "name": "Update a product",
+            "description": {
+              "content": "Updates an existing product. The seller must own the product, or the caller must be ADMIN. Requires SELLER or ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Product UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{product_id}}",
+                  "key": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "113d9857-467c-4652-b553-d967e80a8f44",
+              "name": "Product updated",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"dolore\",\n  \"name\": \"adipisi\",\n  \"description\": \"nisi irure\",\n  \"price\": -39292547.28314033,\n  \"category\": \"veniam\",\n  \"sellerId\": \"in in\",\n  \"imageUrl\": \"culpa dolore et proident\",\n  \"active\": false,\n  \"createdAt\": \"2023-04-08T20:40:23.229Z\",\n  \"updatedAt\": \"2004-11-09T06:30:52.055Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "d4d3f1eb-13ab-47da-b004-aafc5902dda4",
+              "name": "Not the owner or insufficient role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "f429e5d4-d1ce-4392-af65-f85faa7872ba",
+              "name": "Product not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "8657a02d-d5d8-4bbc-b054-2f331607ff6d",
+          "name": "Delete (deactivate) a product",
+          "request": {
+            "name": "Delete (deactivate) a product",
+            "description": {
+              "content": "Soft-deletes a product by marking it inactive. The seller must own the product, or the caller must be ADMIN.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Product UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{product_id}}",
+                  "key": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "DELETE",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "0c05a5ed-8fd8-4093-8f2b-d214ef015ff5",
+              "name": "Product deactivated",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [],
+              "cookie": []
+            },
+            {
+              "id": "e3ef60cf-74b2-4948-9745-931d16702f3f",
+              "name": "Not the owner or insufficient role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "e4d90467-407f-4912-bc17-025da087aa6e",
+              "name": "Product not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "940f8511-46cd-405c-9ee6-660da60234fd",
+          "name": "List all products",
+          "request": {
+            "name": "List all products",
+            "description": {
+              "content": "Returns a paginated list of all active products. No authentication required.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "products"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Zero-based page index",
+                    "type": "text/plain"
+                  },
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "Page size",
+                    "type": "text/plain"
+                  },
+                  "key": "size",
+                  "value": "20"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "response": [
+            {
+              "id": "9c8665a6-4ea6-4b6d-bd15-bb7f736e8db8",
+              "name": "Paginated product list",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "Zero-based page index",
+                        "type": "text/plain"
+                      },
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "Page size",
+                        "type": "text/plain"
+                      },
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"products\": [\n    {\n      \"id\": \"ea esse\",\n      \"name\": \"dolor velit\",\n      \"description\": \"si\",\n      \"price\": -92266044.64358714,\n      \"category\": \"incididunt et\",\n      \"sellerId\": \"ea minim incididun\",\n      \"imageUrl\": \"amet non eu incididunt\",\n      \"active\": true,\n      \"createdAt\": \"1996-11-17T01:29:00.827Z\",\n      \"updatedAt\": \"1976-02-18T13:09:10.375Z\"\n    },\n    {\n      \"id\": \"voluptate ea in exercitation\",\n      \"name\": \"pariatur fugiat Lorem Duis commodo\",\n      \"description\": \"nulla Excepteur occaecat ips\",\n      \"price\": 99629943.81314129,\n      \"category\": \"laborum amet occaecat\",\n      \"sellerId\": \"velit Duis cillum\",\n      \"imageUrl\": \"cillum Duis consequat\",\n      \"active\": true,\n      \"createdAt\": \"2023-09-01T17:48:31.694Z\",\n      \"updatedAt\": \"2019-11-24T15:37:01.658Z\"\n    }\n  ],\n  \"page\": 44264271,\n  \"size\": 75013302,\n  \"totalElements\": 89603713,\n  \"totalPages\": 30376720\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "442737c6-4b15-4842-828a-91b2749294db",
+          "name": "Create a product",
+          "request": {
+            "name": "Create a product",
+            "description": {
+              "content": "Creates a new product listing owned by the authenticated seller. Requires SELLER or ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "products"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "243631cd-dfaa-4eb0-88b8-7db41101698b",
+              "name": "Product created",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"dolore\",\n  \"name\": \"adipisi\",\n  \"description\": \"nisi irure\",\n  \"price\": -39292547.28314033,\n  \"category\": \"veniam\",\n  \"sellerId\": \"in in\",\n  \"imageUrl\": \"culpa dolore et proident\",\n  \"active\": false,\n  \"createdAt\": \"2023-04-08T20:40:23.229Z\",\n  \"updatedAt\": \"2004-11-09T06:30:52.055Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "4f9e0a0d-3b5e-4090-a960-c07f42fa0b69",
+              "name": "Validation error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "5efd842d-3e2b-49c4-84d8-ae9d610edf01",
+              "name": "Insufficient role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"category\": \"voluptate do nostrud\",\n  \"name\": \"quis\",\n  \"price\": 46331933.166750014,\n  \"description\": \"occ\",\n  \"imageUrl\": \"et qui culpa\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "fc25c5f4-7298-4b9a-873e-1e8ea0dc0023",
+                "type": "text/javascript",
+                "exec": [
+                  "// Set response object as internal variable\nlet jsonData = {};\ntry {jsonData = pm.response.json();}catch(e){}\n",
+                  "// Set property value as variable\nconst _resId = jsonData?.id;\n",
+                  "// pm.collectionVariables - Set product_id as variable for jsonData.id\nif (_resId !== undefined) {\n   pm.collectionVariables.set(\"product_id\", jsonData.id);\n   console.log(\"- use {{product_id}} as collection variable for value\",jsonData.id);\n} else {\n   console.log('INFO - Unable to assign variable {{product_id}}, as jsonData.id is undefined.');\n};\n"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c11eaa83-fde3-4a94-ae88-99191f6a74a7",
+          "name": "Get products by seller",
+          "request": {
+            "name": "Get products by seller",
+            "description": {
+              "content": "Returns a paginated list of products owned by the specified seller. Requires SELLER or ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "products",
+                "seller",
+                ":sellerId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "size",
+                  "value": "20"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Seller UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "any",
+                  "value": "consequat culpa",
+                  "key": "sellerId"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "d40e6b67-998d-4e8e-9b12-73a2780f5d82",
+              "name": "Paginated product list",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    "seller",
+                    ":sellerId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "",
+                        "type": "text/plain"
+                      },
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "",
+                        "type": "text/plain"
+                      },
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"products\": [\n    {\n      \"id\": \"ea esse\",\n      \"name\": \"dolor velit\",\n      \"description\": \"si\",\n      \"price\": -92266044.64358714,\n      \"category\": \"incididunt et\",\n      \"sellerId\": \"ea minim incididun\",\n      \"imageUrl\": \"amet non eu incididunt\",\n      \"active\": true,\n      \"createdAt\": \"1996-11-17T01:29:00.827Z\",\n      \"updatedAt\": \"1976-02-18T13:09:10.375Z\"\n    },\n    {\n      \"id\": \"voluptate ea in exercitation\",\n      \"name\": \"pariatur fugiat Lorem Duis commodo\",\n      \"description\": \"nulla Excepteur occaecat ips\",\n      \"price\": 99629943.81314129,\n      \"category\": \"laborum amet occaecat\",\n      \"sellerId\": \"velit Duis cillum\",\n      \"imageUrl\": \"cillum Duis consequat\",\n      \"active\": true,\n      \"createdAt\": \"2023-09-01T17:48:31.694Z\",\n      \"updatedAt\": \"2019-11-24T15:37:01.658Z\"\n    }\n  ],\n  \"page\": 44264271,\n  \"size\": 75013302,\n  \"totalElements\": 89603713,\n  \"totalPages\": 30376720\n}",
+              "cookie": []
+            },
+            {
+              "id": "23dce7ec-cd57-4bd1-9b47-7512e9be7066",
+              "name": "Not authenticated",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    "seller",
+                    ":sellerId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "",
+                        "type": "text/plain"
+                      },
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "",
+                        "type": "text/plain"
+                      },
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "57aae895-2569-43dc-b649-6f9e2ba27c46",
+              "name": "Insufficient role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "products",
+                    "seller",
+                    ":sellerId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "",
+                        "type": "text/plain"
+                      },
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "disabled": true,
+                      "description": {
+                        "content": "",
+                        "type": "text/plain"
+                      },
+                      "key": "size",
+                      "value": "20"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "06fa8aa0-9b4a-4665-8fc6-1d00cb14ce05",
+      "name": "Orders",
+      "description": {
+        "content": "Place orders, track status, and manage the order lifecycle",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "de21024d-ac45-405c-9026-01424906b601",
+          "name": "Update order status",
+          "request": {
+            "name": "Update order status",
+            "description": {
+              "content": "Advances the order state machine. Valid transitions: PENDING→CONFIRMED, CONFIRMED→SHIPPED, SHIPPED→DELIVERED, PENDING/CONFIRMED/SHIPPED→CANCELLED. Requires SELLER or ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "orders",
+                ":id",
+                "status"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Order UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{order_id}}",
+                  "key": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"velit5\": \"id officia\",\n    \"aute_73\": \"occaecat laborum incididunt\",\n    \"status\": \"SHIPPED\"\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "ce16caf0-014a-41c8-8e75-b9bbf763666e",
+              "name": "Status updated",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id",
+                    "status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"velit5\": \"id officia\",\n  \"aute_73\": \"occaecat laborum incididunt\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"officia anim\",\n  \"customerId\": \"ut et consequat voluptate\",\n  \"items\": [\n    {\n      \"productId\": \"est velit\",\n      \"productName\": \"adipisicing\",\n      \"quantity\": 51540393,\n      \"unitPrice\": 91975906.11532322,\n      \"subtotal\": 25800836.130567893\n    },\n    {\n      \"productId\": \"ipsum quis tempor exercitation\",\n      \"productName\": \"consequat labore aute laborum\",\n      \"quantity\": 64873930,\n      \"unitPrice\": 47063401.24965137,\n      \"subtotal\": -19435461.521587223\n    }\n  ],\n  \"total\": -77756856.44475913,\n  \"status\": \"quis incididunt\",\n  \"createdAt\": \"2007-04-14T06:07:41.438Z\",\n  \"updatedAt\": \"1962-07-08T12:52:53.656Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "9af3a106-f25e-4ba2-812e-db46b15503c8",
+              "name": "Invalid state transition",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id",
+                    "status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"velit5\": \"id officia\",\n  \"aute_73\": \"occaecat laborum incididunt\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "f465bfff-945d-4a86-bf88-e65ab9380660",
+              "name": "Order not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id",
+                    "status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"velit5\": \"id officia\",\n  \"aute_73\": \"occaecat laborum incididunt\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "a82d2919-a246-4c52-95d8-406ac3f450e1",
+          "name": "Get all orders (admin)",
+          "request": {
+            "name": "Get all orders (admin)",
+            "description": {
+              "content": "Returns every order in the system. Requires ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "orders"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "acd4d6ba-3596-4238-901a-da777dac218a",
+              "name": "Full order list",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"dolore id\",\n    \"customerId\": \"qui non\",\n    \"items\": [\n      {\n        \"productId\": \"esse commodo proident mollit\",\n        \"productName\": \"in veniam non\",\n        \"quantity\": 62556580,\n        \"unitPrice\": -23392782.63717474,\n        \"subtotal\": -28240127.792042285\n      },\n      {\n        \"productId\": \"officia ipsum in\",\n        \"productName\": \"qui irure ex\",\n        \"quantity\": 95965362,\n        \"unitPrice\": 2650795.823271811,\n        \"subtotal\": -61116240.45094453\n      }\n    ],\n    \"total\": 85994202.72736022,\n    \"status\": \"dolor fugiat\",\n    \"createdAt\": \"1968-08-22T12:24:42.862Z\",\n    \"updatedAt\": \"1946-07-14T09:26:06.925Z\"\n  },\n  {\n    \"id\": \"consequat do sint\",\n    \"customerId\": \"labore dolore\",\n    \"items\": [\n      {\n        \"productId\": \"ad cillum ut\",\n        \"productName\": \"sunt et ea nisi\",\n        \"quantity\": 7894980,\n        \"unitPrice\": 81256977.42122644,\n        \"subtotal\": -68104507.67806283\n      },\n      {\n        \"productId\": \"qui ad sunt cupidatat\",\n        \"productName\": \"culpa Excepteur\",\n        \"quantity\": 36854842,\n        \"unitPrice\": 80309512.2663585,\n        \"subtotal\": -97759411.1054262\n      }\n    ],\n    \"total\": -13806047.128825754,\n    \"status\": \"do qui ex sit\",\n    \"createdAt\": \"1947-07-31T04:08:30.266Z\",\n    \"updatedAt\": \"1996-12-25T03:32:17.936Z\"\n  }\n]",
+              "cookie": []
+            },
+            {
+              "id": "699813e6-ded9-47b9-bdda-9b7e68e3122f",
+              "name": "Requires ADMIN role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c12fcad6-28b4-47f6-81a3-21ae5d17e2f5",
+          "name": "Create an order",
+          "request": {
+            "name": "Create an order",
+            "description": {
+              "content": "Places a new order for the authenticated customer. The order is automatically confirmed after creation. Requires CUSTOMER role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "orders"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"fugiat cupidatat\",\n      \"productName\": \"laborum in consectetur veniam reprehenderit\",\n      \"quantity\": 18189515,\n      \"unitPrice\": -55764908.01295497\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "e65d0819-e27e-41ab-86bf-f51011c492d3",
+              "name": "Order placed and confirmed",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"fugiat cupidatat\",\n      \"productName\": \"laborum in consectetur veniam reprehenderit\",\n      \"quantity\": 18189515,\n      \"unitPrice\": -55764908.01295497\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"officia anim\",\n  \"customerId\": \"ut et consequat voluptate\",\n  \"items\": [\n    {\n      \"productId\": \"est velit\",\n      \"productName\": \"adipisicing\",\n      \"quantity\": 51540393,\n      \"unitPrice\": 91975906.11532322,\n      \"subtotal\": 25800836.130567893\n    },\n    {\n      \"productId\": \"ipsum quis tempor exercitation\",\n      \"productName\": \"consequat labore aute laborum\",\n      \"quantity\": 64873930,\n      \"unitPrice\": 47063401.24965137,\n      \"subtotal\": -19435461.521587223\n    }\n  ],\n  \"total\": -77756856.44475913,\n  \"status\": \"quis incididunt\",\n  \"createdAt\": \"2007-04-14T06:07:41.438Z\",\n  \"updatedAt\": \"1962-07-08T12:52:53.656Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "cadb4b04-f624-4d1f-a856-5ceb86c3c2b4",
+              "name": "Validation error — empty items, negative quantity, etc.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"fugiat cupidatat\",\n      \"productName\": \"laborum in consectetur veniam reprehenderit\",\n      \"quantity\": 18189515,\n      \"unitPrice\": -55764908.01295497\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "3fe5fd85-1979-4fa7-bfaf-0066e5129f54",
+              "name": "Only CUSTOMER role can place orders",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"fugiat cupidatat\",\n      \"productName\": \"laborum in consectetur veniam reprehenderit\",\n      \"quantity\": 18189515,\n      \"unitPrice\": -55764908.01295497\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "8f315131-771b-4254-a54f-d81fca6b795a",
+                "type": "text/javascript",
+                "exec": [
+                  "// Set response object as internal variable\nlet jsonData = {};\ntry {jsonData = pm.response.json();}catch(e){}\n",
+                  "// Set property value as variable\nconst _resId = jsonData?.id;\n",
+                  "// pm.collectionVariables - Set order_id as variable for jsonData.id\nif (_resId !== undefined) {\n   pm.collectionVariables.set(\"order_id\", jsonData.id);\n   console.log(\"- use {{order_id}} as collection variable for value\",jsonData.id);\n} else {\n   console.log('INFO - Unable to assign variable {{order_id}}, as jsonData.id is undefined.');\n};\n"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "b5fcd7d2-b5ab-4c82-a3ac-c853c1b85f69",
+          "name": "Get order by ID",
+          "request": {
+            "name": "Get order by ID",
+            "description": {
+              "content": "Returns the full order details, including all line items and current status.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "orders",
+                ":id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Order UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{order_id}}",
+                  "key": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "2a75306f-5bf5-4744-ad44-5dae0b26ad20",
+              "name": "Order found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"officia anim\",\n  \"customerId\": \"ut et consequat voluptate\",\n  \"items\": [\n    {\n      \"productId\": \"est velit\",\n      \"productName\": \"adipisicing\",\n      \"quantity\": 51540393,\n      \"unitPrice\": 91975906.11532322,\n      \"subtotal\": 25800836.130567893\n    },\n    {\n      \"productId\": \"ipsum quis tempor exercitation\",\n      \"productName\": \"consequat labore aute laborum\",\n      \"quantity\": 64873930,\n      \"unitPrice\": 47063401.24965137,\n      \"subtotal\": -19435461.521587223\n    }\n  ],\n  \"total\": -77756856.44475913,\n  \"status\": \"quis incididunt\",\n  \"createdAt\": \"2007-04-14T06:07:41.438Z\",\n  \"updatedAt\": \"1962-07-08T12:52:53.656Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "4169fcc8-f0de-4f77-9bd7-e81e9b288675",
+              "name": "Order not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "6b693639-3778-4c6a-924b-d221d7b1c82b",
+          "name": "Get my orders",
+          "request": {
+            "name": "Get my orders",
+            "description": {
+              "content": "Returns all orders placed by the currently authenticated customer.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "orders",
+                "my"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "bdb81040-e81a-4e38-aea6-c05c36ead743",
+              "name": "List of orders",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    "my"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": \"dolore id\",\n    \"customerId\": \"qui non\",\n    \"items\": [\n      {\n        \"productId\": \"esse commodo proident mollit\",\n        \"productName\": \"in veniam non\",\n        \"quantity\": 62556580,\n        \"unitPrice\": -23392782.63717474,\n        \"subtotal\": -28240127.792042285\n      },\n      {\n        \"productId\": \"officia ipsum in\",\n        \"productName\": \"qui irure ex\",\n        \"quantity\": 95965362,\n        \"unitPrice\": 2650795.823271811,\n        \"subtotal\": -61116240.45094453\n      }\n    ],\n    \"total\": 85994202.72736022,\n    \"status\": \"dolor fugiat\",\n    \"createdAt\": \"1968-08-22T12:24:42.862Z\",\n    \"updatedAt\": \"1946-07-14T09:26:06.925Z\"\n  },\n  {\n    \"id\": \"consequat do sint\",\n    \"customerId\": \"labore dolore\",\n    \"items\": [\n      {\n        \"productId\": \"ad cillum ut\",\n        \"productName\": \"sunt et ea nisi\",\n        \"quantity\": 7894980,\n        \"unitPrice\": 81256977.42122644,\n        \"subtotal\": -68104507.67806283\n      },\n      {\n        \"productId\": \"qui ad sunt cupidatat\",\n        \"productName\": \"culpa Excepteur\",\n        \"quantity\": 36854842,\n        \"unitPrice\": 80309512.2663585,\n        \"subtotal\": -97759411.1054262\n      }\n    ],\n    \"total\": -13806047.128825754,\n    \"status\": \"do qui ex sit\",\n    \"createdAt\": \"1947-07-31T04:08:30.266Z\",\n    \"updatedAt\": \"1996-12-25T03:32:17.936Z\"\n  }\n]",
+              "cookie": []
+            },
+            {
+              "id": "c870165c-f998-473b-b96b-607b9d67fe97",
+              "name": "Not authenticated",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "orders",
+                    "my"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "bce58880-20b1-4a9d-840e-7016605ef01b",
+      "name": "Inventory",
+      "description": {
+        "content": "Manage stock levels and monitor low-stock thresholds",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "1dd664b3-fcf4-4fbe-90f0-c6d72c06f86c",
+          "name": "Get stock level for a product",
+          "request": {
+            "name": "Get stock level for a product",
+            "description": {
+              "content": "Returns the current quantity and reorder threshold. Requires SELLER or ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "inventory",
+                ":productId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Product UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{product_id}}",
+                  "key": "productId"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "6a272582-0712-4cdc-869a-4af567ceccfe",
+              "name": "Stock level returned",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    ":productId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"productId\": \"ex eiusmod non exercitation enim\",\n  \"quantity\": -69799399,\n  \"reorderThreshold\": -51174786,\n  \"lowStock\": false\n}",
+              "cookie": []
+            },
+            {
+              "id": "c0ed4461-7f6d-42e1-a80e-9d9de67c7419",
+              "name": "Insufficient role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    ":productId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "48dc174a-2717-417d-8b4f-7deab349e821",
+              "name": "No inventory record found for product",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    ":productId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "512a4f7a-50be-404f-bd8e-163aad0352b4",
+          "name": "Update stock level",
+          "request": {
+            "name": "Update stock level",
+            "description": {
+              "content": "Sets the quantity (and optionally the reorder threshold) for a product. Creates the inventory record if it does not exist. Requires SELLER or ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "inventory",
+                ":productId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Product UUID",
+                    "type": "text/plain"
+                  },
+                  "type": "string",
+                  "value": "{{product_id}}",
+                  "key": "productId"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "PUT",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 81837654,\n  \"reorderThreshold\": 2443201\n}",
+              "options": {
+                "raw": {
+                  "headerFamily": "json",
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "dcdf23b8-0df0-402d-a90b-3c8cb412fab6",
+              "name": "Stock updated",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    ":productId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 81837654,\n  \"reorderThreshold\": 2443201\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"productId\": \"ex eiusmod non exercitation enim\",\n  \"quantity\": -69799399,\n  \"reorderThreshold\": -51174786,\n  \"lowStock\": false\n}",
+              "cookie": []
+            },
+            {
+              "id": "75789646-3bb7-4337-9a1f-2af539185316",
+              "name": "Validation error (e.g. negative quantity)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    ":productId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 81837654,\n  \"reorderThreshold\": 2443201\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "64b8ba9b-a30d-45ab-99b9-8a865b3cc410",
+              "name": "Insufficient role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    ":productId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 81837654,\n  \"reorderThreshold\": 2443201\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "0dcf108f-e54d-4b69-a9c4-f7050e1c2c9b",
+          "name": "List low-stock products",
+          "request": {
+            "name": "List low-stock products",
+            "description": {
+              "content": "Returns all inventory items where quantity is at or below the reorder threshold. Requires ADMIN role.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "inventory",
+                "low-stock"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "a73bb5e0-93b5-47e9-8c67-b72dab1eef3f",
+              "name": "Low-stock items listed",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    "low-stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "[\n  {\n    \"productId\": \"reprehenderit\",\n    \"quantity\": 5878327,\n    \"reorderThreshold\": -91765056,\n    \"lowStock\": true\n  },\n  {\n    \"productId\": \"minim exercitation\",\n    \"quantity\": -28472526,\n    \"reorderThreshold\": 30160369,\n    \"lowStock\": false\n  }\n]",
+              "cookie": []
+            },
+            {
+              "id": "83d6a47b-417f-47e5-932e-cf963f473eb6",
+              "name": "Requires ADMIN role",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "inventory",
+                    "low-stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "0c1538f9-7a2c-4cf0-80c8-a6c6f50c53f8",
+      "name": "Users",
+      "description": {
+        "content": "Retrieve the authenticated user's profile",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "98d33288-d3ff-494b-a622-41ddaf91cfb8",
+          "name": "Get my profile",
+          "request": {
+            "name": "Get my profile",
+            "description": {
+              "content": "Returns full profile information for the currently authenticated user.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "users",
+                "me"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "method": "GET",
+            "body": {},
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "type": "any",
+                  "value": "{{bearerToken}}",
+                  "key": "token"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "9b4edf5e-7a87-46a0-84c9-d86e3474c1d5",
+              "name": "Profile returned",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"id\": \"aute nulla id\",\n  \"email\": \"nostrud ipsum dolore\",\n  \"firstName\": \"id ea\",\n  \"lastName\": \"sunt laboris est ipsum\",\n  \"role\": \"labore nisi dolor minim pariatur\",\n  \"createdAt\": \"1960-10-14T05:39:16.979Z\"\n}",
+              "cookie": []
+            },
+            {
+              "id": "6c9a4606-2f71-43ee-8a7d-e9d410dd9e2e",
+              "name": "Missing or invalid JWT",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "*/*"
+                }
+              ],
+              "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "de27ceb6-6891-4a4b-abe8-ed4b79319a8c",
+      "name": "Variation Tests",
+      "item": [
+        {
+          "id": "cae8a3f4-1cf6-44f1-9a08-a70ec0b4eb64",
+          "name": "Authentication Variations",
+          "item": [
+            {
+              "id": "13d6d4c5-2228-4a1c-9396-a5e9dc31eff0",
+              "name": "Register a new user[Register as CUSTOMER and capture JWT]",
+              "request": {
+                "name": "Register a new user[Register as CUSTOMER and capture JWT]",
+                "description": {
+                  "content": "Creates a new account with the requested role (ADMIN | SELLER | CUSTOMER) and returns a signed JWT token.",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"test-customer-{{$randomInt}}@sellsight.test\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"Customer\",\n    \"password\": \"password123\",\n    \"role\": \"CUSTOMER\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "id": "1410e8e4-90f6-43f4-b44b-556bc1c0c1b6",
+                  "name": "Account created — JWT returned",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "register"
+                      ],
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Accept",
+                        "value": "*/*"
+                      }
+                    ],
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "{\n  \"token\": \"deserunt\",\n  \"email\": \"sed sint cillum ut\",\n  \"role\": \"in laborum dolor Excepteur\",\n  \"firstName\": \"aliqua\",\n  \"lastName\": \"proident adipisicing veniam\"\n}",
+                  "cookie": []
+                },
+                {
+                  "id": "5c0d7c1b-fb94-4b4a-bdc0-58010ace85ac",
+                  "name": "Validation error",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "register"
+                      ],
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Accept",
+                        "value": "*/*"
+                      }
+                    ],
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Bad Request",
+                  "code": 400,
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+                  "cookie": []
+                },
+                {
+                  "id": "dda54de3-8050-4fd3-b22d-c8e03d992c47",
+                  "name": "Email already in use",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "register"
+                      ],
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Accept",
+                        "value": "*/*"
+                      }
+                    ],
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"ullamco Excepteur\",\n  \"firstName\": \"aliquip ut\",\n  \"lastName\": \"tempor Lorem minim esse\",\n  \"password\": \"incididunt Excepteur\",\n  \"role\": \"ut anim eiusmod Excepte\"\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Conflict",
+                  "code": 409,
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+                  "cookie": []
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ccf5c580-d64b-4a61-b6bc-6776ea28593f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Validate status 2xx \npm.test(\"[POST]::/api/auth/register - Status code is 2xx\", function () {\n   pm.response.to.be.success;\n});\n"
+                    ]
+                  }
+                }
+              ],
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              }
+            },
+            {
+              "id": "7bba04d8-0c61-42d8-ab79-a60954adc4e7",
+              "name": "Authenticate (login)[Login with test credentials]",
+              "request": {
+                "name": "Authenticate (login)[Login with test credentials]",
+                "description": {
+                  "content": "Validates credentials and returns a signed JWT token valid for 24 hours.",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "*/*"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"{{test_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "id": "e09a44db-9551-4d68-b242-1f6d3ec9e4b6",
+                  "name": "Authenticated — JWT returned",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "login"
+                      ],
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Accept",
+                        "value": "*/*"
+                      }
+                    ],
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"sed qui\",\n  \"password\": \"cupidatat dolore\"\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "{\n  \"token\": \"deserunt\",\n  \"email\": \"sed sint cillum ut\",\n  \"role\": \"in laborum dolor Excepteur\",\n  \"firstName\": \"aliqua\",\n  \"lastName\": \"proident adipisicing veniam\"\n}",
+                  "cookie": []
+                },
+                {
+                  "id": "4f1c221b-b93d-4ca3-a39f-c182cfee7004",
+                  "name": "Invalid email or password",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "login"
+                      ],
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Accept",
+                        "value": "*/*"
+                      }
+                    ],
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"sed qui\",\n  \"password\": \"cupidatat dolore\"\n}",
+                      "options": {
+                        "raw": {
+                          "headerFamily": "json",
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "*/*"
+                    }
+                  ],
+                  "body": "{\n  \"status\": 48240427,\n  \"message\": \"in sint\",\n  \"timestamp\": \"2014-09-04T08:58:43.567Z\"\n}",
+                  "cookie": []
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "73c9adab-3676-4f62-b9c9-25f4efcf37a0",
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Validate status 2xx \npm.test(\"[POST]::/api/auth/login - Status code is 2xx\", function () {\n   pm.response.to.be.success;\n});\n"
+                    ]
+                  }
+                }
+              ],
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              }
+            }
+          ],
+          "event": []
+        }
+      ],
+      "event": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "type": "string",
+        "value": "{{jwt_token}}",
+        "key": "token"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "1442c8ad-9607-4cb7-b78a-1d10e9545928",
+        "type": "text/javascript",
+        "exec": [
+          "const token = pm.environment.get('jwt_token'); if (token) { pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token }); }"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "type": "any",
+      "value": "http://localhost:8080",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "9118e7fd-2b17-44e7-b9f8-a8e0ac237799",
+    "name": "SellSight API",
+    "version": {
+      "raw": "1.0.0",
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "prerelease": [],
+      "build": [],
+      "string": "1.0.0"
+    },
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Production-grade e-commerce REST API with JWT authentication, role-based access control (ADMIN / SELLER / CUSTOMER), and DDD + Hexagonal Architecture.\n\nContact Support:\n Name: SellSight Team\n Email: api@sellsight.com",
+      "type": "text/plain"
+    }
+  }
+}

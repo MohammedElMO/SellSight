@@ -1,0 +1,184 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { productApi } from '@/lib/services';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth';
+import { updateProductSchema, type ProductFormValues } from '@/lib/schemas';
+import { PageLayout } from '@/components/layout/page-layout';
+import { Input, Textarea, Select } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PRODUCT_CATEGORIES } from '@/components/product/product-filters';
+import toast from 'react-hot-toast';
+import { ArrowLeft, Save } from 'lucide-react';
+import Link from 'next/link';
+
+export default function EditProductPage() {
+  const { id }   = useParams<{ id: string }>();
+  const router   = useRouter();
+  const { isAuthenticated, role } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!isAuthenticated) router.replace('/login');
+    else if (role !== 'SELLER' && role !== 'ADMIN') router.replace('/products');
+  }, [isAuthenticated, role, router]);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProductFormValues>({
+    resolver: zodResolver(updateProductSchema),
+  });
+
+  const imageUrl = watch('imageUrl');
+
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => productApi.getById(id),
+    enabled: !!id,
+  });
+
+  // Populate form once product data arrives
+  useEffect(() => {
+    if (product) {
+      reset({
+        name:        product.name,
+        description: product.description ?? '',
+        price:       product.price,
+        category:    product.category,
+        imageUrl:    product.imageUrl ?? '',
+      });
+    }
+  }, [product, reset]);
+
+  const { mutate: update, isPending } = useMutation({
+    mutationFn: (req: ProductFormValues) =>
+      productApi.update(id, {
+        ...req,
+        description: req.description || undefined,
+        imageUrl:    req.imageUrl    || undefined,
+      }),
+    onSuccess: () => {
+      toast.success('Product updated!');
+      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      router.push('/seller/products');
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Failed to update product';
+      toast.error(msg);
+    },
+  });
+
+  const onSubmit = (values: ProductFormValues) => update(values);
+
+  if (isLoading) {
+    return (
+      <PageLayout>
+        <div className="max-w-xl flex flex-col gap-5">
+          <Skeleton className="h-8 w-48" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-11 rounded-[9px]" />
+          ))}
+        </div>
+      </PageLayout>
+    );
+  }
+
+  return (
+    <PageLayout>
+      <Link
+        href="/seller/products"
+        className="inline-flex items-center gap-1.5 text-sm text-[#666] hover:text-[#111] transition-colors mb-7"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to products
+      </Link>
+
+      <div className="max-w-xl animate-fade-in">
+        <div className="mb-7">
+          <h1 className="text-[28px] font-bold text-[#111]">Edit product</h1>
+          <p className="text-sm text-[#666] mt-1 truncate max-w-sm">{product?.name}</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <Input
+            label="Product name"
+            error={errors.name?.message}
+            {...register('name')}
+          />
+
+          <Textarea
+            label="Description"
+            rows={4}
+            {...register('description')}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Price (USD)"
+              type="number"
+              min="0.01"
+              step="0.01"
+              error={errors.price?.message}
+              prefix={<span className="text-xs font-medium">$</span>}
+              {...register('price', { valueAsNumber: true })}
+            />
+            <Select
+              label="Category"
+              error={errors.category?.message}
+              {...register('category')}
+            >
+              {PRODUCT_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </Select>
+          </div>
+
+          <Input
+            label="Image URL"
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            {...register('imageUrl')}
+          />
+
+          {imageUrl && (
+            <div className="rounded-[12px] overflow-hidden border border-[#e5e4e0] aspect-video">
+              <img
+                src={imageUrl}
+                alt="Preview"
+                className="w-full h-full object-cover"
+                onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+              />
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" loading={isSubmitting || isPending} size="lg">
+              <Save className="h-4 w-4" />
+              Save changes
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={() => router.push('/seller/products')}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </div>
+    </PageLayout>
+  );
+}

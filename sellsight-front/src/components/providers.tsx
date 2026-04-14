@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/auth';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
     },
   },
@@ -31,11 +31,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 3500,
           style: {
-            background: '#1a1a2e',
-            color: '#e0e0e0',
-            border: '1px solid #2a2a4a',
+            background: '#fff',
+            color: '#111',
+            border: '1px solid #e5e4e0',
+            borderRadius: '10px',
+            fontSize: '14px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+          },
+          success: {
+            iconTheme: { primary: '#16a34a', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#dc2626', secondary: '#fff' },
           },
         }}
       />

@@ -1,0 +1,35 @@
+{
+  "name": "SellSight – Local Dev",
+  "values": [
+    {
+      "key":     "baseUrl",
+      "value":   "http://localhost:8080",
+      "enabled": true
+    },
+    {
+      "key":     "jwt_token",
+      "value":   "",
+      "enabled": true
+    },
+    {
+      "key":     "test_email",
+      "value":   "admin@sellsight.test",
+      "enabled": true
+    },
+    {
+      "key":     "test_password",
+      "value":   "password123",
+      "enabled": true
+    },
+    {
+      "key":     "product_id",
+      "value":   "",
+      "enabled": true
+    },
+    {
+      "key":     "order_id",
+      "value":   "",
+      "enabled": true
+    }
+  ]
+}
