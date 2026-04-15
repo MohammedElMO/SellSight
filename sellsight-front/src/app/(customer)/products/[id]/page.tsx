@@ -5,6 +5,7 @@ import { productApi } from '@/lib/services';
 import { useParams, useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/page-layout';
 import { useCartStore } from '@/store/cart';
+import { useAuthStore } from '@/store/auth';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { Rating, RatingBreakdown } from '@/components/ui/rating';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,9 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
   const addItem = useCartStore((s) => s.addItem);
+  const role    = useAuthStore((s) => s.role);
+
+  const canAddToCart = role !== 'SELLER' && role !== 'ADMIN';
 
   const [quantity,     setQuantity]     = useState(1);
   const [activeTab,    setActiveTab]    = useState<'details' | 'reviews'>('details');
@@ -156,44 +160,47 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Quantity */}
-          <div className="flex flex-col gap-2 mb-6">
-            <span className="text-[13px] font-medium text-[#111]">Quantity</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="h-10 w-10 flex items-center justify-center rounded-[8px] border border-[#e5e4e0] text-[#666] hover:border-[#111] hover:text-[#111] transition-all"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="h-10 w-14 flex items-center justify-center text-sm font-semibold text-[#111] border border-[#e5e4e0] rounded-[8px]">
-                {quantity}
-              </span>
-              <button
-                onClick={() => setQuantity((q) => q + 1)}
-                className="h-10 w-10 flex items-center justify-center rounded-[8px] border border-[#e5e4e0] text-[#666] hover:border-[#111] hover:text-[#111] transition-all"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          {/* Quantity + Add to cart — customers only */}
+          {canAddToCart && (
+            <>
+              <div className="flex flex-col gap-2 mb-6">
+                <span className="text-[13px] font-medium text-[#111]">Quantity</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="h-10 w-10 flex items-center justify-center rounded-[8px] border border-[#e5e4e0] text-[#666] hover:border-[#111] hover:text-[#111] transition-all"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="h-10 w-14 flex items-center justify-center text-sm font-semibold text-[#111] border border-[#e5e4e0] rounded-[8px]">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="h-10 w-10 flex items-center justify-center rounded-[8px] border border-[#e5e4e0] text-[#666] hover:border-[#111] hover:text-[#111] transition-all"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 mb-5">
-            <Button
-              onClick={handleAddToCart}
-              fullWidth
-              size="lg"
-              disabled={!product.active}
-              className="h-[52px] text-[15px]"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              Add to cart
-            </Button>
-            <button className="h-[52px] w-[52px] shrink-0 flex items-center justify-center border border-[#e5e4e0] rounded-[10px] text-[#666] hover:border-[#111] hover:text-[#111] transition-all">
-              <Heart className="h-5 w-5" />
-            </button>
-          </div>
+              <div className="flex gap-3 mb-5">
+                <Button
+                  onClick={handleAddToCart}
+                  fullWidth
+                  size="lg"
+                  disabled={!product.active}
+                  className="h-[52px] text-[15px]"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Add to cart
+                </Button>
+                <button className="h-[52px] w-[52px] shrink-0 flex items-center justify-center border border-[#e5e4e0] rounded-[10px] text-[#666] hover:border-[#111] hover:text-[#111] transition-all">
+                  <Heart className="h-5 w-5" />
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Free delivery note */}
           <div className="flex items-center gap-2 text-sm text-[#666] py-4 border-t border-[#f0efeb]">

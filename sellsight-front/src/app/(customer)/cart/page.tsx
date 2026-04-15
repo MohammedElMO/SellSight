@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth';
 import { useMutation } from '@tanstack/react-query';
 import { orderApi } from '@/lib/services';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -18,6 +19,11 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, totalPrice } = useCartStore();
   const { isAuthenticated, role } = useAuthStore();
   const router = useRouter();
+
+  useEffect(() => {
+    if (role === 'SELLER') router.replace('/seller/dashboard');
+    else if (role === 'ADMIN') router.replace('/admin/orders');
+  }, [role, router]);
 
   const { mutate: placeOrder, isPending } = useMutation({
     mutationFn: (req: CreateOrderRequest) => orderApi.create(req),

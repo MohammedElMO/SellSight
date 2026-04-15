@@ -41,9 +41,8 @@ function useNavLinks(): NavLink[] {
     ];
   if (role === 'ADMIN')
     return [
-      { label: 'Products',   href: '/products',       icon: Package         },
+      { label: 'Products',   href: '/admin/products', icon: Package         },
       { label: 'All Orders', href: '/admin/orders',   icon: ClipboardList   },
-      { label: 'Manage',     href: '/seller/products', icon: LayoutDashboard },
     ];
   return [];
 }

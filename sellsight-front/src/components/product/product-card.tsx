@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ShoppingCart, Package } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
+import { useAuthStore } from '@/store/auth';
 import { formatPrice } from '@/lib/utils';
 import { Rating } from '@/components/ui/rating';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
+  const role    = useAuthStore((s) => s.role);
+
+  const canAddToCart = role !== 'SELLER' && role !== 'ADMIN';
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,22 +50,24 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Add to cart hover button */}
-        <button
-          onClick={handleAddToCart}
-          className={[
-            'absolute bottom-3 left-1/2 -translate-x-1/2',
-            'flex items-center gap-1.5 whitespace-nowrap',
-            'h-9 px-4 bg-white text-[#111] text-xs font-semibold rounded-full',
-            'border border-[#e5e4e0] shadow-[0_2px_8px_rgba(0,0,0,0.1)]',
-            'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0',
-            'transition-all duration-200 hover:bg-[#111] hover:text-white hover:border-[#111]',
-          ].join(' ')}
-          aria-label={`Add ${product.name} to cart`}
-        >
-          <ShoppingCart className="h-3.5 w-3.5" />
-          Add to cart
-        </button>
+        {/* Add to cart hover button — customers only */}
+        {canAddToCart && (
+          <button
+            onClick={handleAddToCart}
+            className={[
+              'absolute bottom-3 left-1/2 -translate-x-1/2',
+              'flex items-center gap-1.5 whitespace-nowrap',
+              'h-9 px-4 bg-white text-[#111] text-xs font-semibold rounded-full',
+              'border border-[#e5e4e0] shadow-[0_2px_8px_rgba(0,0,0,0.1)]',
+              'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0',
+              'transition-all duration-200 hover:bg-[#111] hover:text-white hover:border-[#111]',
+            ].join(' ')}
+            aria-label={`Add ${product.name} to cart`}
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Add to cart
+          </button>
+        )}
       </div>
 
       {/* Details */}
