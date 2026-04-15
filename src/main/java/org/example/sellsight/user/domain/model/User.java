@@ -1,5 +1,7 @@
 package org.example.sellsight.user.domain.model;
 
+import lombok.EqualsAndHashCode;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -7,6 +9,7 @@ import java.util.Objects;
  * User aggregate root — rich domain model with behavior.
  * Pure Java, no framework annotations.
  */
+@EqualsAndHashCode
 public class User {
 
     private final UserId id;
@@ -17,9 +20,7 @@ public class User {
     private Role role;
     private final LocalDateTime createdAt;
 
-    /**
-     * Constructor for creating a new user. Validates all invariants.
-     */
+
     public User(UserId id, String firstName, String lastName,
                 Email email, Password password, Role role, LocalDateTime createdAt) {
         this.id = Objects.requireNonNull(id, "User ID cannot be null");
@@ -31,31 +32,22 @@ public class User {
         setLastName(lastName);
     }
 
-    // ── Business Methods ────────────────────────────────────────
 
-    /**
-     * Updates the user's profile information.
-     */
     public void updateProfile(String firstName, String lastName) {
         setFirstName(firstName);
         setLastName(lastName);
     }
 
-    /**
-     * Changes the user's role. Typically restricted to admin operations.
-     */
+
     public void changeRole(Role newRole) {
         this.role = Objects.requireNonNull(newRole, "New role cannot be null");
     }
 
-    /**
-     * Changes the user's password (already hashed).
-     */
+
     public void changePassword(Password newPassword) {
         this.password = Objects.requireNonNull(newPassword, "New password cannot be null");
     }
 
-    // ── Private Validators ──────────────────────────────────────
 
     private void setFirstName(String firstName) {
         if (firstName == null || firstName.isBlank()) {
@@ -71,7 +63,6 @@ public class User {
         this.lastName = lastName.trim();
     }
 
-    // ── Getters ─────────────────────────────────────────────────
 
     public UserId getId() { return id; }
     public String getFirstName() { return firstName; }
@@ -81,16 +72,5 @@ public class User {
     public Role getRole() { return role; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return id.equals(user.id);
-    }
 
-    @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
 }

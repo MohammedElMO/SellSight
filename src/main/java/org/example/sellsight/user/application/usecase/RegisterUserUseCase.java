@@ -38,11 +38,11 @@ public class RegisterUserUseCase {
             throw new UserAlreadyExistsException(request.email());
         }
 
-        // Hash password (application concern, not domain)
+        // Hash password
         String hashedPassword = passwordEncoder.encode(request.password());
         Password password = new Password(hashedPassword);
 
-        // Determine role (default to CUSTOMER)
+        // get role
         Role role = Role.CUSTOMER;
         if (request.role() != null && !request.role().isBlank()) {
             try {
@@ -52,7 +52,6 @@ public class RegisterUserUseCase {
             }
         }
 
-        // Create domain entity
         User user = new User(
                 UserId.generate(),
                 request.firstName(),
@@ -65,7 +64,6 @@ public class RegisterUserUseCase {
 
         userRepository.save(user);
 
-        // Generate JWT
         String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name());
 
         return new AuthResponse(

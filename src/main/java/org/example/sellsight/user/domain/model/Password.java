@@ -1,5 +1,7 @@
 package org.example.sellsight.user.domain.model;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.Objects;
 
 /**
@@ -7,6 +9,7 @@ import java.util.Objects;
  * The raw password is never stored — only the BCrypt hash.
  * Hashing is done in the application layer, not here.
  */
+@EqualsAndHashCode
 public final class Password {
 
     private final String hashedValue;
@@ -22,18 +25,6 @@ public final class Password {
         return hashedValue;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Password password = (Password) o;
-        return hashedValue.equals(password.hashedValue);
-    }
-
-    @Override
-    public int hashCode() {
-        return hashedValue.hashCode();
-    }
 
     @Override
     public String toString() {

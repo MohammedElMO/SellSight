@@ -1,4 +1,5 @@
-import type { NextConfig } from "next";
+import type {NextConfig} from "next";
+import * as path from "path"
 
 const nextConfig: NextConfig = {
   async rewrites() {
@@ -11,6 +12,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+    /* config options here */
+    turbopack: {
+        root: path.resolve(__dirname)
+    }
 };
 
 export default nextConfig;

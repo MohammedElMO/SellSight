@@ -35,7 +35,6 @@ public class CreateProductUseCase {
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
-
         Product saved = productRepository.save(product);
         return toDto(saved);
     }

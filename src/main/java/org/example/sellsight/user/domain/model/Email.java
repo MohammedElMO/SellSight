@@ -1,5 +1,6 @@
 package org.example.sellsight.user.domain.model;
 
+import lombok.EqualsAndHashCode;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
 
 import java.util.regex.Pattern;
@@ -8,6 +9,7 @@ import java.util.regex.Pattern;
  * Value Object representing a validated email address.
  * Validates format on construction — fails fast on invalid input.
  */
+@EqualsAndHashCode
 public final class Email {
 
     private static final Pattern EMAIL_PATTERN =
@@ -30,18 +32,7 @@ public final class Email {
         return value;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Email email = (Email) o;
-        return value.equals(email.value);
-    }
 
-    @Override
-    public int hashCode() {
-        return value.hashCode();
-    }
 
     @Override
     public String toString() {
