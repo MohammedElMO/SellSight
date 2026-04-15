@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -38,6 +38,13 @@ export default function NewProductPage() {
   });
 
   const imageUrl = watch('imageUrl');
+  const [imagePreviewError, setImagePreviewError] = useState(false);
+
+  const normalizedImageUrl = (imageUrl ?? '').trim();
+
+  useEffect(() => {
+    setImagePreviewError(false);
+  }, [normalizedImageUrl]);
 
   const { mutate: create, isPending } = useMutation({
     mutationFn: (req: ProductFormValues) =>
@@ -121,18 +128,29 @@ export default function NewProductPage() {
             label="Image URL"
             type="url"
             placeholder="https://example.com/image.jpg"
+            error={errors.imageUrl?.message}
             hint="Optional — link to a product photo"
-            {...register('imageUrl')}
+            {...register('imageUrl', {
+              setValueAs: (value) =>
+                typeof value === 'string' ? value.trim() : value,
+            })}
           />
 
-          {imageUrl && (
+          {normalizedImageUrl && (
             <div className="rounded-[12px] overflow-hidden border border-[#e5e4e0] aspect-video">
-              <img
-                src={imageUrl}
-                alt="Preview"
-                className="w-full h-full object-cover"
-                onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
-              />
+              {!imagePreviewError ? (
+                <img
+                  src={normalizedImageUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                  onLoad={() => setImagePreviewError(false)}
+                  onError={() => setImagePreviewError(true)}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs text-[#666] bg-[#f7f6f2] px-4 text-center">
+                  Unable to load image preview. Check the URL.
+                </div>
+              )}
             </div>
           )}
 
