@@ -3,29 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { productApi } from '@/lib/services';
+import { useCreateProduct } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/auth';
 import { createProductSchema, type ProductFormValues } from '@/lib/schemas';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Input, Textarea, Select } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PRODUCT_CATEGORIES } from '@/components/product/product-filters';
-import toast from 'react-hot-toast';
 import { ArrowLeft, Package } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewProductPage() {
-  const { isAuthenticated, role } = useAuthStore();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-    else if (role !== 'SELLER' && role !== 'ADMIN') router.replace('/products');
-  }, [isAuthenticated, role, router]);
-
-  const queryClient = useQueryClient();
 
   const {
     register,
@@ -39,32 +28,13 @@ export default function NewProductPage() {
 
   const imageUrl = watch('imageUrl');
   const [imagePreviewError, setImagePreviewError] = useState(false);
-
   const normalizedImageUrl = (imageUrl ?? '').trim();
 
   useEffect(() => {
     setImagePreviewError(false);
   }, [normalizedImageUrl]);
 
-  const { mutate: create, isPending } = useMutation({
-    mutationFn: (req: ProductFormValues) =>
-      productApi.create({
-        ...req,
-        description: req.description || undefined,
-        imageUrl:    req.imageUrl    || undefined,
-      }),
-    onSuccess: () => {
-      toast.success('Product created!');
-      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
-      router.push('/seller/products');
-    },
-    onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Failed to create product';
-      toast.error(msg);
-    },
-  });
+  const { mutate: create, isPending } = useCreateProduct();
 
   const onSubmit = (values: ProductFormValues) => create(values);
 
@@ -111,7 +81,6 @@ export default function NewProductPage() {
               prefix={<span className="text-xs font-medium">$</span>}
               {...register('price', { valueAsNumber: true })}
             />
-
             <Select
               label="Category"
               error={errors.category?.message}

@@ -1,10 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { authApi, productApi } from '@/lib/services';
-import { useAuthStore } from '@/store/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useProfile, useSellerProducts } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProductCard } from '@/components/product/product-card';
 import { ProductCardSkeleton } from '@/components/ui/skeleton';
@@ -14,25 +10,8 @@ import { Package, Plus, TrendingUp, Eye, Tag } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SellerDashboardPage() {
-  const { isAuthenticated, role } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-    else if (role !== 'SELLER' && role !== 'ADMIN') router.replace('/products');
-  }, [isAuthenticated, role, router]);
-
-  const { data: profile } = useQuery({
-    queryKey: ['my-profile'],
-    queryFn: authApi.getProfile,
-    enabled: isAuthenticated,
-  });
-
-  const { data: productsPage, isLoading } = useQuery({
-    queryKey: ['seller-products', profile?.id],
-    queryFn: () => productApi.getBySeller(profile!.id, 0, 20),
-    enabled: !!profile?.id,
-  });
+  const { data: profile } = useProfile();
+  const { data: productsPage, isLoading } = useSellerProducts(profile?.id, 0, 20);
 
   const products      = productsPage?.products ?? [];
   const activeCount   = products.filter((p) => p.active).length;
@@ -40,15 +19,18 @@ export default function SellerDashboardPage() {
   const categoryCount = new Set(products.map((p) => p.category)).size;
 
   const stats = [
-    { label: 'Total products', value: products.length, icon: Package },
-    { label: 'Active listings', value: activeCount,    icon: Eye      },
-    { label: 'Categories',      value: categoryCount,  icon: Tag      },
-    { label: 'Avg. price',      value: products.length ? formatPrice(totalValue / products.length) : '$0', icon: TrendingUp },
+    { label: 'Total products', value: products.length,   icon: Package    },
+    { label: 'Active listings', value: activeCount,      icon: Eye        },
+    { label: 'Categories',      value: categoryCount,    icon: Tag        },
+    {
+      label: 'Avg. price',
+      value: products.length ? formatPrice(totalValue / products.length) : '$0',
+      icon: TrendingUp,
+    },
   ];
 
   return (
     <PageLayout>
-      {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8 animate-fade-in">
         <div>
           <h1 className="text-[28px] font-bold text-[#111]">Dashboard</h1>

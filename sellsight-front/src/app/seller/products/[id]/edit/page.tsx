@@ -3,30 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productApi } from '@/lib/services';
+import { useProduct, useUpdateProduct } from '@/lib/hooks';
 import { useParams, useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/auth';
 import { updateProductSchema, type ProductFormValues } from '@/lib/schemas';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Input, Textarea, Select } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PRODUCT_CATEGORIES } from '@/components/product/product-filters';
-import toast from 'react-hot-toast';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EditProductPage() {
   const { id }   = useParams<{ id: string }>();
   const router   = useRouter();
-  const { isAuthenticated, role } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-    else if (role !== 'SELLER' && role !== 'ADMIN') router.replace('/products');
-  }, [isAuthenticated, role, router]);
 
   const {
     register,
@@ -40,18 +30,13 @@ export default function EditProductPage() {
 
   const imageUrl = watch('imageUrl');
   const [imagePreviewError, setImagePreviewError] = useState(false);
-
   const normalizedImageUrl = (imageUrl ?? '').trim();
 
   useEffect(() => {
     setImagePreviewError(false);
   }, [normalizedImageUrl]);
 
-  const { data: product, isLoading } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => productApi.getById(id),
-    enabled: !!id,
-  });
+  const { data: product, isLoading } = useProduct(id);
 
   // Populate form once product data arrives
   useEffect(() => {
@@ -66,26 +51,7 @@ export default function EditProductPage() {
     }
   }, [product, reset]);
 
-  const { mutate: update, isPending } = useMutation({
-    mutationFn: (req: ProductFormValues) =>
-      productApi.update(id, {
-        ...req,
-        description: req.description || undefined,
-        imageUrl:    req.imageUrl    || undefined,
-      }),
-    onSuccess: () => {
-      toast.success('Product updated!');
-      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
-      queryClient.invalidateQueries({ queryKey: ['product', id] });
-      router.push('/seller/products');
-    },
-    onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Failed to update product';
-      toast.error(msg);
-    },
-  });
+  const { mutate: update, isPending } = useUpdateProduct(id);
 
   const onSubmit = (values: ProductFormValues) => update(values);
 

@@ -1,10 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { orderApi } from '@/lib/services';
-import { useAuthStore } from '@/store/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useMyOrders } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { OrderCard } from '@/components/order/order-card';
 import { OrderCardSkeleton } from '@/components/ui/skeleton';
@@ -13,18 +9,7 @@ import { ClipboardList, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function OrdersPage() {
-  const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-  }, [isAuthenticated, router]);
-
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ['my-orders'],
-    queryFn: orderApi.getMyOrders,
-    enabled: isAuthenticated,
-  });
+  const { data: orders, isLoading } = useMyOrders();
 
   return (
     <PageLayout>

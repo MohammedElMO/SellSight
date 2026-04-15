@@ -1,8 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { productApi } from '@/lib/services';
 import { useParams, useRouter } from 'next/navigation';
+import { useProduct } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
@@ -39,14 +38,10 @@ export default function ProductDetailPage() {
 
   const canAddToCart = role !== 'SELLER' && role !== 'ADMIN';
 
-  const [quantity,     setQuantity]     = useState(1);
-  const [activeTab,    setActiveTab]    = useState<'details' | 'reviews'>('details');
+  const [quantity,  setQuantity]  = useState(1);
+  const [activeTab, setActiveTab] = useState<'details' | 'reviews'>('details');
 
-  const { data: product, isLoading, isError } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => productApi.getById(id),
-    enabled: !!id,
-  });
+  const { data: product, isLoading, isError } = useProduct(id);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -81,7 +76,7 @@ export default function ProductDetailPage() {
           Products
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <span className="hover:text-[#111] transition-colors cursor-pointer" onClick={() => {}}>
+        <span className="hover:text-[#111] transition-colors cursor-pointer">
           {product.category}
         </span>
         <ChevronRight className="h-3.5 w-3.5" />
@@ -107,7 +102,6 @@ export default function ProductDetailPage() {
               </div>
             )}
           </div>
-          {/* Thumbnail row (decorative — single product image in backend) */}
           <div className="flex gap-2">
             {[product.imageUrl].map((url, i) => (
               <div
@@ -128,15 +122,12 @@ export default function ProductDetailPage() {
 
         {/* ── Right: details ── */}
         <div className="flex flex-col">
-          {/* Brand / seller ref */}
           <p className="text-sm text-[#999] mb-1.5">Seller #{product.sellerId.slice(0, 8)}</p>
 
-          {/* Name */}
           <h1 className="text-[28px] sm:text-[34px] font-bold text-[#111] leading-tight mb-3">
             {product.name}
           </h1>
 
-          {/* Rating */}
           <Rating
             value={MOCK_RATING}
             size="sm"
@@ -145,12 +136,10 @@ export default function ProductDetailPage() {
             className="mb-4"
           />
 
-          {/* Price */}
           <p className="text-3xl font-bold text-[#111] mb-5">
             {formatPrice(product.price)}
           </p>
 
-          {/* Category */}
           <div className="flex items-center gap-2 mb-6">
             <Badge variant="default">{product.category}</Badge>
             {product.active ? (
@@ -202,13 +191,11 @@ export default function ProductDetailPage() {
             </>
           )}
 
-          {/* Free delivery note */}
           <div className="flex items-center gap-2 text-sm text-[#666] py-4 border-t border-[#f0efeb]">
             <Truck className="h-4 w-4 text-[#111] shrink-0" />
             Free delivery on orders over $30.00
           </div>
 
-          {/* Added date */}
           <p className="text-xs text-[#999] mt-2">
             Listed {formatDate(product.createdAt)}
           </p>
@@ -243,13 +230,11 @@ export default function ProductDetailPage() {
             </div>
           ) : (
             <div className="flex flex-col lg:flex-row gap-10 max-w-3xl">
-              {/* Overall score */}
               <div className="flex flex-col items-center justify-center shrink-0 gap-2 p-8 border border-[#e5e4e0] rounded-[14px] w-full lg:w-44">
                 <span className="text-5xl font-bold text-[#111]">{MOCK_RATING.toFixed(1)}</span>
                 <Rating value={MOCK_RATING} size="sm" />
                 <span className="text-sm text-[#666]">{MOCK_REVIEW_COUNT} reviews</span>
               </div>
-              {/* Breakdown */}
               <div className="flex-1">
                 <RatingBreakdown
                   distribution={MOCK_DISTRIBUTION}
@@ -261,7 +246,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Back link */}
       <div className="mt-4 mb-8">
         <button
           onClick={() => router.back()}

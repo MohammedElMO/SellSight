@@ -1,8 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { orderApi } from '@/lib/services';
 import { useParams, useRouter } from 'next/navigation';
+import { useOrder } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { OrderStatusBadge } from '@/components/order/order-status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,11 +14,7 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
 
-  const { data: order, isLoading, isError } = useQuery({
-    queryKey: ['order', id],
-    queryFn: () => orderApi.getById(id),
-    enabled: !!id,
-  });
+  const { data: order, isLoading, isError } = useOrder(id);
 
   if (isLoading) {
     return (
@@ -103,7 +98,7 @@ export default function OrderDetailPage() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-10 w-10 rounded-[8px] bg-[#f7f6f2] border border-[#e5e4e0] flex items-center justify-center shrink-0">
-                    <Package className="h-4.5 w-4.5 text-[#bbb]" />
+                    <Package className="h-4 w-4 text-[#bbb]" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-[#111] truncate">
@@ -140,7 +135,6 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Back */}
         <button
           onClick={() => router.back()}
           className="self-start flex items-center gap-1.5 text-sm text-[#666] hover:text-[#111] transition-colors"

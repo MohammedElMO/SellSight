@@ -2,10 +2,8 @@
 
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
-import { useMutation } from '@tanstack/react-query';
-import { orderApi } from '@/lib/services';
+import { useCreateOrder } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -13,32 +11,13 @@ import { formatPrice } from '@/lib/utils';
 import { Minus, Plus, Trash2, ShoppingCart, Package, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import type { CreateOrderRequest } from '@shared/types';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, totalPrice } = useCartStore();
   const { isAuthenticated, role } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    if (role === 'SELLER') router.replace('/seller/dashboard');
-    else if (role === 'ADMIN') router.replace('/admin/orders');
-  }, [role, router]);
-
-  const { mutate: placeOrder, isPending } = useMutation({
-    mutationFn: (req: CreateOrderRequest) => orderApi.create(req),
-    onSuccess: (order) => {
-      clearCart();
-      toast.success('Order placed successfully!');
-      router.push(`/orders/${order.id}`);
-    },
-    onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Failed to place order';
-      toast.error(msg);
-    },
-  });
+  const { mutate: placeOrder, isPending } = useCreateOrder();
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -51,14 +30,14 @@ export default function CartPage() {
       return;
     }
 
-    const orderItems = items.map((item) => ({
-      productId:   item.product.id,
-      productName: item.product.name,
-      quantity:    item.quantity,
-      unitPrice:   item.product.price,
-    }));
-
-    placeOrder({ items: orderItems });
+    placeOrder({
+      items: items.map((item) => ({
+        productId:   item.product.id,
+        productName: item.product.name,
+        quantity:    item.quantity,
+        unitPrice:   item.product.price,
+      })),
+    });
   };
 
   const subtotal  = totalPrice();
@@ -104,7 +83,6 @@ export default function CartPage() {
               key={product.id}
               className="flex gap-4 p-4 border border-[#e5e4e0] rounded-[14px] bg-white hover:border-[#ccc9c2] transition-all"
             >
-              {/* Image */}
               <Link
                 href={`/products/${product.id}`}
                 className="h-24 w-24 rounded-[10px] bg-[#f7f6f2] overflow-hidden shrink-0 border border-[#e5e4e0]"
@@ -122,7 +100,6 @@ export default function CartPage() {
                 )}
               </Link>
 
-              {/* Details */}
               <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
                   <p className="text-xs text-[#999] mb-0.5">{product.category}</p>
@@ -134,7 +111,6 @@ export default function CartPage() {
                 </div>
 
                 <div className="flex items-center justify-between mt-2 gap-4">
-                  {/* Quantity control */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => updateQuantity(product.id, quantity - 1)}

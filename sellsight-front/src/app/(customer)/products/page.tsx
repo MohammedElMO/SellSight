@@ -1,8 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { productApi } from '@/lib/services';
 import { useState, useMemo } from 'react';
+import { useProducts } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProductCard } from '@/components/product/product-card';
 import { ProductFilters } from '@/components/product/product-filters';
@@ -18,10 +17,7 @@ export default function ProductsPage() {
   const [search,   setSearch]   = useState('');
   const [category, setCategory] = useState('');
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['products', page, PAGE_SIZE],
-    queryFn: () => productApi.getAll(page, PAGE_SIZE),
-  });
+  const { data, isLoading } = useProducts(page, PAGE_SIZE);
 
   // Client-side filter (search + category) since backend doesn't expose filter params
   const filtered = useMemo(() => {
@@ -48,7 +44,6 @@ export default function ProductsPage() {
 
   return (
     <PageLayout>
-      {/* Page header */}
       <div className="mb-7 animate-fade-in">
         <h1 className="text-[28px] font-bold text-[#111] mb-1">Shop</h1>
         <p className="text-[#666] text-sm">
@@ -56,7 +51,6 @@ export default function ProductsPage() {
         </p>
       </div>
 
-      {/* Filters */}
       <ProductFilters
         search={search}
         category={category}
@@ -66,7 +60,6 @@ export default function ProductsPage() {
         className="mb-8"
       />
 
-      {/* Grid */}
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (

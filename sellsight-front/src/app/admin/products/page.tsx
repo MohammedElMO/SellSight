@@ -1,10 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { productApi } from '@/lib/services';
-import { useAuthStore } from '@/store/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useProducts } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Pagination } from '@/components/ui/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -27,21 +24,9 @@ function groupBySeller(products: ProductDto[]): Map<string, ProductDto[]> {
 }
 
 export default function AdminProductsPage() {
-  const { isAuthenticated, role } = useAuthStore();
-  const router = useRouter();
   const [page, setPage] = useState(0);
 
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-    else if (role !== 'ADMIN') router.replace('/');
-  }, [isAuthenticated, role, router]);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin-products', page],
-    queryFn: () => productApi.getAll(page, PAGE_SIZE),
-    enabled: isAuthenticated && role === 'ADMIN',
-  });
-
+  const { data, isLoading } = useProducts(page, PAGE_SIZE);
   const grouped = data ? groupBySeller(data.products) : new Map<string, ProductDto[]>();
 
   return (
@@ -49,7 +34,9 @@ export default function AdminProductsPage() {
       <div className="mb-7 animate-fade-in">
         <h1 className="text-[28px] font-bold text-[#111]">Products by seller</h1>
         <p className="text-sm text-[#666] mt-1">
-          {data ? `${data.totalElements} total products across ${grouped.size} seller${grouped.size !== 1 ? 's' : ''} on this page` : '—'}
+          {data
+            ? `${data.totalElements} total products · ${grouped.size} seller${grouped.size !== 1 ? 's' : ''} on this page`
+            : '—'}
         </p>
       </div>
 
@@ -90,7 +77,6 @@ export default function AdminProductsPage() {
                 </Badge>
               </div>
 
-              {/* Products table */}
               <div className="border border-[#e5e4e0] rounded-[14px] overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
@@ -158,7 +144,6 @@ export default function AdminProductsPage() {
             </section>
           ))}
 
-          {/* Pagination */}
           {data && data.totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-[#999]">

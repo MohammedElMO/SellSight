@@ -1,8 +1,6 @@
 'use client';
 
 import { useAuthStore } from '@/store/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Truck, ShieldCheck, RefreshCcw, Star, Package, Users, BarChart3 } from 'lucide-react';
 
@@ -29,16 +27,15 @@ const FEATURES = [
   },
 ];
 
-export default function HomePage() {
-  const { isAuthenticated, role } = useAuthStore();
-  const router = useRouter();
+const ROLE_HOME: Record<string, string> = {
+  CUSTOMER: '/products',
+  SELLER:   '/seller/dashboard',
+  ADMIN:    '/admin/orders',
+};
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    if (role === 'CUSTOMER') router.replace('/products');
-    else if (role === 'SELLER') router.replace('/seller/dashboard');
-    else if (role === 'ADMIN') router.replace('/admin/orders');
-  }, [isAuthenticated, role, router]);
+export default function HomePage() {
+  const { isAuthenticated, role, firstName } = useAuthStore();
+  const dashboardHref = role ? ROLE_HOME[role] : '/';
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -55,18 +52,30 @@ export default function HomePage() {
             >
               Shop
             </Link>
-            <Link
-              href="/login"
-              className="h-9 px-4 flex items-center text-sm font-medium text-[#666] hover:text-[#111] hover:bg-[#f7f6f2] rounded-[8px] transition-all"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="h-9 px-5 flex items-center text-sm font-semibold bg-[#111] text-white rounded-[9px] hover:bg-[#2a2a2a] transition-all"
-            >
-              Get started
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                href={dashboardHref}
+                className="h-9 px-5 flex items-center text-sm font-semibold bg-[#111] text-white rounded-[9px] hover:bg-[#2a2a2a] transition-all"
+              >
+                {firstName ? `Hi, ${firstName}` : 'Go to dashboard'}
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="h-9 px-4 flex items-center text-sm font-medium text-[#666] hover:text-[#111] hover:bg-[#f7f6f2] rounded-[8px] transition-all"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="h-9 px-5 flex items-center text-sm font-semibold bg-[#111] text-white rounded-[9px] hover:bg-[#2a2a2a] transition-all"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -95,12 +104,14 @@ export default function HomePage() {
             Browse products
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link
-            href="/register"
-            className="h-12 px-7 flex items-center text-[15px] font-semibold text-[#111] bg-white border border-[#e5e4e0] rounded-[11px] hover:border-[#111] hover:bg-[#f7f6f2] transition-all"
-          >
-            Start selling
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              href="/register"
+              className="h-12 px-7 flex items-center text-[15px] font-semibold text-[#111] bg-white border border-[#e5e4e0] rounded-[11px] hover:border-[#111] hover:bg-[#f7f6f2] transition-all"
+            >
+              Start selling
+            </Link>
+          )}
         </div>
       </section>
 
@@ -161,18 +172,30 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex gap-3 shrink-0">
-            <Link
-              href="/register"
-              className="h-11 px-6 flex items-center text-sm font-semibold bg-white text-[#111] rounded-[9px] hover:bg-[#f0efeb] transition-all"
-            >
-              Create account
-            </Link>
-            <Link
-              href="/products"
-              className="h-11 px-6 flex items-center text-sm font-semibold bg-white/10 text-white border border-white/20 rounded-[9px] hover:bg-white/20 transition-all"
-            >
-              Browse products
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                href={dashboardHref}
+                className="h-11 px-6 flex items-center text-sm font-semibold bg-white text-[#111] rounded-[9px] hover:bg-[#f0efeb] transition-all"
+              >
+                Go to dashboard
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="h-11 px-6 flex items-center text-sm font-semibold bg-white text-[#111] rounded-[9px] hover:bg-[#f0efeb] transition-all"
+                >
+                  Create account
+                </Link>
+                <Link
+                  href="/products"
+                  className="h-11 px-6 flex items-center text-sm font-semibold bg-white/10 text-white border border-white/20 rounded-[9px] hover:bg-white/20 transition-all"
+                >
+                  Browse products
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

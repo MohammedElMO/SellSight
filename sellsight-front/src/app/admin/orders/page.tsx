@@ -1,20 +1,15 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderApi } from '@/lib/services';
-import { useAuthStore } from '@/store/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAllOrders, useUpdateOrderStatus } from '@/lib/hooks';
+import { useState } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { OrderStatusBadge } from '@/components/order/order-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { ClipboardList, ChevronDown } from 'lucide-react';
-import toast from 'react-hot-toast';
-import type { OrderStatus } from '@shared/types';
+import { ClipboardList } from 'lucide-react';
 import Link from 'next/link';
+import type { OrderStatus } from '@shared/types';
 
 const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   PENDING:   ['CONFIRMED', 'CANCELLED'],
@@ -25,32 +20,10 @@ const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 };
 
 export default function AdminOrdersPage() {
-  const { isAuthenticated, role } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) router.replace('/login');
-    else if (role !== 'ADMIN') router.replace('/');
-  }, [isAuthenticated, role, router]);
-
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
-  const queryClient = useQueryClient();
 
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ['all-orders'],
-    queryFn: orderApi.getAll,
-    enabled: isAuthenticated && role === 'ADMIN',
-  });
-
-  const { mutate: updateStatus, isPending } = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      orderApi.updateStatus(id, status),
-    onSuccess: () => {
-      toast.success('Order status updated');
-      queryClient.invalidateQueries({ queryKey: ['all-orders'] });
-    },
-    onError: () => toast.error('Failed to update order status'),
-  });
+  const { data: orders, isLoading } = useAllOrders();
+  const { mutate: updateStatus, isPending } = useUpdateOrderStatus();
 
   const filtered = statusFilter
     ? orders?.filter((o) => o.status === statusFilter)
@@ -101,7 +74,6 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
-      {/* Table */}
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -163,9 +135,7 @@ export default function AdminOrdersPage() {
                             {transitions.map((nextStatus) => (
                               <button
                                 key={nextStatus}
-                                onClick={() =>
-                                  updateStatus({ id: order.id, status: nextStatus })
-                                }
+                                onClick={() => updateStatus({ id: order.id, status: nextStatus })}
                                 disabled={isPending}
                                 className={[
                                   'h-7 px-2.5 text-[11px] font-medium rounded-[6px] border transition-all disabled:opacity-40',
