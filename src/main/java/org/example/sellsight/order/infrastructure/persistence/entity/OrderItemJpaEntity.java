@@ -23,7 +23,7 @@ public class OrderItemJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 36)
+    @Column(nullable = false, length = 255)
     private String productId;
 
     @Column(nullable = false)

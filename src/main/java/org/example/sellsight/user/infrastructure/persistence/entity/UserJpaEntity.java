@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.sellsight.user.domain.model.AuthProvider;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 public class UserJpaEntity {
 
     @Id
-    @Column(length = 36, nullable = false, updatable = false)
+    @Column(length = 255, nullable = false, updatable = false)
     private String id;
 
     @Column(nullable = false)
@@ -32,7 +33,7 @@ public class UserJpaEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(nullable = false, length = 20)
@@ -41,4 +42,14 @@ public class UserJpaEntity {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private boolean isVirtual;
+
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(nullable = true)
+    private String providerId;
 }

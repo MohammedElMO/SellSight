@@ -6,6 +6,7 @@ import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
+import org.example.sellsight.user.infrastructure.oauth.OAuthException;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(400, ex.getMessage()));
+    }
+
+    @ExceptionHandler(OAuthException.class)
+    public ResponseEntity<ErrorResponse> handleOAuth(OAuthException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(400, ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

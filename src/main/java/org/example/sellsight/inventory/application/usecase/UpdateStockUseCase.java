@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Use case: Update stock level for a product.
- * Creates inventory item if it doesn't exist yet.
+ * Creates an inventory item if it doesn't exist yet.
  */
 @Service
 public class UpdateStockUseCase {

@@ -12,14 +12,21 @@ public final class UserPersistenceMapper {
     private UserPersistenceMapper() {}
 
     public static User toDomain(UserJpaEntity entity) {
+        Password password = entity.getPassword() != null
+                ? new Password(entity.getPassword())
+                : null;
+
         return new User(
                 UserId.from(entity.getId()),
                 entity.getFirstName(),
                 entity.getLastName(),
                 new Email(entity.getEmail()),
-                new Password(entity.getPassword()),
+                password,
                 entity.getRole(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.isVirtual(),
+                entity.getAuthProvider() != null ? entity.getAuthProvider() : AuthProvider.LOCAL,
+                entity.getProviderId()
         );
     }
 
@@ -29,9 +36,12 @@ public final class UserPersistenceMapper {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail().getValue(),
-                user.getPassword().getHashedValue(),
+                user.getPassword() != null ? user.getPassword().getHashedValue() : null,
                 user.getRole(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.isVirtual(),
+                user.getAuthProvider(),
+                user.getProviderId()
         );
     }
 }

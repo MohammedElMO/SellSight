@@ -5,25 +5,36 @@ import java.util.UUID;
 
 /**
  * Value Object representing a unique product identifier.
+ * Wraps a String to support both standard UUIDs (catalogue products)
+ * and external dataset IDs (numeric strings, long UUIDs) that arrive
+ * via the event-streaming pipeline.
  */
 public final class ProductId {
 
-    private final UUID value;
+    private final String value;
 
-    private ProductId(UUID value) {
+    private ProductId(String value) {
         this.value = Objects.requireNonNull(value, "ProductId cannot be null");
     }
 
+    /** Creates a new UUID-based identifier for catalogue products. */
     public static ProductId generate() {
-        return new ProductId(UUID.randomUUID());
+        return new ProductId(UUID.randomUUID().toString());
     }
 
+    /**
+     * Creates an identifier from an existing string.
+     * Accepts any non-blank string — including numeric IDs from external datasets.
+     */
     public static ProductId from(String value) {
-        return new ProductId(UUID.fromString(value));
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("ProductId cannot be blank");
+        }
+        return new ProductId(value);
     }
 
     public String getValue() {
-        return value.toString();
+        return value;
     }
 
     @Override
@@ -41,6 +52,6 @@ public final class ProductId {
 
     @Override
     public String toString() {
-        return value.toString();
+        return value;
     }
 }

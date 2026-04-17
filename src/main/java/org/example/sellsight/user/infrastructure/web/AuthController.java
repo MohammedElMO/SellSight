@@ -10,8 +10,10 @@ import jakarta.validation.Valid;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.dto.LoginRequest;
+import org.example.sellsight.user.application.dto.OAuthLoginRequest;
 import org.example.sellsight.user.application.dto.RegisterRequest;
 import org.example.sellsight.user.application.usecase.LoginUserUseCase;
+import org.example.sellsight.user.application.usecase.OAuthLoginUseCase;
 import org.example.sellsight.user.application.usecase.RegisterUserUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,11 +29,14 @@ public class AuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
+    private final OAuthLoginUseCase oAuthLoginUseCase;
 
     public AuthController(RegisterUserUseCase registerUserUseCase,
-                           LoginUserUseCase loginUserUseCase) {
+                           LoginUserUseCase loginUserUseCase,
+                           OAuthLoginUseCase oAuthLoginUseCase) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
+        this.oAuthLoginUseCase = oAuthLoginUseCase;
     }
 
     @Operation(
@@ -68,6 +73,24 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = loginUserUseCase.execute(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        operationId = "oauthLogin",
+        summary     = "OAuth2 login/signup",
+        description = "Exchanges an OAuth2 authorization code (Google or Slack) for a JWT. "
+                    + "Creates a new account if the user doesn't exist yet."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Authenticated — JWT returned",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid provider or code",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/oauth")
+    public ResponseEntity<AuthResponse> oauthLogin(@Valid @RequestBody OAuthLoginRequest request) {
+        AuthResponse response = oAuthLoginUseCase.execute(request);
         return ResponseEntity.ok(response);
     }
 }

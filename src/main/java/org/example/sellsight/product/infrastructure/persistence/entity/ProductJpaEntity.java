@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class ProductJpaEntity {
 
     @Id
-    @Column(length = 36, nullable = false, updatable = false)
+    @Column(length = 255, nullable = false, updatable = false)
     private String id;
 
     @Column(nullable = false)
@@ -36,7 +36,7 @@ public class ProductJpaEntity {
     @Column(nullable = false)
     private String category;
 
-    @Column(nullable = false, length = 36)
+    @Column(nullable = false, length = 255)
     private String sellerId;
 
     private String imageUrl;

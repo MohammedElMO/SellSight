@@ -47,6 +47,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(path, request.url));
   }
 
+  // ── /oauth/callback ──────────────────────────────────────
+  // Always allow — handles the OAuth code exchange.
+  if (pathname.startsWith('/oauth/callback')) {
+    return NextResponse.next();
+  }
+
   // ── /login and /register ────────────────────────────────
   // Authenticated users have no reason to be here — send them home.
   if (pathname === '/login' || pathname === '/register') {

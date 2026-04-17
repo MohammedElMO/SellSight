@@ -1,8 +1,6 @@
 package org.example.sellsight.user.infrastructure.persistence.repository;
 
-import org.example.sellsight.user.domain.model.Email;
-import org.example.sellsight.user.domain.model.User;
-import org.example.sellsight.user.domain.model.UserId;
+import org.example.sellsight.user.domain.model.*;
 import org.example.sellsight.user.domain.repository.UserRepository;
 import org.example.sellsight.user.infrastructure.persistence.entity.UserJpaEntity;
 import org.example.sellsight.user.infrastructure.persistence.mapper.UserPersistenceMapper;
@@ -45,5 +43,11 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public boolean existsByEmail(Email email) {
         return jpaRepository.existsByEmail(email.getValue());
+    }
+
+    @Override
+    public Optional<User> findByAuthProviderAndProviderId(AuthProvider provider, String providerId) {
+        return jpaRepository.findByAuthProviderAndProviderId(provider, providerId)
+                .map(UserPersistenceMapper::toDomain);
     }
 }

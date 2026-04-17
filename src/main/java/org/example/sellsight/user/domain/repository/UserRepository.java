@@ -1,8 +1,6 @@
 package org.example.sellsight.user.domain.repository;
 
-import org.example.sellsight.user.domain.model.Email;
-import org.example.sellsight.user.domain.model.User;
-import org.example.sellsight.user.domain.model.UserId;
+import org.example.sellsight.user.domain.model.*;
 
 import java.util.Optional;
 
@@ -19,4 +17,6 @@ public interface UserRepository {
     Optional<User> findByEmail(Email email);
 
     boolean existsByEmail(Email email);
+
+    Optional<User> findByAuthProviderAndProviderId(AuthProvider provider, String providerId);
 }

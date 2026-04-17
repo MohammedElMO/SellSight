@@ -18,6 +18,14 @@ export interface LoginRequest {
   password: string;
 }
 
+export type OAuthProvider = 'GOOGLE' | 'SLACK';
+
+export interface OAuthLoginRequest {
+  provider: OAuthProvider;
+  code: string;
+  redirectUri: string;
+}
+
 export interface AuthResponse {
   token: string;
   email: string;

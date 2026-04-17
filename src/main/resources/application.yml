@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
+
   application:
     name: sellsight
 
@@ -25,6 +28,15 @@ server:
 jwt:
   secret: ${JWT_SECRET:c2VsbHNpZ2h0LXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC1zaWduaW5nLTI1Ni1iaXRz}
   expiration: ${JWT_EXPIRATION:86400000}
+
+# OAuth2 providers
+oauth:
+  google:
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID:}
+    client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET:}
+  slack:
+    client-id: ${OAUTH_SLACK_CLIENT_ID:}
+    client-secret: ${OAUTH_SLACK_CLIENT_SECRET:}
 
 # SpringDoc OpenAPI / Swagger UI
 # Single flat spec — all endpoints at /v3/api-docs, grouped by @Tag in the UI.

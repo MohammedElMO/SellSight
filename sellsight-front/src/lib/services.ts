@@ -2,6 +2,7 @@ import api from '@/lib/api';
 import type {
   LoginRequest,
   RegisterRequest,
+  OAuthLoginRequest,
   AuthResponse,
   UserDto,
   ProductDto,
@@ -22,6 +23,9 @@ export const authApi = {
 
   login: (data: LoginRequest) =>
     api.post<AuthResponse>('/auth/login', data).then((r) => r.data),
+
+  oauthLogin: (data: OAuthLoginRequest) =>
+    api.post<AuthResponse>('/auth/oauth', data).then((r) => r.data),
 
   getProfile: () =>
     api.get<UserDto>('/users/me').then((r) => r.data),

@@ -4,6 +4,7 @@ import org.example.sellsight.config.security.JwtService;
 import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.dto.LoginRequest;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
+import org.example.sellsight.user.domain.model.AuthProvider;
 import org.example.sellsight.user.domain.model.Email;
 import org.example.sellsight.user.domain.model.User;
 import org.example.sellsight.user.domain.repository.UserRepository;
@@ -33,6 +34,12 @@ public class LoginUserUseCase {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
+
+        // OAuth users cannot sign in with a password
+        if (user.getAuthProvider() != AuthProvider.LOCAL) {
+            throw new InvalidCredentialsException(
+                    "This account uses " + user.getAuthProvider().name() + " sign-in. Please use that method instead.");
+        }
 
         // Verify password
         if (!passwordEncoder.matches(request.password(), user.getPassword().getHashedValue())) {

@@ -16,18 +16,47 @@ public class User {
     private String firstName;
     private String lastName;
     private final Email email;
-    private Password password;
+    private Password password;          // null for OAuth users
     private Role role;
     private final LocalDateTime createdAt;
+    private final boolean isVirtual;
+    private final AuthProvider authProvider;
+    private final String providerId;    // null for LOCAL users
 
-
+    /** Constructor for real (non-virtual), LOCAL users — backwards compatible. */
     public User(UserId id, String firstName, String lastName,
                 Email email, Password password, Role role, LocalDateTime createdAt) {
+        this(id, firstName, lastName, email, password, role, createdAt, false,
+             AuthProvider.LOCAL, null);
+    }
+
+    /** Constructor with isVirtual flag — backwards compatible. */
+    public User(UserId id, String firstName, String lastName,
+                Email email, Password password, Role role, LocalDateTime createdAt,
+                boolean isVirtual) {
+        this(id, firstName, lastName, email, password, role, createdAt, isVirtual,
+             AuthProvider.LOCAL, null);
+    }
+
+    /** Full constructor — used when rehydrating from persistence or creating OAuth users. */
+    public User(UserId id, String firstName, String lastName,
+                Email email, Password password, Role role, LocalDateTime createdAt,
+                boolean isVirtual, AuthProvider authProvider, String providerId) {
         this.id = Objects.requireNonNull(id, "User ID cannot be null");
         this.email = Objects.requireNonNull(email, "Email cannot be null");
-        this.password = Objects.requireNonNull(password, "Password cannot be null");
         this.role = Objects.requireNonNull(role, "Role cannot be null");
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
+        this.authProvider = Objects.requireNonNull(authProvider, "AuthProvider cannot be null");
+        this.isVirtual = isVirtual;
+        this.providerId = providerId;
+
+        // Password is required for LOCAL users, optional for OAuth users
+        if (authProvider == AuthProvider.LOCAL) {
+            this.password = Objects.requireNonNull(password, "Password cannot be null for local users");
+        } else {
+            this.password = password; // may be null
+        }
+
         setFirstName(firstName);
         setLastName(lastName);
     }
@@ -71,6 +100,7 @@ public class User {
     public Password getPassword() { return password; }
     public Role getRole() { return role; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-
-
+    public boolean isVirtual() { return isVirtual; }
+    public AuthProvider getAuthProvider() { return authProvider; }
+    public String getProviderId() { return providerId; }
 }

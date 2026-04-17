@@ -15,7 +15,7 @@ import lombok.Setter;
 public class InventoryJpaEntity {
 
     @Id
-    @Column(length = 36, nullable = false)
+    @Column(length = 255, nullable = false)
     private String productId;
 
     @Column(nullable = false)
