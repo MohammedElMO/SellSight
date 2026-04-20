@@ -6,9 +6,11 @@ import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
-import org.example.sellsight.user.infrastructure.oauth.OAuthException;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
+import org.example.sellsight.user.domain.exception.InvalidTokenException;
+import org.example.sellsight.user.domain.exception.OAuthEmailConflictException;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
+import org.example.sellsight.user.infrastructure.oauth.OAuthException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -93,6 +95,20 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(400, ex.getMessage()));
     }
 
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(400, ex.getMessage()));
+    }
+
+    @ExceptionHandler(OAuthEmailConflictException.class)
+    public ResponseEntity<ErrorResponse> handleOAuthEmailConflict(OAuthEmailConflictException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -105,8 +121,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        // Log the FULL stack trace so we can actually debug 500 errors
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                .error("Unhandled exception in controller", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(500, "An unexpected error occurred"));
+                .body(ErrorResponse.of(500, "Internal error: " + ex.getMessage()));
     }
 }

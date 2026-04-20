@@ -5,24 +5,89 @@ spring:
   application:
     name: sellsight
 
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sellsight_db}
     username: ${SPRING_DATASOURCE_USERNAME:sellsight}
     password: ${SPRING_DATASOURCE_PASSWORD:sellsight}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
 
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: update
+      # Flyway owns schema. Hibernate only validates mappings against the
+      # migrated schema. Never set this back to `update` or `create` — drift
+      # between JPA-inferred DDL and migrations is a common source of prod bugs.
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
+        jdbc:
+          fetch_size: 100
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
+          plan_cache_max_size: 2048
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2s
+
+  cache:
+    type: caffeine
 
 server:
-  port: 8080
+  port: 8081
   address: 0.0.0.0
+
+# Application-level config
+app:
+  base-url: ${APP_BASE_URL:http://localhost:3000}
+  kafka:
+    topics:
+      user-events: user-events
+  rate-limit:
+    auth:
+      login-per-minute: 20
+      register-per-minute: 5
+      password-reset-per-minute: 5
+      resend-verification-per-minute: 5
+      oauth-per-minute: 10
+  tokens:
+    email-verification-ttl-minutes: 1440
+    password-reset-ttl-minutes: 60
 
 # JWT Configuration
 jwt:
@@ -34,9 +99,16 @@ oauth:
   google:
     client-id: ${OAUTH_GOOGLE_CLIENT_ID:}
     client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI:http://localhost:3000/oauth/callback}
   slack:
     client-id: ${OAUTH_SLACK_CLIENT_ID:}
     client-secret: ${OAUTH_SLACK_CLIENT_SECRET:}
+    redirect-uri: ${OAUTH_SLACK_REDIRECT_URI:http://localhost:3000/oauth/callback}
+
+# Email (Resend). Blank key = LoggingEmailAdapter fallback for local dev.
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from: ${RESEND_FROM:SellSight <noreply@sellsight.local>}
 
 # SpringDoc OpenAPI / Swagger UI
 # Single flat spec — all endpoints at /v3/api-docs, grouped by @Tag in the UI.
@@ -51,3 +123,20 @@ springdoc:
     tagsSorter: alpha
     doc-expansion: none
     display-request-duration: true
+
+# Resilience4j defaults (used later by Stripe/Resend/OAuth HTTP clients)
+resilience4j:
+  retry:
+    instances:
+      outbound-http:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+  circuitbreaker:
+    instances:
+      outbound-http:
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
