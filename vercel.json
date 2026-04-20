@@ -3,5 +3,7 @@
   "buildCommand": "cd sellsight-front && pnpm build",
   "installCommand": "cd sellsight-front && pnpm install",
   "outputDirectory": "sellsight-front/.next",
-  "nodeVersion": "20.x"
+  "env": {
+    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+  }
 }

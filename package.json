@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "API testing toolchain for SellSight (Portman + Newman)",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "generate-collection": "npx portman --url http://localhost:8080/v3/api-docs --output scripts/sellsight-collection.json --portmanConfigFile portman.config.json --envFile scripts/portman-env.json",
     "test:api": "npx newman run scripts/sellsight-collection.json --environment scripts/portman-env.json --reporters cli,json --reporter-json-export scripts/newman-results.json",
