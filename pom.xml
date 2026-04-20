@@ -263,7 +263,6 @@
 					<url>jdbc:postgresql://localhost:5432/sellsight_db</url>
 					<user>sellsight</user>
 					<password>sellsight</password>
-					<cleanDisabled>false</cleanDisabled>
 				</configuration>
 			</plugin>
 		</plugins>

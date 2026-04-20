@@ -35,6 +35,12 @@ public class InventoryRepositoryAdapter implements InventoryRepository {
     }
 
     @Override
+    public List<InventoryItem> findAllByProductIds(List<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) return List.of();
+        return jpaRepository.findAllByProductIdIn(productIds).stream().map(this::toDomain).toList();
+    }
+
+    @Override
     public List<InventoryItem> findLowStock() {
         return jpaRepository.findLowStock().stream().map(this::toDomain).toList();
     }

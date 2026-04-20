@@ -125,7 +125,7 @@ springdoc:
     display-request-duration: true
 
 # Resilience4j defaults (used later by Stripe/Resend/OAuth HTTP clients)
-resilience4j:
+  resilience4j:
   retry:
     instances:
       outbound-http:

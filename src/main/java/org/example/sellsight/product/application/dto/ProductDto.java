@@ -20,5 +20,6 @@ public record ProductDto(
         int soldCount,
         boolean active,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        int stockQuantity
 ) {}

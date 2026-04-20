@@ -48,7 +48,7 @@ public class CreateProductUseCase {
                 p.getId().getValue(), p.getName(), p.getDescription(),
                 p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
                 p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
-                p.isActive(), p.getCreatedAt(), p.getUpdatedAt()
+                p.isActive(), p.getCreatedAt(), p.getUpdatedAt(), 0
         );
     }
 }

@@ -22,6 +22,9 @@ public class CacheConfig {
         // First-page listing cursor — shorter TTL so new products appear quickly
         cm.registerCustomCache("product-listings",
                 Caffeine.newBuilder().maximumSize(200).expireAfterWrite(3, TimeUnit.MINUTES).build());
+        // Filtered/sorted listing pages — was missing, causing uncached scans on every request
+        cm.registerCustomCache("product-filter-listings",
+                Caffeine.newBuilder().maximumSize(1000).expireAfterWrite(2, TimeUnit.MINUTES).build());
         return cm;
     }
 }

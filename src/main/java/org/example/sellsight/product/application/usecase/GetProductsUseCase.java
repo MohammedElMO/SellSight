@@ -1,5 +1,7 @@
 package org.example.sellsight.product.application.usecase;
 
+import org.example.sellsight.inventory.domain.model.InventoryItem;
+import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.application.dto.ProductPageDto;
 import org.example.sellsight.product.domain.model.Product;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Use case: Get paginated product listing.
@@ -19,9 +23,11 @@ import java.util.List;
 public class GetProductsUseCase {
 
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
 
-    public GetProductsUseCase(ProductRepository productRepository) {
+    public GetProductsUseCase(ProductRepository productRepository, InventoryRepository inventoryRepository) {
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     @Transactional(readOnly = true)
@@ -33,9 +39,9 @@ public class GetProductsUseCase {
     @Cacheable(
         value = "product-filter-listings",
         key = "T(java.util.Objects).hash(#category,#minPrice,#maxPrice,#minRating,#inStock,#sort,#page,#size)",
-        condition = "#page < 5"
+        condition = "#page < 5",
+        sync = true
     )
-    @Transactional(readOnly = true)
     public ProductPageDto executeWithFilters(
             String category, BigDecimal minPrice, BigDecimal maxPrice,
             Double minRating, Boolean inStock, String sort, int page, int size) {
@@ -51,33 +57,39 @@ public class GetProductsUseCase {
         return toPageDto(slice, page, size);
     }
 
-    @Cacheable(value = "product-listings", key = "#size", condition = "#lastId == null")
-    @Transactional(readOnly = true)
+    @Cacheable(value = "product-listings", key = "#size", condition = "#lastId == null", sync = true)
     public ProductPageDto executeKeyset(String lastId, int size) {
-        // Request size+1 to determine hasMore without a COUNT query
         int fetchSize = size + 1;
         List<Product> products = lastId == null
                 ? productRepository.findActiveFirst(fetchSize)
                 : productRepository.findActiveBefore(lastId, fetchSize);
         boolean hasMore = products.size() > size;
-        List<ProductDto> dtos = products.stream()
-                .limit(size)
-                .map(this::toDto)
-                .toList();
+        List<Product> page = products.stream().limit(size).toList();
+        Map<String, Integer> stockMap = stockMapFor(page);
+        List<ProductDto> dtos = page.stream().map(p -> toDto(p, stockMap)).toList();
         return new ProductPageDto(dtos, 0, size, hasMore);
     }
 
     private ProductPageDto toPageDto(ProductSlice slice, int page, int size) {
-        List<ProductDto> dtos = slice.items().stream().map(this::toDto).toList();
+        List<Product> products = slice.items();
+        Map<String, Integer> stockMap = stockMapFor(products);
+        List<ProductDto> dtos = products.stream().map(p -> toDto(p, stockMap)).toList();
         return new ProductPageDto(dtos, page, size, slice.hasMore());
     }
 
-    private ProductDto toDto(Product p) {
+    private Map<String, Integer> stockMapFor(List<Product> products) {
+        List<String> ids = products.stream().map(p -> p.getId().getValue()).toList();
+        return inventoryRepository.findAllByProductIds(ids).stream()
+                .collect(Collectors.toMap(InventoryItem::getProductId, i -> i.getStockLevel().getQuantity()));
+    }
+
+    private ProductDto toDto(Product p, Map<String, Integer> stockMap) {
         return new ProductDto(
                 p.getId().getValue(), p.getName(), p.getDescription(),
                 p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
                 p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
-                p.isActive(), p.getCreatedAt(), p.getUpdatedAt()
+                p.isActive(), p.getCreatedAt(), p.getUpdatedAt(),
+                stockMap.getOrDefault(p.getId().getValue(), 0)
         );
     }
 }

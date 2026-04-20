@@ -11,6 +11,8 @@ public interface InventoryRepository {
 
     Optional<InventoryItem> findByProductId(String productId);
 
+    List<InventoryItem> findAllByProductIds(List<String> productIds);
+
     List<InventoryItem> findLowStock();
 
     boolean existsByProductId(String productId);
