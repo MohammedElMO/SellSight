@@ -1,0 +1,88 @@
+// ── Theme System ───────────────────────────────────────────────
+
+const SS_THEMES = {
+  dark: {
+    name: 'Dark', isDark: true,
+    // Canvas
+    bg: 'oklch(0.16 0.02 270)',
+    bgAlt: 'oklch(0.19 0.02 270)',
+    bgCard: 'oklch(0.20 0.025 270)',
+    bgCardHover: 'oklch(0.23 0.03 270)',
+    bgElevated: 'oklch(0.22 0.025 270)',
+    bgSurface: 'oklch(0.18 0.02 270)',
+    bgNav: 'oklch(0.16 0.02 270 / 0.92)',
+    bgInput: 'oklch(0.22 0.02 270)',
+    bgHero: 'oklch(0.13 0.025 270)',
+    // Borders
+    border: 'oklch(0.32 0.02 270)',
+    borderSubtle: 'oklch(0.26 0.02 270)',
+    borderHover: 'oklch(0.42 0.03 270)',
+    // Text
+    text: 'oklch(0.95 0.01 270)',
+    textMuted: 'oklch(0.68 0.02 270)',
+    textFaint: 'oklch(0.48 0.02 270)',
+    // Accent — vibrant violet-indigo
+    accent: 'oklch(0.65 0.24 280)',
+    accentHover: 'oklch(0.72 0.22 280)',
+    accentMuted: 'oklch(0.65 0.24 280 / 0.15)',
+    accentText: 'oklch(0.80 0.18 280)',
+    accentGlow: 'oklch(0.65 0.24 280 / 0.25)',
+    // Secondary — warm coral
+    secondary: 'oklch(0.70 0.18 25)',
+    secondaryMuted: 'oklch(0.70 0.18 25 / 0.12)',
+    secondaryText: 'oklch(0.82 0.14 25)',
+    // Semantic
+    success: 'oklch(0.72 0.19 155)',
+    successMuted: 'oklch(0.72 0.19 155 / 0.12)',
+    danger: 'oklch(0.65 0.22 25)',
+    dangerMuted: 'oklch(0.65 0.22 25 / 0.12)',
+    // Effects
+    gradient: 'linear-gradient(135deg, oklch(0.58 0.26 280), oklch(0.62 0.22 320), oklch(0.68 0.2 25))',
+    gradientText: 'linear-gradient(135deg, oklch(0.75 0.22 280), oklch(0.78 0.18 320), oklch(0.80 0.16 25))',
+    gradientHero: 'radial-gradient(ellipse 120% 80% at 70% 40%, oklch(0.22 0.06 280), oklch(0.16 0.02 270) 70%)',
+    shadow: '0 8px 40px oklch(0 0 0 / 0.35)',
+    shadowSm: '0 2px 12px oklch(0 0 0 / 0.25)',
+    glow: '0 0 60px oklch(0.65 0.24 280 / 0.15)',
+    // Radius
+    r: 16, rSm: 12, rXs: 8,
+  },
+  light: {
+    name: 'Light', isDark: false,
+    bg: 'oklch(0.975 0.005 80)',
+    bgAlt: 'oklch(0.955 0.008 80)',
+    bgCard: '#fff',
+    bgCardHover: '#fff',
+    bgElevated: '#fff',
+    bgSurface: 'oklch(0.955 0.008 80)',
+    bgNav: 'oklch(0.975 0.005 80 / 0.92)',
+    bgInput: '#fff',
+    bgHero: 'oklch(0.96 0.01 270)',
+    border: 'oklch(0.88 0.01 80)',
+    borderSubtle: 'oklch(0.92 0.008 80)',
+    borderHover: 'oklch(0.78 0.015 80)',
+    text: 'oklch(0.20 0.02 270)',
+    textMuted: 'oklch(0.48 0.02 270)',
+    textFaint: 'oklch(0.64 0.015 270)',
+    accent: 'oklch(0.55 0.26 280)',
+    accentHover: 'oklch(0.50 0.28 280)',
+    accentMuted: 'oklch(0.55 0.26 280 / 0.08)',
+    accentText: 'oklch(0.48 0.24 280)',
+    accentGlow: 'oklch(0.55 0.26 280 / 0.12)',
+    secondary: 'oklch(0.62 0.2 25)',
+    secondaryMuted: 'oklch(0.62 0.2 25 / 0.08)',
+    secondaryText: 'oklch(0.50 0.18 25)',
+    success: 'oklch(0.55 0.19 155)',
+    successMuted: 'oklch(0.55 0.19 155 / 0.08)',
+    danger: 'oklch(0.55 0.24 25)',
+    dangerMuted: 'oklch(0.55 0.24 25 / 0.08)',
+    gradient: 'linear-gradient(135deg, oklch(0.55 0.26 280), oklch(0.58 0.22 320), oklch(0.62 0.2 25))',
+    gradientText: 'linear-gradient(135deg, oklch(0.45 0.26 280), oklch(0.48 0.22 320), oklch(0.52 0.2 25))',
+    gradientHero: 'radial-gradient(ellipse 120% 80% at 70% 40%, oklch(0.94 0.04 280), oklch(0.975 0.005 80) 70%)',
+    shadow: '0 8px 40px oklch(0 0 0 / 0.08)',
+    shadowSm: '0 2px 12px oklch(0 0 0 / 0.05)',
+    glow: '0 0 60px oklch(0.55 0.26 280 / 0.08)',
+    r: 16, rSm: 12, rXs: 8,
+  },
+};
+
+Object.assign(window, { SS_THEMES });

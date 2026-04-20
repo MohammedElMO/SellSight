@@ -1,0 +1,12 @@
+src/app/(account)/profile/page.tsx(11,11): error TS2339: Property 'user' does not exist on type 'AuthState'.
+src/components/checkout/checkout-client.tsx(20,18): error TS2339: Property 'total' does not exist on type 'CartState'.
+src/components/checkout/checkout-client.tsx(38,24): error TS2339: Property 'id' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(39,26): error TS2339: Property 'name' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(41,24): error TS2339: Property 'price' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(150,30): error TS2339: Property 'id' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(152,25): error TS2339: Property 'imageUrl' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(152,52): error TS2339: Property 'imageUrl' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(152,72): error TS2339: Property 'name' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(155,69): error TS2339: Property 'name' does not exist on type 'CartItem'.
+src/components/checkout/checkout-client.tsx(158,72): error TS2339: Property 'price' does not exist on type 'CartItem'.
+src/components/product/product-search-autocomplete.tsx(8,10): error TS2305: Module '"@/lib/hooks"' has no exported member 'useDebounce'.
