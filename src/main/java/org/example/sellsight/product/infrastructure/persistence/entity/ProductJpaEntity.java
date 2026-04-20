@@ -41,6 +41,17 @@ public class ProductJpaEntity {
 
     private String imageUrl;
 
+    private String brand;
+
+    @Column(name = "rating_avg", nullable = false, precision = 3, scale = 2)
+    private java.math.BigDecimal ratingAvg = java.math.BigDecimal.ZERO;
+
+    @Column(name = "rating_count", nullable = false)
+    private int ratingCount = 0;
+
+    @Column(name = "sold_count", nullable = false)
+    private int soldCount = 0;
+
     @Column(nullable = false)
     private boolean active;
 

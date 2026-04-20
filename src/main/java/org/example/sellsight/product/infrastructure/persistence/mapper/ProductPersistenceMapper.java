@@ -13,6 +13,8 @@ public final class ProductPersistenceMapper {
     private ProductPersistenceMapper() {}
 
     public static Product toDomain(ProductJpaEntity entity) {
+        double ratingAvg = entity.getRatingAvg() != null
+                ? entity.getRatingAvg().doubleValue() : 0.0;
         return new Product(
                 ProductId.from(entity.getId()),
                 entity.getName(),
@@ -21,6 +23,10 @@ public final class ProductPersistenceMapper {
                 entity.getCategory(),
                 entity.getSellerId(),
                 entity.getImageUrl(),
+                entity.getBrand(),
+                ratingAvg,
+                entity.getRatingCount(),
+                entity.getSoldCount(),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
@@ -36,6 +42,10 @@ public final class ProductPersistenceMapper {
                 product.getCategory(),
                 product.getSellerId(),
                 product.getImageUrl(),
+                product.getBrand(),
+                java.math.BigDecimal.valueOf(product.getRatingAvg()),
+                product.getRatingCount(),
+                product.getSoldCount(),
                 product.isActive(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()

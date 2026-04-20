@@ -16,23 +16,39 @@ public class Product {
     private String category;
     private final String sellerId;
     private String imageUrl;
+    private String brand;
+    private double ratingAvg;
+    private int ratingCount;
+    private int soldCount;
     private boolean active;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Product(ProductId id, String name, String description, Money price,
                    String category, String sellerId, String imageUrl,
+                   String brand, double ratingAvg, int ratingCount, int soldCount,
                    boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = Objects.requireNonNull(id, "Product ID cannot be null");
         this.sellerId = Objects.requireNonNull(sellerId, "Seller ID cannot be null");
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
         this.updatedAt = updatedAt;
         this.active = active;
+        this.brand = brand;
+        this.ratingAvg = ratingAvg;
+        this.ratingCount = ratingCount;
+        this.soldCount = soldCount;
         setName(name);
         setDescription(description);
         setPrice(price);
         setCategory(category);
         this.imageUrl = imageUrl;
+    }
+
+    public Product(ProductId id, String name, String description, Money price,
+                   String category, String sellerId, String imageUrl,
+                   boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this(id, name, description, price, category, sellerId, imageUrl,
+             null, 0.0, 0, 0, active, createdAt, updatedAt);
     }
 
     // ── Business Methods ────────────────────────────────────────
@@ -90,6 +106,10 @@ public class Product {
     public String getCategory() { return category; }
     public String getSellerId() { return sellerId; }
     public String getImageUrl() { return imageUrl; }
+    public String getBrand() { return brand; }
+    public double getRatingAvg() { return ratingAvg; }
+    public int getRatingCount() { return ratingCount; }
+    public int getSoldCount() { return soldCount; }
     public boolean isActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

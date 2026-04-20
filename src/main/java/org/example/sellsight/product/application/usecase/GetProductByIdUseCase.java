@@ -5,7 +5,9 @@ import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case: Get a single product by ID.
@@ -19,6 +21,8 @@ public class GetProductByIdUseCase {
         this.productRepository = productRepository;
     }
 
+    @Cacheable(value = "products", key = "#productId")
+    @Transactional(readOnly = true)
     public ProductDto execute(String productId) {
         ProductId id = ProductId.from(productId);
         Product product = productRepository.findById(id)
@@ -27,7 +31,9 @@ public class GetProductByIdUseCase {
         return new ProductDto(
                 product.getId().getValue(), product.getName(), product.getDescription(),
                 product.getPrice().getAmount(), product.getCategory(), product.getSellerId(),
-                product.getImageUrl(), product.isActive(), product.getCreatedAt(), product.getUpdatedAt()
+                product.getImageUrl(), product.getBrand(),
+                product.getRatingAvg(), product.getRatingCount(), product.getSoldCount(),
+                product.isActive(), product.getCreatedAt(), product.getUpdatedAt()
         );
     }
 }

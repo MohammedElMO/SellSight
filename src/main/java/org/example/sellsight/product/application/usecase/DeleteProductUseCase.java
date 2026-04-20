@@ -5,7 +5,10 @@ import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessE
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case: Delete (soft-delete) a product.
@@ -19,6 +22,11 @@ public class DeleteProductUseCase {
         this.productRepository = productRepository;
     }
 
+    @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "products", key = "#productId"),
+        @CacheEvict(value = "product-listings", allEntries = true)
+    })
     public void execute(String productId, String sellerId, String role) {
         ProductId id = ProductId.from(productId);
         Product product = productRepository.findById(id)

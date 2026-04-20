@@ -6,7 +6,9 @@ import org.example.sellsight.product.domain.model.Money;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -22,6 +24,8 @@ public class CreateProductUseCase {
         this.productRepository = productRepository;
     }
 
+    @Transactional
+    @CacheEvict(value = "product-listings", allEntries = true)
     public ProductDto execute(CreateProductRequest request, String sellerId) {
         Product product = new Product(
                 ProductId.generate(),
@@ -43,7 +47,8 @@ public class CreateProductUseCase {
         return new ProductDto(
                 p.getId().getValue(), p.getName(), p.getDescription(),
                 p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
-                p.getImageUrl(), p.isActive(), p.getCreatedAt(), p.getUpdatedAt()
+                p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
+                p.isActive(), p.getCreatedAt(), p.getUpdatedAt()
         );
     }
 }

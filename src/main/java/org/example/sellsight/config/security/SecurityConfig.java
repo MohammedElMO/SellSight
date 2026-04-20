@@ -51,6 +51,13 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         // Public — read-only product browsing
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
+                        // Public — read-only reviews and Q&A
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews/product/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/questions/product/**").permitAll()
+                        // Public — behavioral events (fire-and-forget)
+                        .requestMatchers("/api/v1/events").permitAll()
+                        // Public — SSE notifications stream (token validated in controller)
+                        .requestMatchers("/api/notifications/stream").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

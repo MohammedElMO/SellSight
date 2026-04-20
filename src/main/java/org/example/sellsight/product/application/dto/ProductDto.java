@@ -14,6 +14,10 @@ public record ProductDto(
         String category,
         String sellerId,
         String imageUrl,
+        String brand,
+        double ratingAvg,
+        int ratingCount,
+        int soldCount,
         boolean active,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

@@ -39,6 +39,15 @@ final class ProductSpec {
                         BigDecimal.valueOf(minRating)));
             }
 
+            if (inStock != null && inStock) {
+                var subquery = query.subquery(Integer.class);
+                var invRoot = subquery.from(org.example.sellsight.inventory.infrastructure.persistence.entity.InventoryJpaEntity.class);
+                subquery.select(invRoot.get("quantity"));
+                subquery.where(cb.equal(invRoot.get("productId"), root.get("id")));
+                
+                predicates.add(cb.greaterThan(subquery, 0));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

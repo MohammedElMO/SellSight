@@ -8,7 +8,10 @@ import org.example.sellsight.product.domain.model.Money;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case: Update an existing product.
@@ -23,6 +26,11 @@ public class UpdateProductUseCase {
         this.productRepository = productRepository;
     }
 
+    @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "products", key = "#productId"),
+        @CacheEvict(value = "product-listings", allEntries = true)
+    })
     public ProductDto execute(String productId, UpdateProductRequest request,
                                String sellerId, String role) {
         ProductId id = ProductId.from(productId);
@@ -50,7 +58,8 @@ public class UpdateProductUseCase {
         return new ProductDto(
                 p.getId().getValue(), p.getName(), p.getDescription(),
                 p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
-                p.getImageUrl(), p.isActive(), p.getCreatedAt(), p.getUpdatedAt()
+                p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
+                p.isActive(), p.getCreatedAt(), p.getUpdatedAt()
         );
     }
 }
