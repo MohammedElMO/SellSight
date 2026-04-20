@@ -18,4 +18,7 @@ public interface OrderRepository {
     List<Order> findByCustomerId(String customerId);
 
     List<Order> findAll();
+
+    /** Check if a customer has a DELIVERED order containing the given product. */
+    boolean hasDeliveredOrderWithProduct(String customerId, String productId);
 }

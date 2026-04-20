@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { OAuthProvider } from '@shared/types';
 
 export default function OAuthCallbackPage() {

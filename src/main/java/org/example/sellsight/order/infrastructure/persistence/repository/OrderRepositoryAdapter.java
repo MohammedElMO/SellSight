@@ -44,4 +44,9 @@ public class OrderRepositoryAdapter implements OrderRepository {
                 .map(OrderPersistenceMapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public boolean hasDeliveredOrderWithProduct(String customerId, String productId) {
+        return jpaRepository.existsDeliveredOrderWithProduct(customerId, productId);
+    }
 }

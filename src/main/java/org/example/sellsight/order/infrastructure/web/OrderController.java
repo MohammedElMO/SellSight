@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.sellsight.order.application.dto.CreateOrderRequest;
+import org.example.sellsight.order.application.dto.CreateRefundRequest;
 import org.example.sellsight.order.application.dto.OrderDto;
+import org.example.sellsight.order.application.dto.RefundRequestDto;
 import org.example.sellsight.order.application.usecase.*;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.application.dto.UserDto;
@@ -38,17 +40,20 @@ public class OrderController {
     private final GetOrderUseCase getOrderUseCase;
     private final GetUserOrdersUseCase getUserOrdersUseCase;
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
+    private final CreateRefundRequestUseCase createRefundRequestUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
 
     public OrderController(CreateOrderUseCase createOrderUseCase,
                             GetOrderUseCase getOrderUseCase,
                             GetUserOrdersUseCase getUserOrdersUseCase,
                             UpdateOrderStatusUseCase updateOrderStatusUseCase,
+                            CreateRefundRequestUseCase createRefundRequestUseCase,
                             GetUserProfileUseCase getUserProfileUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.getOrderUseCase = getOrderUseCase;
         this.getUserOrdersUseCase = getUserOrdersUseCase;
         this.updateOrderStatusUseCase = updateOrderStatusUseCase;
+        this.createRefundRequestUseCase = createRefundRequestUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
     }
 
@@ -161,6 +166,26 @@ public class OrderController {
             @RequestBody Map<String, String> body) {
         String status = body.get("status");
         return ResponseEntity.ok(updateOrderStatusUseCase.execute(id, status));
+    }
+
+    @Operation(operationId = "requestRefund", summary = "Request a refund for a delivered order",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/{id}/refund")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<RefundRequestDto> requestRefund(
+            @PathVariable String id,
+            @Valid @RequestBody CreateRefundRequest request,
+            Authentication authentication) {
+        UserDto user = getUserProfile(authentication);
+        return ResponseEntity.ok(createRefundRequestUseCase.execute(id, user.id(), request.reason()));
+    }
+
+    @Operation(operationId = "getRefundStatus", summary = "Get refund request status for an order",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/{id}/refund")
+    public ResponseEntity<RefundRequestDto> getRefundStatus(@PathVariable String id) {
+        RefundRequestDto dto = createRefundRequestUseCase.getByOrderId(id);
+        return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
     }
 
     private UserDto getUserProfile(Authentication authentication) {
