@@ -69,14 +69,15 @@ public class GetProductsUseCase {
         List<Product> page = products.stream().limit(size).toList();
         Map<String, Integer> stockMap = stockMapFor(page);
         List<ProductDto> dtos = page.stream().map(p -> toDto(p, stockMap)).toList();
-        return new ProductPageDto(dtos, 0, size, hasMore);
+        return new ProductPageDto(dtos, 0, size, hasMore, hasMore ? 2 : 1, (long) dtos.size());
     }
 
     private ProductPageDto toPageDto(ProductSlice slice, int page, int size) {
         List<Product> products = slice.items();
         Map<String, Integer> stockMap = stockMapFor(products);
         List<ProductDto> dtos = products.stream().map(p -> toDto(p, stockMap)).toList();
-        return new ProductPageDto(dtos, page, size, slice.hasMore());
+        int totalPages = size == 0 ? 0 : (int) Math.ceil((double) slice.totalElements() / size);
+        return new ProductPageDto(dtos, page, size, slice.hasMore(), totalPages, slice.totalElements());
     }
 
     private Map<String, Integer> stockMapFor(List<Product> products) {

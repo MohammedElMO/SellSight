@@ -8,9 +8,9 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Root;
 import org.example.sellsight.product.infrastructure.persistence.entity.ProductJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -29,13 +29,21 @@ class ProductJpaRepositoryCustomImpl implements ProductJpaRepositoryCustom {
     private EntityManager em;
 
     @Override
-    public Slice<ProductJpaEntity> findAllSliced(Specification<ProductJpaEntity> spec, Pageable pageable) {
+    public Page<ProductJpaEntity> findAllSliced(Specification<ProductJpaEntity> spec, Pageable pageable) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        // Count query
+        CriteriaQuery<Long> countCq = cb.createQuery(Long.class);
+        Root<ProductJpaEntity> countRoot = countCq.from(ProductJpaEntity.class);
+        countCq.select(cb.count(countRoot));
+        if (spec != null) {
+            countCq.where(spec.toPredicate(countRoot, countCq, cb));
+        }
+        long total = em.createQuery(countCq).getSingleResult();
+
+        // Data query — project only columns needed for listing (skip description)
         CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
         Root<ProductJpaEntity> root = cq.from(ProductJpaEntity.class);
-
-        // Project only columns needed for listing — skip `description` (TEXT,
-        // can be multi-KB per row) which is never shown on cards.
         cq.multiselect(
                 root.get("id"),
                 root.get("name"),
@@ -66,10 +74,9 @@ class ProductJpaRepositoryCustomImpl implements ProductJpaRepositoryCustom {
             cq.orderBy(orders);
         }
 
-        int pageSize = pageable.getPageSize();
         TypedQuery<Object[]> query = em.createQuery(cq);
         query.setFirstResult((int) pageable.getOffset());
-        query.setMaxResults(pageSize + 1);
+        query.setMaxResults(pageable.getPageSize());
         query.setHint("org.hibernate.fetchSize", JDBC_FETCH_SIZE);
         query.setHint("org.hibernate.readOnly", true);
 
@@ -78,8 +85,7 @@ class ProductJpaRepositoryCustomImpl implements ProductJpaRepositoryCustom {
         for (Object[] r : rows) {
             results.add(fromRow(r));
         }
-        boolean hasNext = results.size() > pageSize;
-        return new SliceImpl<>(hasNext ? results.subList(0, pageSize) : results, pageable, hasNext);
+        return new PageImpl<>(results, pageable, total);
     }
 
     private static ProductJpaEntity fromRow(Object[] r) {

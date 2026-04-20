@@ -1,8 +1,8 @@
 package org.example.sellsight.product.infrastructure.persistence.repository;
 
 import org.example.sellsight.product.infrastructure.persistence.entity.ProductJpaEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -15,18 +15,23 @@ import java.util.List;
 public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, String>,
         JpaSpecificationExecutor<ProductJpaEntity>, ProductJpaRepositoryCustom {
 
-    Slice<ProductJpaEntity> findByActiveTrue(Pageable pageable);
+    Page<ProductJpaEntity> findByActiveTrue(Pageable pageable);
 
-    Slice<ProductJpaEntity> findBySellerIdAndActiveTrue(String sellerId, Pageable pageable);
+    Page<ProductJpaEntity> findBySellerIdAndActiveTrue(String sellerId, Pageable pageable);
 
-    Slice<ProductJpaEntity> findByCategoryAndActiveTrue(String category, Pageable pageable);
+    Page<ProductJpaEntity> findByCategoryAndActiveTrue(String category, Pageable pageable);
 
     @Query(value = """
             SELECT * FROM products
             WHERE active = true
               AND search_vector @@ websearch_to_tsquery('english', :query)
+            """,
+           countQuery = """
+            SELECT count(*) FROM products
+            WHERE active = true
+              AND search_vector @@ websearch_to_tsquery('english', :query)
             """, nativeQuery = true)
-    Slice<ProductJpaEntity> searchByFullText(@Param("query") String query, Pageable pageable);
+    Page<ProductJpaEntity> searchByFullText(@Param("query") String query, Pageable pageable);
 
     @Query(value = """
             SELECT p.* FROM products p

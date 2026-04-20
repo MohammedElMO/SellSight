@@ -109,6 +109,8 @@ export interface ProductPageDto {
   page: number;
   size: number;
   hasMore: boolean;
+  totalPages: number;
+  totalElements: number;
 }
 
 // ── Order ───────────────────────────────────────────────────

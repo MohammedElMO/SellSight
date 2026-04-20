@@ -225,5 +225,5 @@ export const eventApi = {
 
 export const paymentApi = {
   createIntent: (amount: number) =>
-    api.post<{ clientSecret: string }>('/payments/create-intent', { amount }).then((r) => r.data).catch(console.log),
+    api.post<{ clientSecret: string }>('/payments/create-intent', { amount }).then((r) => r.data),
 };

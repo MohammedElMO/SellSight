@@ -33,7 +33,7 @@ public class SearchProductsUseCase {
     @Transactional(readOnly = true)
     public ProductPageDto execute(String query, int page, int size) {
         if (query == null || query.trim().isEmpty()) {
-            return new ProductPageDto(List.of(), page, size, false);
+            return new ProductPageDto(List.of(), page, size, false, 0, 0L);
         }
         ProductSlice slice = productRepository.search(query, page, size);
         List<Product> products = slice.items();
@@ -41,7 +41,8 @@ public class SearchProductsUseCase {
         Map<String, Integer> stockMap = inventoryRepository.findAllByProductIds(ids).stream()
                 .collect(Collectors.toMap(InventoryItem::getProductId, i -> i.getStockLevel().getQuantity()));
         List<ProductDto> dtos = products.stream().map(p -> toDto(p, stockMap)).toList();
-        return new ProductPageDto(dtos, page, size, slice.hasMore());
+        int totalPages = size == 0 ? 0 : (int) Math.ceil((double) slice.totalElements() / size);
+        return new ProductPageDto(dtos, page, size, slice.hasMore(), totalPages, slice.totalElements());
     }
 
     private ProductDto toDto(Product p, Map<String, Integer> stockMap) {

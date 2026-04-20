@@ -9,5 +9,7 @@ public record ProductPageDto(
         List<ProductDto> products,
         int page,
         int size,
-        boolean hasMore
+        boolean hasMore,
+        int totalPages,
+        long totalElements
 ) {}

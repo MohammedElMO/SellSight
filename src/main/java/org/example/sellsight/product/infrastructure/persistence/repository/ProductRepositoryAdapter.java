@@ -6,8 +6,8 @@ import org.example.sellsight.product.domain.model.ProductSlice;
 import org.example.sellsight.product.domain.repository.ProductRepository;
 import org.example.sellsight.product.infrastructure.persistence.entity.ProductJpaEntity;
 import org.example.sellsight.product.infrastructure.persistence.mapper.ProductPersistenceMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -88,11 +88,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .toList();
     }
 
-    private ProductSlice toProductSlice(Slice<ProductJpaEntity> slice) {
-        List<Product> items = slice.getContent().stream()
+    private ProductSlice toProductSlice(Page<ProductJpaEntity> page) {
+        List<Product> items = page.getContent().stream()
                 .map(ProductPersistenceMapper::toDomain)
                 .toList();
-        return new ProductSlice(items, slice.hasNext());
+        return new ProductSlice(items, page.hasNext(), page.getTotalElements());
     }
 
     private Sort resolveSort(String sort) {
