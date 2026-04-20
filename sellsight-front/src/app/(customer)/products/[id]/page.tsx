@@ -1,52 +1,85 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useProduct } from '@/lib/hooks';
+import { useEffect, useState } from 'react';
+import { useProduct, useAddToCart, usePriceDropSubscription, useTogglePriceDropSubscription } from '@/lib/hooks';
+import { useTracker } from '@/hooks/useTracker';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { PageLayout } from '@/components/layout/page-layout';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { Rating, RatingBreakdown } from '@/components/ui/rating';
-import { Badge } from '@/components/ui/badge';
+import { Rating } from '@/components/ui/rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Button } from '@/components/ui/button';
+import { Reveal } from '@/components/ui/reveal';
+import { MagButton } from '@/components/ui/mag-button';
+import { TiltCard } from '@/components/ui/tilt-card';
+import { Pill } from '@/components/ui/pill';
 import {
-  ShoppingCart,
-  Heart,
-  Package,
-  Truck,
-  ChevronRight,
-  Minus,
-  Plus,
-  ArrowLeft,
+  ShoppingCart, Package, Truck, ChevronRight, Minus, Plus, ArrowLeft, Check, Heart, Bell, BellOff,
 } from 'lucide-react';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
-
-/* ── Mock review data (reviews aren't in the backend) ───── */
-const MOCK_RATING = 4.2;
-const MOCK_REVIEW_COUNT = 42;
-const MOCK_DISTRIBUTION = { 5: 25, 4: 9, 3: 4, 2: 2, 1: 2 } as const;
+import { ReviewSection } from '@/components/review/review-section';
+import { WishlistButton } from '@/components/wishlist/wishlist-button';
+import { QASection } from '@/components/product/qa-section';
+import { ProductCard } from '@/components/product/product-card';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
   const addItem = useCartStore((s) => s.addItem);
-  const role    = useAuthStore((s) => s.role);
+  const { role, isAuthenticated } = useAuthStore();
 
+  const isCustomer = role === 'CUSTOMER';
+  const isLoggedInCustomer = isAuthenticated && isCustomer;
   const canAddToCart = role !== 'SELLER' && role !== 'ADMIN';
 
-  const [quantity,  setQuantity]  = useState(1);
-  const [activeTab, setActiveTab] = useState<'details' | 'reviews'>('details');
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded]       = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'reviews' | 'qa'>('details');
+
+  const { track } = useTracker();
+  const { addProduct } = useRecentlyViewed();
+  const addToDbCart = useAddToCart();
+  const { data: priceDropSub } = usePriceDropSubscription(id);
+  const togglePriceDrop = useTogglePriceDropSubscription(id);
+  const isSubscribedPriceDrop = priceDropSub?.subscribed ?? false;
 
   const { data: product, isLoading, isError } = useProduct(id);
 
+  useEffect(() => {
+    if (!product) return;
+    addProduct(product);
+    const timer = setTimeout(() => {
+      track('PRODUCT_VIEW', { productId: product.id, productName: product.name });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [product, track, addProduct]);
+
   const handleAddToCart = () => {
     if (!product) return;
-    addItem(product, quantity);
-    toast.success(`${product.name} added to cart`);
+    if (isLoggedInCustomer) {
+      addToDbCart.mutate(
+        { productId: product.id, quantity },
+        {
+          onSuccess: () => {
+            track('ADD_TO_CART', { productId: product.id, quantity, price: product.price });
+            toast.success(`${product.name} added to cart`);
+            setAdded(true);
+            setTimeout(() => setAdded(false), 2000);
+          },
+        },
+      );
+    } else {
+      addItem(product, quantity);
+      track('ADD_TO_CART', { productId: product.id, quantity, price: product.price });
+      toast.success(`${product.name} added to cart`);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
   };
 
   if (isLoading) return <ProductDetailSkeleton />;
@@ -59,9 +92,9 @@ export default function ProductDetailPage() {
           title="Product not found"
           description="This product may have been removed or the link is invalid."
           action={
-            <Button onClick={() => router.push('/products')} size="md">
+            <MagButton onClick={() => router.push('/products')} variant="primary">
               Back to shop
-            </Button>
+            </MagButton>
           }
         />
       </PageLayout>
@@ -71,185 +104,189 @@ export default function ProductDetailPage() {
   return (
     <PageLayout>
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-[#999] mb-7 animate-fade-in">
-        <Link href="/products" className="hover:text-[#111] transition-colors">
-          Products
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="hover:text-[#111] transition-colors cursor-pointer">
-          {product.category}
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-[#111] font-medium truncate max-w-[200px]">
-          {product.name}
-        </span>
-      </nav>
+      <Reveal>
+        <nav className="flex items-center gap-1.5 text-[13px] text-[var(--text-tertiary)] mb-7">
+          <Link href="/products" className="hover:text-[var(--accent-text)] transition-colors">
+            Products
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="text-[var(--text-secondary)]">{product.category}</span>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="text-[var(--text-primary)] font-medium truncate max-w-[200px]">
+            {product.name}
+          </span>
+        </nav>
+      </Reveal>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16 animate-fade-in">
-        {/* ── Left: images ── */}
-        <div className="flex flex-col gap-3">
-          <div className="aspect-square rounded-[16px] bg-[#f7f6f2] overflow-hidden border border-[#e5e4e0]">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                <Package className="h-16 w-16 text-[#ccc]" />
-                <span className="text-sm text-[#bbb]">{product.category}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {[product.imageUrl].map((url, i) => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
+        {/* ── Left: image ── */}
+        <Reveal delay={60}>
+          <div className="flex flex-col gap-3 lg:sticky lg:top-24">
+            <div
+              className="aspect-square rounded-[var(--radius-lg)] overflow-hidden border border-[var(--border)]"
+              style={{ background: 'var(--surface)' }}
+            >
+              {product.imageUrl ? (
+                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                  <Package className="h-16 w-16 text-[var(--text-tertiary)]" />
+                  <span className="text-sm text-[var(--text-tertiary)]">{product.category}</span>
+                </div>
+              )}
+            </div>
+            {/* thumbnail strip (single image for now) */}
+            <div className="flex gap-2">
               <div
-                key={i}
-                className="h-20 w-20 rounded-[10px] bg-[#f7f6f2] border-2 border-[#111] overflow-hidden shrink-0"
+                className="h-20 w-20 rounded-[var(--radius-sm)] border-2 overflow-hidden shrink-0"
+                style={{ borderColor: 'var(--accent)', background: 'var(--surface)' }}
               >
-                {url ? (
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Package className="h-6 w-6 text-[#ccc]" />
+                    <Package className="h-6 w-6 text-[var(--text-tertiary)]" />
                   </div>
                 )}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        </Reveal>
 
         {/* ── Right: details ── */}
-        <div className="flex flex-col">
-          <p className="text-sm text-[#999] mb-1.5">Seller #{product.sellerId.slice(0, 8)}</p>
+        <Reveal delay={120}>
+          <div className="flex flex-col">
+            <p className="text-[12px] text-[var(--text-tertiary)] font-medium mb-2 uppercase tracking-wider">
+              Seller #{product.sellerId.slice(0, 8)}
+            </p>
 
-          <h1 className="text-[28px] sm:text-[34px] font-bold text-[#111] leading-tight mb-3">
-            {product.name}
-          </h1>
+            <h1 className="font-display font-extrabold text-[28px] sm:text-[36px] text-[var(--text-primary)] leading-tight mb-3 tracking-[-0.02em]">
+              {product.name}
+            </h1>
 
-          <Rating
-            value={MOCK_RATING}
-            size="sm"
-            showValue
-            count={MOCK_REVIEW_COUNT}
-            className="mb-4"
-          />
+            <div className="flex items-center gap-2 mb-4">
+              <Rating value={product.ratingAvg ?? 0} size="sm" showValue count={product.ratingCount ?? 0} />
+            </div>
 
-          <p className="text-3xl font-bold text-[#111] mb-5">
-            {formatPrice(product.price)}
-          </p>
+            <div className="font-display font-extrabold text-[34px] tracking-[-0.02em] mb-2" style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              {formatPrice(product.price)}
+            </div>
 
-          <div className="flex items-center gap-2 mb-6">
-            <Badge variant="default">{product.category}</Badge>
-            {product.active ? (
-              <Badge variant="success">In stock</Badge>
-            ) : (
-              <Badge variant="danger">Out of stock</Badge>
-            )}
-          </div>
+            <div className="flex items-center gap-2 mb-6">
+              <Pill size="sm" variant="accent">{product.category}</Pill>
+              {product.active
+                ? <Pill size="sm" variant="success">In stock</Pill>
+                : <Pill size="sm" variant="danger">Out of stock</Pill>}
+            </div>
 
-          {/* Quantity + Add to cart — customers only */}
-          {canAddToCart && (
-            <>
-              <div className="flex flex-col gap-2 mb-6">
-                <span className="text-[13px] font-medium text-[#111]">Quantity</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-10 w-10 flex items-center justify-center rounded-[8px] border border-[#e5e4e0] text-[#666] hover:border-[#111] hover:text-[#111] transition-all"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="h-10 w-14 flex items-center justify-center text-sm font-semibold text-[#111] border border-[#e5e4e0] rounded-[8px]">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="h-10 w-10 flex items-center justify-center rounded-[8px] border border-[#e5e4e0] text-[#666] hover:border-[#111] hover:text-[#111] transition-all"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+            {/* Quantity + CTA */}
+            {canAddToCart && (
+              <>
+                <div className="flex flex-col gap-2 mb-5">
+                  <span className="text-[13px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Quantity</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-all"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span
+                      className="h-10 w-14 flex items-center justify-center text-sm font-bold text-[var(--text-primary)] rounded-[var(--radius-xs)] border border-[var(--border)]"
+                    >
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={() => setQuantity((q) => q + 1)}
+                      className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-all"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3 mb-5">
-                <Button
-                  onClick={handleAddToCart}
-                  fullWidth
-                  size="lg"
-                  disabled={!product.active}
-                  className="h-[52px] text-[15px]"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Add to cart
-                </Button>
-                <button className="h-[52px] w-[52px] shrink-0 flex items-center justify-center border border-[#e5e4e0] rounded-[10px] text-[#666] hover:border-[#111] hover:text-[#111] transition-all">
-                  <Heart className="h-5 w-5" />
-                </button>
-              </div>
-            </>
-          )}
+                <div className="flex gap-3 mb-6">
+                  <MagButton
+                    onClick={handleAddToCart}
+                    variant={added ? 'secondary' : 'primary'}
+                    size="lg"
+                    disabled={!product.active}
+                    className="flex-1"
+                  >
+                    {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
+                    {added ? 'Added!' : 'Add to cart'}
+                  </MagButton>
+                  <WishlistButton productId={product.id} className="h-[52px] w-[52px]" />
+                </div>
+              </>
+            )}
 
-          <div className="flex items-center gap-2 text-sm text-[#666] py-4 border-t border-[#f0efeb]">
-            <Truck className="h-4 w-4 text-[#111] shrink-0" />
-            Free delivery on orders over $30.00
+            {isLoggedInCustomer && (
+              <button
+                onClick={() => togglePriceDrop.mutate({ subscribed: isSubscribedPriceDrop })}
+                disabled={togglePriceDrop.isPending}
+                className="flex items-center gap-2 text-[13px] font-medium mb-4 transition-colors"
+                style={{ color: isSubscribedPriceDrop ? 'var(--accent-text)' : 'var(--text-secondary)' }}
+              >
+                {isSubscribedPriceDrop ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                {isSubscribedPriceDrop ? 'Subscribed to price drops' : 'Notify me of price drops'}
+              </button>
+            )}
+
+            <div className="flex items-center gap-2 text-[13px] text-[var(--text-secondary)] py-4 border-t border-[var(--border-subtle)]">
+              <Truck className="h-4 w-4 text-[var(--accent-text)] shrink-0" />
+              Free delivery on orders over $30.00
+            </div>
+
+            <p className="text-[12px] text-[var(--text-tertiary)] mt-3">
+              Listed {formatDate(product.createdAt)}
+            </p>
           </div>
-
-          <p className="text-xs text-[#999] mt-2">
-            Listed {formatDate(product.createdAt)}
-          </p>
-        </div>
+        </Reveal>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="mt-14 border-t border-[#e5e4e0]">
-        <div className="flex items-center gap-0 -mt-px">
-          {(['details', 'reviews'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={[
-                'h-11 px-5 text-sm font-medium capitalize border-b-2 transition-all',
-                activeTab === tab
-                  ? 'border-[#111] text-[#111]'
-                  : 'border-transparent text-[#666] hover:text-[#111]',
-              ].join(' ')}
-            >
-              {tab === 'reviews' ? `Reviews (${MOCK_REVIEW_COUNT})` : 'Details'}
-            </button>
-          ))}
-        </div>
+      <Reveal delay={200}>
+        <div className="mt-12 pt-8 border-t border-[var(--border-subtle)]">
+          <div className="flex gap-1 mb-8">
+            {(['details', 'reviews', 'qa'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="h-9 px-5 rounded-full text-[13px] font-medium transition-all capitalize"
+                style={activeTab === tab
+                  ? { background: 'var(--accent)', color: 'white' }
+                  : { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+              >
+                {tab === 'qa' ? 'Q&A' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
 
-        <div className="py-8">
-          {activeTab === 'details' ? (
+          {activeTab === 'details' && (
             <div className="max-w-2xl">
-              <p className="text-[15px] text-[#444] leading-relaxed">
+              <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
                 {product.description || 'No description provided for this product.'}
               </p>
             </div>
-          ) : (
-            <div className="flex flex-col lg:flex-row gap-10 max-w-3xl">
-              <div className="flex flex-col items-center justify-center shrink-0 gap-2 p-8 border border-[#e5e4e0] rounded-[14px] w-full lg:w-44">
-                <span className="text-5xl font-bold text-[#111]">{MOCK_RATING.toFixed(1)}</span>
-                <Rating value={MOCK_RATING} size="sm" />
-                <span className="text-sm text-[#666]">{MOCK_REVIEW_COUNT} reviews</span>
-              </div>
-              <div className="flex-1">
-                <RatingBreakdown
-                  distribution={MOCK_DISTRIBUTION}
-                  total={MOCK_REVIEW_COUNT}
-                />
-              </div>
-            </div>
+          )}
+          {activeTab === 'reviews' && (
+            <ReviewSection
+              productId={product.id}
+              ratingAvg={product.ratingAvg ?? 0}
+              ratingCount={product.ratingCount ?? 0}
+            />
+          )}
+          {activeTab === 'qa' && (
+            <QASection productId={product.id} />
           )}
         </div>
-      </div>
+      </Reveal>
 
-      <div className="mt-4 mb-8">
+      <div className="mt-10 mb-8">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-[#666] hover:text-[#111] transition-colors"
+          className="flex items-center gap-1.5 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--accent-text)] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -263,18 +300,18 @@ function ProductDetailSkeleton() {
   return (
     <PageLayout>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
-        <Skeleton className="aspect-square rounded-[16px]" />
+        <Skeleton className="aspect-square rounded-[var(--radius-lg)]" />
         <div className="flex flex-col gap-4">
           <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-2/3" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-2/3" />
           <Skeleton className="h-5 w-28" />
-          <Skeleton className="h-8 w-36 mt-2" />
-          <div className="flex gap-2 mt-4">
+          <Skeleton className="h-10 w-36 mt-2" />
+          <div className="flex gap-2 mt-2">
             <Skeleton className="h-6 w-20 rounded-full" />
             <Skeleton className="h-6 w-16 rounded-full" />
           </div>
-          <Skeleton className="h-[52px] w-full mt-4 rounded-[10px]" />
+          <Skeleton className="h-[52px] w-full mt-4 rounded-[var(--radius)]" />
         </div>
       </div>
     </PageLayout>

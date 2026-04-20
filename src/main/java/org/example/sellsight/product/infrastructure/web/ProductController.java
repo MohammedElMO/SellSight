@@ -19,6 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 /**
  * REST controller for product CRUD operations.
  */
@@ -31,6 +33,7 @@ public class ProductController {
     private final UpdateProductUseCase updateProductUseCase;
     private final DeleteProductUseCase deleteProductUseCase;
     private final GetProductsUseCase getProductsUseCase;
+    private final SearchProductsUseCase searchProductsUseCase;
     private final GetProductByIdUseCase getProductByIdUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
 
@@ -38,12 +41,14 @@ public class ProductController {
                               UpdateProductUseCase updateProductUseCase,
                               DeleteProductUseCase deleteProductUseCase,
                               GetProductsUseCase getProductsUseCase,
+                              SearchProductsUseCase searchProductsUseCase,
                               GetProductByIdUseCase getProductByIdUseCase,
                               GetUserProfileUseCase getUserProfileUseCase) {
         this.createProductUseCase = createProductUseCase;
         this.updateProductUseCase = updateProductUseCase;
         this.deleteProductUseCase = deleteProductUseCase;
         this.getProductsUseCase = getProductsUseCase;
+        this.searchProductsUseCase = searchProductsUseCase;
         this.getProductByIdUseCase = getProductByIdUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
     }
@@ -53,7 +58,8 @@ public class ProductController {
     @Operation(
         operationId = "getProducts",
         summary     = "List all products",
-        description = "Returns a paginated list of all active products. No authentication required."
+        description = "Returns a paginated list of all active products. Supports offset pagination (page/size) " +
+                      "and keyset pagination (lastId/size). No authentication required."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Paginated product list",
@@ -61,11 +67,52 @@ public class ProductController {
     })
     @GetMapping
     public ResponseEntity<ProductPageDto> getAll(
+            @Parameter(description = "Zero-based page index (offset mode)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Filter by category") @RequestParam(required = false) String category,
+            @Parameter(description = "Minimum price") @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "Maximum price") @RequestParam(required = false) BigDecimal maxPrice,
+            @Parameter(description = "Minimum rating (0-5)") @RequestParam(required = false) Double minRating,
+            @Parameter(description = "Filter in-stock only") @RequestParam(required = false) Boolean inStock,
+            @Parameter(description = "Sort: newest|price_asc|price_desc|rating|best_selling")
+            @RequestParam(required = false, defaultValue = "newest") String sort,
+            @Parameter(description = "Keyset cursor: ID of the last item on the previous page (keyset mode)")
+            @RequestParam(required = false) String lastId) {
+
+        boolean hasFilters = category != null || minPrice != null || maxPrice != null
+                || minRating != null || inStock != null || !"newest".equals(sort);
+
+        if (hasFilters) {
+            return ResponseEntity.ok(getProductsUseCase.executeWithFilters(
+                    category, minPrice, maxPrice, minRating, inStock, sort, page, size));
+        }
+        // Keyset on first page (no OFFSET) or when a cursor is supplied
+        if (lastId != null || page == 0) {
+            return ResponseEntity.ok(getProductsUseCase.executeKeyset(lastId, size));
+        }
+        return ResponseEntity.ok(getProductsUseCase.execute(page, size));
+    }
+
+    @Operation(
+        operationId = "searchProducts",
+        summary     = "Search products",
+        description = "Returns a paginated list of products matching search query."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Paginated product list",
+            content = @Content(schema = @Schema(implementation = ProductPageDto.class)))
+    })
+    @GetMapping("/search")
+    public ResponseEntity<ProductPageDto> search(
+            @Parameter(description = "Search query", example = "laptop")
+            @RequestParam("q") String query,
             @Parameter(description = "Zero-based page index", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(getProductsUseCase.execute(page, size));
+        return ResponseEntity.ok(searchProductsUseCase.execute(query, page, size));
     }
 
     @Operation(
