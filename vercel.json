@@ -1,9 +1,3 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "cd sellsight-front && pnpm build",
-  "installCommand": "npm install -g pnpm@9.15.0 --no-fund --no-audit && cd sellsight-front && pnpm install",
-  "outputDirectory": "sellsight-front/.next",
-  "env": {
-    "ENABLE_EXPERIMENTAL_COREPACK": "1"
-  }
+  "framework": "nextjs"
 }
