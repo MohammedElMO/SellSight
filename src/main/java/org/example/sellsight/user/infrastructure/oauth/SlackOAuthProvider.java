@@ -1,5 +1,7 @@
 package org.example.sellsight.user.infrastructure.oauth;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +37,8 @@ public class SlackOAuthProvider {
         this.clientSecret = clientSecret;
     }
 
+    @Retry(name = "outbound-http")
+    @CircuitBreaker(name = "outbound-http", fallbackMethod = "exchangeCodeFallback")
     public OAuthUserInfo exchangeCodeForUser(String code, String redirectUri) {
         // 1. Exchange code for access token via openid.connect.token
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -58,10 +62,8 @@ public class SlackOAuthProvider {
         } catch (HttpClientErrorException e) {
             log.error("Slack token exchange failed with status {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new OAuthException("Slack authentication failed: " + e.getResponseBodyAsString());
-        } catch (RestClientException e) {
-            log.error("Slack token exchange failed: {}", e.getMessage());
-            throw new OAuthException("Slack authentication failed: could not exchange code for token");
         }
+        // RestClientException (network) propagates so @Retry can handle it
 
         boolean ok = tokenBody != null && Boolean.TRUE.equals(tokenBody.get("ok"));
         if (!ok) {
@@ -86,10 +88,11 @@ public class SlackOAuthProvider {
                     MAP_TYPE
             );
             user = userResponse.getBody();
-        } catch (RestClientException e) {
-            log.error("Slack userInfo fetch failed: {}", e.getMessage());
+        } catch (HttpClientErrorException e) {
+            log.error("Slack userInfo fetch failed with status {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new OAuthException("Slack authentication failed: could not fetch user info");
         }
+        // RestClientException (network) propagates so @Retry can handle it
 
         boolean userOk = user != null && Boolean.TRUE.equals(user.get("ok"));
         if (!userOk) {
@@ -108,5 +111,10 @@ public class SlackOAuthProvider {
                 user.containsKey("family_name") ? String.valueOf(user.get("family_name"))
                         : (parts.length > 1 ? parts[1] : "")
         );
+    }
+
+    private OAuthUserInfo exchangeCodeFallback(String code, String redirectUri, Exception e) {
+        log.error("Slack OAuth circuit open or retries exhausted: {}", e.getMessage());
+        throw new OAuthException("Slack authentication is temporarily unavailable. Please try again later.");
     }
 }

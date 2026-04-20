@@ -1,5 +1,6 @@
 package org.example.sellsight.order.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.order.application.dto.OrderDto;
 import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.order.domain.model.Order;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 /**
  * Use case: Get a single order by ID.
  */
+@Slf4j
 @Service
 public class GetOrderUseCase {
 

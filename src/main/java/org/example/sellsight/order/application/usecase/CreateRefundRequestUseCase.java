@@ -1,5 +1,6 @@
 package org.example.sellsight.order.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.order.application.dto.RefundRequestDto;
 import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.order.domain.model.OrderId;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class CreateRefundRequestUseCase {
 

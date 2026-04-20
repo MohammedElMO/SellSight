@@ -1,5 +1,6 @@
 package org.example.sellsight.cart.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.cart.application.dto.CartDto;
 import org.example.sellsight.cart.domain.model.Cart;
 import org.example.sellsight.cart.domain.model.CartItem;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 public class GetCartUseCase {
 

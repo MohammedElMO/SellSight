@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.infrastructure.persistence.entity.PriceDropSubscriptionJpaEntity;
 import org.example.sellsight.engagement.infrastructure.persistence.repository.PriceDropSubscriptionJpaRepository;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 public class ManagePriceDropSubscriptionUseCase {
 

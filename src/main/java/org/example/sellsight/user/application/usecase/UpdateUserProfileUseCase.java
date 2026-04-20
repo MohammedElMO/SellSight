@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.user.application.dto.UpdateProfileRequest;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.domain.model.Email;
@@ -7,6 +8,7 @@ import org.example.sellsight.user.domain.model.User;
 import org.example.sellsight.user.domain.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class UpdateUserProfileUseCase {
 

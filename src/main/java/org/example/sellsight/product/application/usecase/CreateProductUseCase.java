@@ -1,5 +1,6 @@
 package org.example.sellsight.product.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.product.application.dto.CreateProductRequest;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.domain.model.Money;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 /**
  * Use case: Create a new product.
  */
+@Slf4j
 @Service
 public class CreateProductUseCase {
 
@@ -27,6 +29,7 @@ public class CreateProductUseCase {
     @Transactional
     @CacheEvict(value = "product-listings", allEntries = true)
     public ProductDto execute(CreateProductRequest request, String sellerId) {
+        log.info("Creating product: name='{}' category='{}' seller={}", request.name(), request.category(), sellerId);
         Product product = new Product(
                 ProductId.generate(),
                 request.name(),
@@ -40,6 +43,7 @@ public class CreateProductUseCase {
                 LocalDateTime.now()
         );
         Product saved = productRepository.save(product);
+        log.info("Product created: id={} name='{}' seller={}", saved.getId().getValue(), saved.getName(), sellerId);
         return toDto(saved);
     }
 

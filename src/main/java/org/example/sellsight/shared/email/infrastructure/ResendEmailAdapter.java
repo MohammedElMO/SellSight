@@ -2,12 +2,12 @@ package org.example.sellsight.shared.email.infrastructure;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.shared.email.EmailMessage;
 import org.example.sellsight.shared.email.EmailSender;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -43,6 +43,8 @@ public class ResendEmailAdapter implements EmailSender {
     }
 
     @Override
+    @Retry(name = "outbound-http")
+    @CircuitBreaker(name = "outbound-http", fallbackMethod = "sendFallback")
     public void send(EmailMessage message) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("from", fromAddress);
@@ -51,22 +53,38 @@ public class ResendEmailAdapter implements EmailSender {
         body.put("text", message.text());
         if (message.html() != null) body.put("html", message.html());
 
+        String json;
         try {
-            HttpRequest request = HttpRequest.newBuilder(ENDPOINT)
-                    .timeout(Duration.ofSeconds(10))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
-                    .build();
+            json = objectMapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize email payload for {}", message.to(), e);
+            return;
+        }
 
+        HttpRequest request = HttpRequest.newBuilder(ENDPOINT)
+                .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
                 log.error("Resend API error {}: {}", response.statusCode(), response.body());
+            } else {
+                log.debug("Email sent to {} via Resend (status {})", message.to(), response.statusCode());
             }
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize email payload", e);
-        } catch (Exception e) {
-            log.error("Failed to send email via Resend: {}", e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Email send interrupted for {}", message.to());
+            throw new RuntimeException("Email send interrupted", e);
         }
+        // IOException propagates to let @Retry handle transient network failures
+    }
+
+    private void sendFallback(EmailMessage message, Exception e) {
+        log.error("Email delivery failed after retries for {} ({}): {}",
+                message.to(), message.subject(), e.getMessage());
     }
 }

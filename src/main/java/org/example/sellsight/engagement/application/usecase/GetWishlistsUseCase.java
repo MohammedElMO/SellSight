@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.application.dto.WishlistDto;
 import org.example.sellsight.engagement.domain.repository.WishlistRepository;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import java.util.List;
 /**
  * Get all wishlists for the authenticated user.
  */
+@Slf4j
 @Component
 public class GetWishlistsUseCase {
 

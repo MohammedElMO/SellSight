@@ -1,5 +1,6 @@
 package org.example.sellsight.product.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.application.dto.UpdateProductRequest;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Use case: Update an existing product.
  * Only the seller who owns the product or an ADMIN can update.
  */
+@Slf4j
 @Service
 public class UpdateProductUseCase {
 

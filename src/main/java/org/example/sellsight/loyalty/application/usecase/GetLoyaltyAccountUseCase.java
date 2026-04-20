@@ -1,5 +1,6 @@
 package org.example.sellsight.loyalty.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.loyalty.application.dto.LoyaltyAccountDto;
 import org.example.sellsight.loyalty.domain.model.LoyaltyAccount;
 import org.example.sellsight.loyalty.domain.model.LoyaltyTransaction;
@@ -16,6 +17,7 @@ import java.util.UUID;
 /**
  * Get or create a loyalty account for a user.
  */
+@Slf4j
 @Component
 public class GetLoyaltyAccountUseCase {
 

@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.application.dto.CreateReviewRequest;
 import org.example.sellsight.engagement.application.dto.ReviewDto;
 import org.example.sellsight.engagement.domain.model.Review;
@@ -16,6 +17,7 @@ import java.util.List;
  * - one review per customer per product
  * - verified purchase check (customer has a DELIVERED order containing the product)
  */
+@Slf4j
 @Component
 public class WriteReviewUseCase {
 

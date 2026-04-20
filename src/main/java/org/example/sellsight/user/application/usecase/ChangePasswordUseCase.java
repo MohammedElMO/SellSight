@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.sellsight.shared.events.EventPublisher;
 import org.example.sellsight.user.application.event.PasswordChanged;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChangePasswordUseCase {

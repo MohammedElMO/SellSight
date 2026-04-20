@@ -1,5 +1,6 @@
 package org.example.sellsight.promotions.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.promotions.application.dto.CouponDto;
 import org.example.sellsight.promotions.domain.model.Coupon;
 import org.example.sellsight.promotions.domain.repository.CouponRepository;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 /**
  * Validates a coupon code against an order subtotal and returns the discount.
  */
+@Slf4j
 @Component
 public class ValidateCouponUseCase {
 

@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.application.dto.QuestionDto;
 import org.example.sellsight.engagement.domain.model.Question;
 import org.example.sellsight.engagement.domain.repository.QuestionRepository;
@@ -12,6 +13,7 @@ import java.util.UUID;
 /**
  * Ask a question on a product. Answers are added via AnswerQuestionUseCase.
  */
+@Slf4j
 @Component
 public class AskQuestionUseCase {
 

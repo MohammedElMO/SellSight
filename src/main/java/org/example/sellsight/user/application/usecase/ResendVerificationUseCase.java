@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.sellsight.user.domain.model.Email;
 import org.example.sellsight.user.domain.model.User;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ResendVerificationUseCase {

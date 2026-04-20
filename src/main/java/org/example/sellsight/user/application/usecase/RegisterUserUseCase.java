@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.config.security.JwtService;
 import org.example.sellsight.shared.events.EventPublisher;
 import org.example.sellsight.user.application.dto.AuthResponse;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 public class RegisterUserUseCase {
 
@@ -41,9 +43,11 @@ public class RegisterUserUseCase {
 
     @Transactional
     public AuthResponse execute(RegisterRequest request) {
+        log.info("Register attempt for email={} role={}", request.email(), request.role());
         Email email = new Email(request.email());
 
         if (userRepository.existsByEmail(email)) {
+            log.warn("Registration rejected — email already exists: {}", request.email());
             throw new UserAlreadyExistsException(request.email());
         }
 
@@ -70,6 +74,7 @@ public class RegisterUserUseCase {
         );
 
         user = userRepository.save(user);
+        log.info("User registered: id={} email={} role={}", user.getId().getValue(), user.getEmail().getValue(), user.getRole());
 
         sendVerificationEmail.execute(user);
 

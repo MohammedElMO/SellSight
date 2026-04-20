@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.domain.model.Email;
 import org.example.sellsight.user.domain.model.User;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 /**
  * Use case: Retrieve the authenticated user's profile.
  */
+@Slf4j
 @Service
 public class GetUserProfileUseCase {
 

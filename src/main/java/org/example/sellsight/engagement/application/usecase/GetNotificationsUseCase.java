@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.application.dto.NotificationDto;
 import org.example.sellsight.engagement.domain.model.Notification;
 import org.example.sellsight.engagement.domain.repository.NotificationRepository;
@@ -11,6 +12,7 @@ import java.util.UUID;
 /**
  * Retrieve notifications and mark them as read.
  */
+@Slf4j
 @Component
 public class GetNotificationsUseCase {
 

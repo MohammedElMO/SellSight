@@ -1,5 +1,6 @@
 package org.example.sellsight.analytics.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.analytics.application.event.AnalyticsEventRecorded;
 import org.example.sellsight.analytics.domain.model.AnalyticsEvent;
 import org.example.sellsight.analytics.domain.model.EventType;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
  * The Postgres write will be removed in a follow-up session (TASK.md §6 says
  * behavioral events should be Kafka-only) once downstream consumers exist.
  */
+@Slf4j
 @Component
 public class RecordEventUseCase {
 

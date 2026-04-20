@@ -1,5 +1,6 @@
 package org.example.sellsight.inventory.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.inventory.application.dto.StockDto;
 import org.example.sellsight.inventory.application.dto.UpdateStockRequest;
 import org.example.sellsight.inventory.domain.exception.InventoryNotFoundException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
  * Use case: Update stock level for a product.
  * Creates an inventory item if it doesn't exist yet.
  */
+@Slf4j
 @Service
 public class UpdateStockUseCase {
 

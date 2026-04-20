@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.sellsight.shared.email.EmailMessage;
 import org.example.sellsight.shared.email.EmailSender;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * Internal helper — mints a fresh verification token, persists it, and emails
  * the user a link. Called from RegisterUserUseCase and ResendVerificationUseCase.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SendVerificationEmailUseCase {

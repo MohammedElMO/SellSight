@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.application.dto.ReviewDto;
 import org.example.sellsight.engagement.domain.model.Review;
 import org.example.sellsight.engagement.domain.repository.ReviewRepository;
@@ -10,6 +11,7 @@ import java.util.List;
 /**
  * Retrieves all reviews for a given product.
  */
+@Slf4j
 @Component
 public class GetProductReviewsUseCase {
 

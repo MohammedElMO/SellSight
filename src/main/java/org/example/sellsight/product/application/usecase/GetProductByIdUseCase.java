@@ -1,5 +1,6 @@
 package org.example.sellsight.product.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Use case: Get a single product by ID.
  */
+@Slf4j
 @Service
 public class GetProductByIdUseCase {
 

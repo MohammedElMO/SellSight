@@ -1,5 +1,7 @@
 package org.example.sellsight.user.infrastructure.oauth;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +37,8 @@ public class GoogleOAuthProvider {
         this.clientSecret = clientSecret;
     }
 
+    @Retry(name = "outbound-http")
+    @CircuitBreaker(name = "outbound-http", fallbackMethod = "exchangeCodeFallback")
     public OAuthUserInfo exchangeCodeForUser(String code, String redirectUri) {
         log.info("Google OAuth: exchanging code for token");
         log.info("  redirect_uri: {}", redirectUri);
@@ -63,10 +67,8 @@ public class GoogleOAuthProvider {
             String responseBody = e.getResponseBodyAsString();
             log.error("Google token exchange failed with status {}: {}", e.getStatusCode(), responseBody);
             throw new OAuthException("Google authentication failed: " + responseBody);
-        } catch (RestClientException e) {
-            log.error("Google token exchange failed (network): {}", e.getMessage(), e);
-            throw new OAuthException("Google authentication failed: could not exchange code for token");
         }
+        // RestClientException (network) propagates so @Retry can handle it
 
         if (tokenBody == null || !tokenBody.containsKey("access_token")) {
             String error = tokenBody != null && tokenBody.containsKey("error")
@@ -90,10 +92,11 @@ public class GoogleOAuthProvider {
                     MAP_TYPE
             );
             user = userResponse.getBody();
-        } catch (RestClientException e) {
-            log.error("Google userinfo fetch failed: {}", e.getMessage());
+        } catch (HttpClientErrorException e) {
+            log.error("Google userinfo fetch failed with status {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new OAuthException("Google authentication failed: could not fetch user info");
         }
+        // RestClientException (network) propagates so @Retry can handle it
 
         if (user == null || !user.containsKey("email")) {
             throw new OAuthException("Google authentication failed: no email in user info");
@@ -109,5 +112,10 @@ public class GoogleOAuthProvider {
                         : String.valueOf(user.getOrDefault("name", "User")),
                 user.containsKey("family_name") ? String.valueOf(user.get("family_name")) : ""
         );
+    }
+
+    private OAuthUserInfo exchangeCodeFallback(String code, String redirectUri, Exception e) {
+        log.error("Google OAuth circuit open or retries exhausted: {}", e.getMessage());
+        throw new OAuthException("Google authentication is temporarily unavailable. Please try again later.");
     }
 }

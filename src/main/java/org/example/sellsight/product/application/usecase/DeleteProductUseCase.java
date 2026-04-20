@@ -1,5 +1,6 @@
 package org.example.sellsight.product.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.product.domain.model.Product;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Use case: Delete (soft-delete) a product.
  */
+@Slf4j
 @Service
 public class DeleteProductUseCase {
 

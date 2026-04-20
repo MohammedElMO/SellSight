@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.application.dto.WishlistDto;
 import org.example.sellsight.engagement.domain.model.Wishlist;
 import org.example.sellsight.engagement.domain.model.WishlistId;
@@ -11,6 +12,7 @@ import java.util.UUID;
 /**
  * Add or remove a product from a wishlist.
  */
+@Slf4j
 @Component
 public class ManageWishlistItemUseCase {
 

@@ -74,7 +74,7 @@ export function useTracker() {
       if (eventQueue.length > 0) {
         // Use keepalive for reliable delivery on navigation
         const blob = new Blob([JSON.stringify({ events: eventQueue })], { type: 'application/json' });
-        navigator.sendBeacon('http://localhost:8080/api/v1/events', blob); 
+        navigator.sendBeacon('/api/v1/events', blob);
         eventQueue = [];
       }
     };

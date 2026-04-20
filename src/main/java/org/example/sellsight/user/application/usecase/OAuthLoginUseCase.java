@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.config.security.JwtService;
 import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.dto.OAuthLoginRequest;
@@ -27,6 +28,7 @@ import java.util.Optional;
  *        rationale: the email was already verified, linking is safer than creating duplicates.
  * 4. Otherwise create a brand-new OAuth user (email_verified=true, no password).
  */
+@Slf4j
 @Service
 public class OAuthLoginUseCase {
 

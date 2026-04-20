@@ -2,6 +2,11 @@ import type {NextConfig} from "next";
 import * as path from "path"
 
 const nextConfig: NextConfig = {
+  // Allow Next.js file tracing to resolve the shared/ directory one level up (used by @shared/* alias)
+  experimental: {
+    outputFileTracingRoot: path.resolve(__dirname, '..'),
+  },
+
   async rewrites() {
     const backendUrl = process.env.BACKEND_INTERNAL_URL || 'http://localhost:8081';
 
@@ -12,10 +17,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-    /* config options here */
-    turbopack: {
-        root: path.resolve(__dirname)
-    }
+
+  turbopack: {
+    root: path.resolve(__dirname, '..')
+  }
 };
 
 export default nextConfig;

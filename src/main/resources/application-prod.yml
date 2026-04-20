@@ -1,0 +1,53 @@
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  # Flyway runs in prod; never auto-migrate schema via JPA
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+
+server:
+  port: 8081
+
+# Override all localhost defaults with required env vars (no fallbacks in prod)
+spring.datasource:
+  url: ${SPRING_DATASOURCE_URL}
+  username: ${SPRING_DATASOURCE_USERNAME}
+  password: ${SPRING_DATASOURCE_PASSWORD}
+
+spring.kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+spring.data.redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT:6379}
+
+app:
+  base-url: ${APP_BASE_URL}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+oauth:
+  google:
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID}
+    client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI}
+  slack:
+    client-id: ${OAUTH_SLACK_CLIENT_ID}
+    client-secret: ${OAUTH_SLACK_CLIENT_SECRET}
+    redirect-uri: ${OAUTH_SLACK_REDIRECT_URI}
+
+resend:
+  api-key: ${RESEND_API_KEY}
+  from: ${RESEND_FROM}
+
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY}

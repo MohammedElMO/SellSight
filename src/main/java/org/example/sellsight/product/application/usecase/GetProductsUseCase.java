@@ -1,5 +1,6 @@
 package org.example.sellsight.product.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.inventory.domain.model.InventoryItem;
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.product.application.dto.ProductDto;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 /**
  * Use case: Get paginated product listing.
  */
+@Slf4j
 @Service
 public class GetProductsUseCase {
 

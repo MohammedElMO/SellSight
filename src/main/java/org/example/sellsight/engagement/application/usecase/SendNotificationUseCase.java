@@ -1,5 +1,6 @@
 package org.example.sellsight.engagement.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.engagement.domain.model.Notification;
 import org.example.sellsight.engagement.domain.repository.NotificationRepository;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,7 @@ import java.util.UUID;
 /**
  * Persists an in-app notification for the given user.
  */
+@Slf4j
 @Component
 public class SendNotificationUseCase {
 

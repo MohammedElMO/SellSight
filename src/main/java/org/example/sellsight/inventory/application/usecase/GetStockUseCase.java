@@ -1,5 +1,6 @@
 package org.example.sellsight.inventory.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.inventory.application.dto.StockDto;
 import org.example.sellsight.inventory.domain.exception.InventoryNotFoundException;
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
@@ -10,6 +11,7 @@ import java.util.List;
 /**
  * Use case: Get stock info for a product or all low-stock items.
  */
+@Slf4j
 @Service
 public class GetStockUseCase {
 

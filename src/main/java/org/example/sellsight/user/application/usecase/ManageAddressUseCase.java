@@ -1,5 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.user.application.dto.AddressDto;
 import org.example.sellsight.user.domain.model.Address;
 import org.example.sellsight.user.domain.repository.AddressRepository;
@@ -12,6 +13,7 @@ import java.util.UUID;
 /**
  * Address CRUD operations.
  */
+@Slf4j
 @Component
 public class ManageAddressUseCase {
 
