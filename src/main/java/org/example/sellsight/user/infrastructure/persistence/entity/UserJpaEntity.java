@@ -52,4 +52,10 @@ public class UserJpaEntity {
 
     @Column(nullable = true)
     private String providerId;
+
+    @Column(nullable = false)
+    private boolean emailVerified;
+
+    @Column(nullable = true)
+    private LocalDateTime deletedAt;
 }

@@ -5,7 +5,6 @@ import org.example.sellsight.user.infrastructure.persistence.entity.UserJpaEntit
 
 /**
  * Maps between domain User and JPA UserJpaEntity.
- * Static utility — no framework dependency.
  */
 public final class UserPersistenceMapper {
 
@@ -26,7 +25,9 @@ public final class UserPersistenceMapper {
                 entity.getCreatedAt(),
                 entity.isVirtual(),
                 entity.getAuthProvider() != null ? entity.getAuthProvider() : AuthProvider.LOCAL,
-                entity.getProviderId()
+                entity.getProviderId(),
+                entity.isEmailVerified(),
+                entity.getDeletedAt()
         );
     }
 
@@ -41,7 +42,9 @@ public final class UserPersistenceMapper {
                 user.getCreatedAt(),
                 user.isVirtual(),
                 user.getAuthProvider(),
-                user.getProviderId()
+                user.getProviderId(),
+                user.isEmailVerified(),
+                user.getDeletedAt()
         );
     }
 }

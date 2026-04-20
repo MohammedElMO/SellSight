@@ -1,15 +1,18 @@
 package org.example.sellsight.user.infrastructure.oauth;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 /**
  * Exchanges a Google authorization code for user info.
@@ -18,6 +21,8 @@ import org.springframework.web.client.RestTemplate;
 public class GoogleOAuthProvider {
 
     private static final Logger log = LoggerFactory.getLogger(GoogleOAuthProvider.class);
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
+            new ParameterizedTypeReference<>() {};
 
     private final String clientId;
     private final String clientSecret;
@@ -31,6 +36,9 @@ public class GoogleOAuthProvider {
     }
 
     public OAuthUserInfo exchangeCodeForUser(String code, String redirectUri) {
+        log.info("Google OAuth: exchanging code for token");
+        log.info("  redirect_uri: {}", redirectUri);
+
         // 1. Exchange code for access token
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("code", code);
@@ -42,40 +50,44 @@ public class GoogleOAuthProvider {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        JsonNode tokenBody;
+        Map<String, Object> tokenBody;
         try {
-            ResponseEntity<JsonNode> tokenResponse = restTemplate.exchange(
+            ResponseEntity<Map<String, Object>> tokenResponse = restTemplate.exchange(
                     "https://oauth2.googleapis.com/token",
                     HttpMethod.POST,
                     new HttpEntity<>(params, headers),
-                    JsonNode.class
+                    MAP_TYPE
             );
             tokenBody = tokenResponse.getBody();
+        } catch (HttpClientErrorException e) {
+            String responseBody = e.getResponseBodyAsString();
+            log.error("Google token exchange failed with status {}: {}", e.getStatusCode(), responseBody);
+            throw new OAuthException("Google authentication failed: " + responseBody);
         } catch (RestClientException e) {
-            log.error("Google token exchange failed: {}", e.getMessage());
+            log.error("Google token exchange failed (network): {}", e.getMessage(), e);
             throw new OAuthException("Google authentication failed: could not exchange code for token");
         }
 
-        if (tokenBody == null || !tokenBody.has("access_token")) {
-            String error = tokenBody != null && tokenBody.has("error")
-                    ? tokenBody.get("error").asText() : "unknown";
+        if (tokenBody == null || !tokenBody.containsKey("access_token")) {
+            String error = tokenBody != null && tokenBody.containsKey("error")
+                    ? String.valueOf(tokenBody.get("error")) : "unknown";
             log.error("Google token response missing access_token. Error: {}", error);
             throw new OAuthException("Google authentication failed: " + error);
         }
 
-        String accessToken = tokenBody.get("access_token").asText();
+        String accessToken = String.valueOf(tokenBody.get("access_token"));
 
         // 2. Fetch user info
         HttpHeaders authHeaders = new HttpHeaders();
         authHeaders.setBearerAuth(accessToken);
 
-        JsonNode user;
+        Map<String, Object> user;
         try {
-            ResponseEntity<JsonNode> userResponse = restTemplate.exchange(
+            ResponseEntity<Map<String, Object>> userResponse = restTemplate.exchange(
                     "https://www.googleapis.com/oauth2/v2/userinfo",
                     HttpMethod.GET,
                     new HttpEntity<>(authHeaders),
-                    JsonNode.class
+                    MAP_TYPE
             );
             user = userResponse.getBody();
         } catch (RestClientException e) {
@@ -83,15 +95,19 @@ public class GoogleOAuthProvider {
             throw new OAuthException("Google authentication failed: could not fetch user info");
         }
 
-        if (user == null || !user.has("email")) {
+        if (user == null || !user.containsKey("email")) {
             throw new OAuthException("Google authentication failed: no email in user info");
         }
 
+        String email = String.valueOf(user.get("email"));
+        log.info("Google OAuth: successfully fetched user info for {}", email);
+
         return new OAuthUserInfo(
-                user.get("id").asText(),
-                user.get("email").asText(),
-                user.has("given_name") ? user.get("given_name").asText() : user.get("name").asText(),
-                user.has("family_name") ? user.get("family_name").asText() : ""
+                String.valueOf(user.get("id")),
+                email,
+                user.containsKey("given_name") ? String.valueOf(user.get("given_name"))
+                        : String.valueOf(user.getOrDefault("name", "User")),
+                user.containsKey("family_name") ? String.valueOf(user.get("family_name")) : ""
         );
     }
 }

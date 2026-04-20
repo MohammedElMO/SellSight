@@ -8,21 +8,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.sellsight.shared.exception.ErrorResponse;
-import org.example.sellsight.user.application.dto.AuthResponse;
-import org.example.sellsight.user.application.dto.LoginRequest;
-import org.example.sellsight.user.application.dto.OAuthLoginRequest;
-import org.example.sellsight.user.application.dto.RegisterRequest;
-import org.example.sellsight.user.application.usecase.LoginUserUseCase;
-import org.example.sellsight.user.application.usecase.OAuthLoginUseCase;
-import org.example.sellsight.user.application.usecase.RegisterUserUseCase;
+import org.example.sellsight.user.application.dto.*;
+import org.example.sellsight.user.application.usecase.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * REST controller for authentication endpoints (register + login).
- * All endpoints are public — no JWT required.
- */
-@Tag(name = "Authentication", description = "Register a new account or obtain a JWT token")
+@Tag(name = "Authentication", description = "Register, login, OAuth, email verification, password reset")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -30,67 +24,88 @@ public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
     private final OAuthLoginUseCase oAuthLoginUseCase;
+    private final VerifyEmailUseCase verifyEmailUseCase;
+    private final ResendVerificationUseCase resendVerificationUseCase;
+    private final RequestPasswordResetUseCase requestPasswordResetUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
 
     public AuthController(RegisterUserUseCase registerUserUseCase,
-                           LoginUserUseCase loginUserUseCase,
-                           OAuthLoginUseCase oAuthLoginUseCase) {
+                          LoginUserUseCase loginUserUseCase,
+                          OAuthLoginUseCase oAuthLoginUseCase,
+                          VerifyEmailUseCase verifyEmailUseCase,
+                          ResendVerificationUseCase resendVerificationUseCase,
+                          RequestPasswordResetUseCase requestPasswordResetUseCase,
+                          ResetPasswordUseCase resetPasswordUseCase,
+                          ChangePasswordUseCase changePasswordUseCase) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
         this.oAuthLoginUseCase = oAuthLoginUseCase;
+        this.verifyEmailUseCase = verifyEmailUseCase;
+        this.resendVerificationUseCase = resendVerificationUseCase;
+        this.requestPasswordResetUseCase = requestPasswordResetUseCase;
+        this.resetPasswordUseCase = resetPasswordUseCase;
+        this.changePasswordUseCase = changePasswordUseCase;
     }
 
-    @Operation(
-        operationId = "register",
-        summary     = "Register a new user",
-        description = "Creates a new account with the requested role (ADMIN | SELLER | CUSTOMER) "
-                    + "and returns a signed JWT token."
-    )
+    @Operation(operationId = "register", summary = "Register a new user")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Account created — JWT returned",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-        @ApiResponse(responseCode = "409", description = "Email already in use",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Validation error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Account created — JWT returned",
+                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Email already in use",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = registerUserUseCase.execute(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(registerUserUseCase.execute(request));
     }
 
-    @Operation(
-        operationId = "login",
-        summary     = "Authenticate (login)",
-        description = "Validates credentials and returns a signed JWT token valid for 24 hours."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Authenticated — JWT returned",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Invalid email or password",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
+    @Operation(operationId = "login", summary = "Authenticate")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = loginUserUseCase.execute(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(loginUserUseCase.execute(request));
     }
 
-    @Operation(
-        operationId = "oauthLogin",
-        summary     = "OAuth2 login/signup",
-        description = "Exchanges an OAuth2 authorization code (Google or Slack) for a JWT. "
-                    + "Creates a new account if the user doesn't exist yet."
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Authenticated — JWT returned",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid provider or code",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
+    @Operation(operationId = "oauthLogin", summary = "OAuth2 login/signup")
     @PostMapping("/oauth")
     public ResponseEntity<AuthResponse> oauthLogin(@Valid @RequestBody OAuthLoginRequest request) {
-        AuthResponse response = oAuthLoginUseCase.execute(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(oAuthLoginUseCase.execute(request));
+    }
+
+    @Operation(operationId = "verifyEmail", summary = "Verify email with token")
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        verifyEmailUseCase.execute(request.token());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "resendVerification", summary = "Resend the verification email")
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
+        resendVerificationUseCase.execute(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "forgotPassword", summary = "Start password reset flow")
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        requestPasswordResetUseCase.execute(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "resetPassword", summary = "Complete password reset with token")
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        resetPasswordUseCase.execute(request.token(), request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "changePassword", summary = "Change password (authenticated)")
+    @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+                                               @AuthenticationPrincipal UserDetails principal) {
+        changePasswordUseCase.execute(principal.getUsername(), request.oldPassword(), request.newPassword());
+        return ResponseEntity.noContent().build();
     }
 }

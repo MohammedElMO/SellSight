@@ -9,13 +9,23 @@ import org.example.sellsight.user.infrastructure.oauth.GoogleOAuthProvider;
 import org.example.sellsight.user.infrastructure.oauth.OAuthUserInfo;
 import org.example.sellsight.user.infrastructure.oauth.SlackOAuthProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * Use case: Authenticate or register a user via OAuth2.
- * Exchanges the authorization code for user info, finds or creates the user, returns JWT.
+ * OAuth2 authentication use case.
+ *
+ * Flow:
+ * 1. Exchange authorization code for user info via the provider adapter.
+ * 2. If a user exists with that (provider, providerId) → log them in.
+ * 3. Otherwise, if a user exists with that email:
+ *      - If their current provider is LOCAL, LINK the account (update provider/providerId,
+ *        mark email verified). This lets a password-registered user later sign in via Google.
+ *      - If their current provider is a DIFFERENT OAuth provider, we still link-and-override —
+ *        rationale: the email was already verified, linking is safer than creating duplicates.
+ * 4. Otherwise create a brand-new OAuth user (email_verified=true, no password).
  */
 @Service
 public class OAuthLoginUseCase {
@@ -26,15 +36,16 @@ public class OAuthLoginUseCase {
     private final SlackOAuthProvider slackProvider;
 
     public OAuthLoginUseCase(UserRepository userRepository,
-                              JwtService jwtService,
-                              GoogleOAuthProvider googleProvider,
-                              SlackOAuthProvider slackProvider) {
+                             JwtService jwtService,
+                             GoogleOAuthProvider googleProvider,
+                             SlackOAuthProvider slackProvider) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.googleProvider = googleProvider;
         this.slackProvider = slackProvider;
     }
 
+    @Transactional
     public AuthResponse execute(OAuthLoginRequest request) {
         AuthProvider provider = AuthProvider.valueOf(request.provider().toUpperCase());
 
@@ -44,39 +55,40 @@ public class OAuthLoginUseCase {
             default     -> throw new IllegalArgumentException("Unsupported OAuth provider: " + request.provider());
         };
 
-        // Try to find existing user by provider+providerId
-        Optional<User> existing = userRepository.findByAuthProviderAndProviderId(provider, userInfo.providerId());
+        Optional<User> existingByProvider =
+                userRepository.findByAuthProviderAndProviderId(provider, userInfo.providerId());
 
         User user;
-        if (existing.isPresent()) {
-            user = existing.get();
+        if (existingByProvider.isPresent()) {
+            user = existingByProvider.get();
         } else {
-            // Check if a user with this email already exists (e.g. registered with password)
             Email email = new Email(userInfo.email());
             Optional<User> byEmail = userRepository.findByEmail(email);
+
             if (byEmail.isPresent()) {
-                // Email already taken by a different auth method
-                throw new IllegalStateException(
-                        "An account with this email already exists. Please sign in with your original method.");
+                user = byEmail.get();
+                user.linkOAuth(provider, userInfo.providerId());
+                user = userRepository.save(user);
+            } else {
+                String firstName = userInfo.firstName() == null || userInfo.firstName().isBlank()
+                        ? "User" : userInfo.firstName();
+                String lastName = userInfo.lastName() == null || userInfo.lastName().isBlank()
+                        ? "User" : userInfo.lastName();
+
+                user = new User(
+                        UserId.generate(),
+                        firstName,
+                        lastName,
+                        email,
+                        null,
+                        Role.CUSTOMER,
+                        LocalDateTime.now(),
+                        false,
+                        provider,
+                        userInfo.providerId()
+                );
+                user = userRepository.save(user);
             }
-
-            // Create new OAuth user (default role: CUSTOMER, no password)
-            String firstName = userInfo.firstName().isBlank() ? "User" : userInfo.firstName();
-            String lastName = userInfo.lastName().isBlank() ? "User" : userInfo.lastName();
-
-            user = new User(
-                    UserId.generate(),
-                    firstName,
-                    lastName,
-                    email,
-                    null,
-                    Role.CUSTOMER,
-                    LocalDateTime.now(),
-                    false,
-                    provider,
-                    userInfo.providerId()
-            );
-            user = userRepository.save(user);
         }
 
         String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name());

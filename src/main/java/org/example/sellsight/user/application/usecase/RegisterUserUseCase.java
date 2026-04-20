@@ -1,48 +1,55 @@
 package org.example.sellsight.user.application.usecase;
 
 import org.example.sellsight.config.security.JwtService;
+import org.example.sellsight.shared.events.EventPublisher;
 import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.dto.RegisterRequest;
+import org.example.sellsight.user.application.event.UserRegistered;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
 import org.example.sellsight.user.domain.model.*;
 import org.example.sellsight.user.domain.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-/**
- * Use case: Register a new user.
- * Validates email uniqueness, hashes password, creates domain User, returns JWT.
- */
 @Service
 public class RegisterUserUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final SendVerificationEmailUseCase sendVerificationEmail;
+    private final EventPublisher eventPublisher;
+    private final String userEventsTopic;
 
     public RegisterUserUseCase(UserRepository userRepository,
-                                PasswordEncoder passwordEncoder,
-                                JwtService jwtService) {
+                               PasswordEncoder passwordEncoder,
+                               JwtService jwtService,
+                               SendVerificationEmailUseCase sendVerificationEmail,
+                               EventPublisher eventPublisher,
+                               @Value("${app.kafka.topics.user-events:user-events}") String userEventsTopic) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.sendVerificationEmail = sendVerificationEmail;
+        this.eventPublisher = eventPublisher;
+        this.userEventsTopic = userEventsTopic;
     }
 
+    @Transactional
     public AuthResponse execute(RegisterRequest request) {
         Email email = new Email(request.email());
 
-        // Check email uniqueness
         if (userRepository.existsByEmail(email)) {
             throw new UserAlreadyExistsException(request.email());
         }
 
-        // Hash password
         String hashedPassword = passwordEncoder.encode(request.password());
         Password password = new Password(hashedPassword);
 
-        // get role
         Role role = Role.CUSTOMER;
         if (request.role() != null && !request.role().isBlank()) {
             try {
@@ -62,7 +69,12 @@ public class RegisterUserUseCase {
                 LocalDateTime.now()
         );
 
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        sendVerificationEmail.execute(user);
+
+        eventPublisher.publish(userEventsTopic,
+                new UserRegistered(user.getId().getValue(), user.getEmail().getValue(), user.getRole().name()));
 
         String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name());
 
