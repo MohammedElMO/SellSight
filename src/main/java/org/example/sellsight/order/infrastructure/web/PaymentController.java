@@ -26,6 +26,6 @@ public class PaymentController {
     @PostMapping("/create-intent")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<PaymentIntentResponse> createIntent(@Valid @RequestBody CreatePaymentIntentRequest request) {
-        return ResponseEntity.ok(createPaymentIntentUseCase.execute(request.amount()));
+        return ResponseEntity.ok(createPaymentIntentUseCase.execute(request.amount(), request.orderId()));
     }
 }

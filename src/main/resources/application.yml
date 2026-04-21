@@ -107,6 +107,10 @@ oauth:
     client-secret: ${OAUTH_SLACK_CLIENT_SECRET:}
     redirect-uri: ${OAUTH_SLACK_REDIRECT_URI:http://localhost:3000/oauth/callback}
 
+# Stripe
+stripe:
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+
 # Email (Resend). Blank key = LoggingEmailAdapter fallback for local dev.
 resend:
   api-key: ${RESEND_API_KEY:}

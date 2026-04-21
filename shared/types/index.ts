@@ -124,7 +124,11 @@ export interface OrderItemRequest {
 
 export interface CreateOrderRequest {
   items: OrderItemRequest[];
-  paymentIntentId?: string;
+}
+
+export interface CreatePaymentIntentRequest {
+  amount: number;
+  orderId: string;
 }
 
 export interface OrderItemDto {

@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/events").permitAll()
                         // Public — SSE notifications stream (token validated in controller)
                         .requestMatchers("/api/notifications/stream").permitAll()
+                        // Public — Stripe webhook (verified by signature, must not require auth)
+                        .requestMatchers("/api/payments/webhook").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

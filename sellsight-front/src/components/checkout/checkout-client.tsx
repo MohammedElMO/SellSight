@@ -27,7 +27,9 @@ export default function CheckoutClient() {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPreparingCheckout, setIsPreparingCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
@@ -58,18 +60,10 @@ export default function CheckoutClient() {
     }
   }, [cartItems.length, cartLoading, router, currentStep]);
 
-  // Fetch Stripe client secret when entering payment step
-  useEffect(() => {
-    if (currentStep === 2 && finalTotal > 0) {
-      paymentApi
-        .createIntent(Math.round(finalTotal * 100) || 50)
-        .then((res) => setClientSecret(res.clientSecret))
-        .catch(() => toast.error('Failed to initialize payment.'));
-    }
-  }, [currentStep, finalTotal]);
-
-  const handleOrderComplete = async (paymentIntentId: string) => {
-    setIsProcessing(true);
+  // Step 1 → 2: create the order first (PENDING), then create the PaymentIntent with the orderId.
+  // The webhook will confirm the order once Stripe fires payment_intent.succeeded.
+  const handleAddressNext = async () => {
+    setIsPreparingCheckout(true);
     try {
       const order = await orderApi.create({
         items: cartItems.map((i) => ({
@@ -78,16 +72,35 @@ export default function CheckoutClient() {
           quantity: i.quantity,
           unitPrice: i.unitPrice,
         })),
-        paymentIntentId,
       });
-      if (pointsToRedeem >= 100 && order?.id) {
-        loyaltyApi.redeem(pointsToRedeem, order.id).catch(() => {});
+      setPendingOrderId(order.id);
+
+      const intent = await paymentApi.createIntent({
+        amount: Math.round(finalTotal * 100) || 50,
+        orderId: order.id,
+      });
+      setClientSecret(intent.clientSecret);
+      setCurrentStep(2);
+    } catch {
+      toast.error('Failed to initialize checkout. Please try again.');
+    } finally {
+      setIsPreparingCheckout(false);
+    }
+  };
+
+  // Called after Stripe confirms the payment client-side.
+  // Order fulfillment (CONFIRMED status, inventory, loyalty earn) is handled server-side via webhook.
+  const handleOrderComplete = async (_paymentIntentId: string) => {
+    setIsProcessing(true);
+    try {
+      if (pointsToRedeem >= 100 && pendingOrderId) {
+        loyaltyApi.redeem(pointsToRedeem, pendingOrderId).catch(() => {});
       }
-      track('PURCHASE', { orderId: order?.id, total: finalTotal });
+      track('PURCHASE', { orderId: pendingOrderId, total: finalTotal });
       await cartApi.clear().catch(() => {});
       setCurrentStep(3);
     } catch {
-      toast.error('Payment succeeded but order creation failed. Please contact support.');
+      toast.error('An unexpected error occurred. Please contact support.');
     } finally {
       setIsProcessing(false);
     }
@@ -165,7 +178,8 @@ export default function CheckoutClient() {
               <AddressStep
                 selectedId={selectedAddressId}
                 onSelect={setSelectedAddressId}
-                onNext={() => setCurrentStep(2)}
+                onNext={handleAddressNext}
+                isNextLoading={isPreparingCheckout}
               />
             </motion.div>
           )}

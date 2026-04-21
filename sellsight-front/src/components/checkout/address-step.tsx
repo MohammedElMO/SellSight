@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { addressApi } from '@/lib/services';
-import { MapPin, Plus, Check } from 'lucide-react';
+import { MapPin, Plus, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface AddressStepProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onNext: () => void;
+  isNextLoading?: boolean;
 }
 
-export default function AddressStep({ selectedId, onSelect, onNext }: AddressStepProps) {
+export default function AddressStep({ selectedId, onSelect, onNext, isNextLoading }: AddressStepProps) {
   const { data: addresses, isLoading } = useQuery({
     queryKey: ['addresses'],
     queryFn: addressApi.getAll,
@@ -98,12 +99,18 @@ export default function AddressStep({ selectedId, onSelect, onNext }: AddressSte
             );
           })}
 
-          <button 
+          <button
             className="btn-primary w-full mt-8 py-3 text-lg"
-            disabled={!selectedId && !addresses.some(a => a.isDefaultShipping)}
+            disabled={(!selectedId && !addresses.some(a => a.isDefaultShipping)) || isNextLoading}
             onClick={onNext}
           >
-            Continue to Payment
+            {isNextLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="animate-spin" size={20} /> Preparing checkout...
+              </span>
+            ) : (
+              'Continue to Payment'
+            )}
           </button>
         </div>
       )}

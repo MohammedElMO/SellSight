@@ -17,6 +17,7 @@ import type {
   UpdateProductRequest,
   OrderDto,
   CreateOrderRequest,
+  CreatePaymentIntentRequest,
   StockDto,
   UpdateStockRequest,
   ReviewDto,
@@ -224,6 +225,6 @@ export const eventApi = {
 // ── Payments ─────────────────────────────────────────────────
 
 export const paymentApi = {
-  createIntent: (amount: number) =>
-    api.post<{ clientSecret: string }>('/payments/create-intent', { amount }).then((r) => r.data),
+  createIntent: (req: CreatePaymentIntentRequest) =>
+    api.post<{ clientSecret: string }>('/payments/create-intent', req).then((r) => r.data),
 };

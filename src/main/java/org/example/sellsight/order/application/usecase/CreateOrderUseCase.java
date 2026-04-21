@@ -1,12 +1,8 @@
 package org.example.sellsight.order.application.usecase;
 
-import com.stripe.model.PaymentIntent;
-import com.stripe.exception.StripeException;
-import org.example.sellsight.engagement.application.usecase.SendNotificationUseCase;
 import org.example.sellsight.inventory.domain.exception.InsufficientStockException;
 import org.example.sellsight.inventory.domain.model.InventoryItem;
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
-import org.example.sellsight.loyalty.application.usecase.GetLoyaltyAccountUseCase;
 import org.example.sellsight.order.application.dto.*;
 import org.example.sellsight.order.domain.model.*;
 import org.example.sellsight.order.domain.repository.OrderRepository;
@@ -18,9 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Use case: Create a new order for the authenticated customer.
- */
 @Service
 public class CreateOrderUseCase {
 
@@ -28,33 +21,15 @@ public class CreateOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
-    private final GetLoyaltyAccountUseCase getLoyaltyAccountUseCase;
-    private final SendNotificationUseCase sendNotificationUseCase;
 
     public CreateOrderUseCase(OrderRepository orderRepository,
-                               InventoryRepository inventoryRepository,
-                               GetLoyaltyAccountUseCase getLoyaltyAccountUseCase,
-                               SendNotificationUseCase sendNotificationUseCase) {
+                               InventoryRepository inventoryRepository) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
-        this.getLoyaltyAccountUseCase = getLoyaltyAccountUseCase;
-        this.sendNotificationUseCase = sendNotificationUseCase;
     }
 
     @Transactional
     public OrderDto execute(CreateOrderRequest request, String customerId) {
-        // Stripe validation — fast network call, happens before any DB write
-        if (request.paymentIntentId() != null && !request.paymentIntentId().trim().isEmpty() && !request.paymentIntentId().startsWith("pi_simulated")) {
-            try {
-                PaymentIntent intent = PaymentIntent.retrieve(request.paymentIntentId());
-                if (!"succeeded".equals(intent.getStatus()) && !"requires_capture".equals(intent.getStatus())) {
-                    throw new RuntimeException("PaymentIntent is not in a succeeded state. Status: " + intent.getStatus());
-                }
-            } catch (StripeException e) {
-                throw new RuntimeException("Failed to verify PaymentIntent with Stripe: " + e.getMessage());
-            }
-        }
-
         // Validate stock availability before touching the DB
         for (OrderItemRequest itemReq : request.items()) {
             InventoryItem stock = inventoryRepository.findByProductId(itemReq.productId())
@@ -83,37 +58,8 @@ public class CreateOrderUseCase {
             ));
         }
 
-        order.confirm();
         Order saved = orderRepository.save(order);
-
-        // Decrement inventory after successful order save
-        for (OrderItemRequest itemReq : request.items()) {
-            inventoryRepository.findByProductId(itemReq.productId()).ifPresent(inv -> {
-                inv.decreaseStock(itemReq.quantity());
-                inventoryRepository.save(inv);
-            });
-        }
-
-        // Award loyalty points — fire-and-forget, never fails the order
-        try {
-            getLoyaltyAccountUseCase.earnPoints(customerId, saved.getTotal(), saved.getId().getValue());
-        } catch (Exception e) {
-            log.warn("Loyalty point award skipped for order {}: {}", saved.getId().getValue(), e.getMessage());
-        }
-
-        // Notify customer — fire-and-forget, never fails the order
-        try {
-            String shortId = saved.getId().getValue().substring(0, 8).toUpperCase();
-            sendNotificationUseCase.send(
-                    customerId,
-                    "ORDER_CONFIRMED",
-                    "Order Confirmed",
-                    "Your order #" + shortId + " has been placed successfully. Total: $" + saved.getTotal()
-            );
-        } catch (Exception e) {
-            log.warn("Order confirmation notification skipped for order {}: {}", saved.getId().getValue(), e.getMessage());
-        }
-
+        log.info("Order {} created with status PENDING — awaiting payment confirmation", saved.getId().getValue());
         return toDto(saved);
     }
 

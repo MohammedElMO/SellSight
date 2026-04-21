@@ -22,12 +22,13 @@ public class CreatePaymentIntentUseCase {
         Stripe.apiKey = stripeApiKey;
     }
 
-    public PaymentIntentResponse execute(long amount) {
+    public PaymentIntentResponse execute(long amount, String orderId) {
         try {
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                 .setAmount(amount)
                 .setCurrency("usd")
                 .addPaymentMethodType("card")
+                .putMetadata("order_id", orderId)
                 .build();
             PaymentIntent intent = PaymentIntent.create(params);
             return new PaymentIntentResponse(intent.getClientSecret());

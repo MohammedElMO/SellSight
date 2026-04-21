@@ -9,6 +9,7 @@ import org.example.sellsight.shared.email.EmailMessage;
 import org.example.sellsight.shared.email.EmailSender;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -75,7 +76,7 @@ public class ResendEmailAdapter implements EmailSender {
             } else {
                 log.debug("Email sent to {} via Resend (status {})", message.to(), response.statusCode());
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             Thread.currentThread().interrupt();
             log.error("Email send interrupted for {}", message.to());
             throw new RuntimeException("Email send interrupted", e);
