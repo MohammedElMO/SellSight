@@ -13,6 +13,7 @@ import org.example.sellsight.user.domain.exception.OAuthEmailConflictException;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
 import org.example.sellsight.user.infrastructure.oauth.OAuthException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -85,7 +86,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException ex) {
         return ResponseEntity
-                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .status(HttpStatusCode.valueOf(422))
                 .body(ErrorResponse.of(422, ex.getMessage()));
     }
 
