@@ -1,5 +1,6 @@
 package org.example.sellsight.user.infrastructure.web;
 
+import org.example.sellsight.inventory.domain.exception.InsufficientStockException;
 import org.example.sellsight.order.domain.exception.InvalidOrderStateException;
 import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
@@ -79,6 +80,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponse.of(403, ex.getMessage()));
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ErrorResponse.of(422, ex.getMessage()));
     }
 
     @ExceptionHandler(OrderNotFoundException.class)

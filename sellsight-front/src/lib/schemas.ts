@@ -46,8 +46,9 @@ const productBase = z.object({
                   .or(z.literal('')),
 });
 
-export const createProductSchema =
-  productBase satisfies z.ZodType<CreateProductRequest>;
+export const createProductSchema = productBase.extend({
+  initialStock: z.number().int().min(0, 'Stock cannot be negative'),
+}) satisfies z.ZodType<CreateProductRequest>;
 
 export const updateProductSchema =
   productBase satisfies z.ZodType<UpdateProductRequest>;
@@ -67,6 +68,7 @@ export const createOrderSchema = z.object({
 
 // ── Inferred types ───────────────────────────────────────────
 
-export type LoginFormValues    = z.infer<typeof loginSchema>;
-export type RegisterFormValues = z.infer<typeof registerSchema>;
-export type ProductFormValues  = z.infer<typeof productBase>;
+export type LoginFormValues          = z.infer<typeof loginSchema>;
+export type RegisterFormValues       = z.infer<typeof registerSchema>;
+export type ProductFormValues        = z.infer<typeof productBase>;
+export type CreateProductFormValues  = z.infer<typeof createProductSchema>;

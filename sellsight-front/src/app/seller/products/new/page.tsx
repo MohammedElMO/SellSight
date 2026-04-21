@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateProduct } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
-import { createProductSchema, type ProductFormValues } from '@/lib/schemas';
+import { createProductSchema, type CreateProductFormValues } from '@/lib/schemas';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Input, Textarea, Select } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,9 +21,9 @@ export default function NewProductPage() {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ProductFormValues>({
+  } = useForm<CreateProductFormValues>({
     resolver: zodResolver(createProductSchema),
-    defaultValues: { name: '', description: '', price: 0, category: '', imageUrl: '' },
+    defaultValues: { name: '', description: '', price: 0, category: '', imageUrl: '', initialStock: 0 },
   });
 
   const imageUrl = watch('imageUrl');
@@ -36,7 +36,7 @@ export default function NewProductPage() {
 
   const { mutate: create, isPending } = useCreateProduct();
 
-  const onSubmit = (values: ProductFormValues) => create(values);
+  const onSubmit = (values: CreateProductFormValues) => create(values);
 
   return (
     <PageLayout>
@@ -92,6 +92,17 @@ export default function NewProductPage() {
               ))}
             </Select>
           </div>
+
+          <Input
+            label="Initial stock"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="0"
+            hint="How many units are available for purchase"
+            error={errors.initialStock?.message}
+            {...register('initialStock', { valueAsNumber: true })}
+          />
 
           <Input
             label="Image URL"

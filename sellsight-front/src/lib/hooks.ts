@@ -14,7 +14,7 @@ import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { toast } from 'sonner';
 import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest } from '@shared/types';
-import type { ProductFormValues } from '@/lib/schemas';
+import type { ProductFormValues, CreateProductFormValues } from '@/lib/schemas';
 
 // ── Internal helper ──────────────────────────────────────────
 
@@ -115,7 +115,7 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
-    mutationFn: (req: ProductFormValues) =>
+    mutationFn: (req: CreateProductFormValues) =>
       productApi.create({
         ...req,
         description: req.description || undefined,

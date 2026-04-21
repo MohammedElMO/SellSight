@@ -1,6 +1,9 @@
 package org.example.sellsight.product.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.sellsight.inventory.domain.model.InventoryItem;
+import org.example.sellsight.inventory.domain.model.StockLevel;
+import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.product.application.dto.CreateProductRequest;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.domain.model.Money;
@@ -21,9 +24,12 @@ import java.time.LocalDateTime;
 public class CreateProductUseCase {
 
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
 
-    public CreateProductUseCase(ProductRepository productRepository) {
+    public CreateProductUseCase(ProductRepository productRepository,
+                                InventoryRepository inventoryRepository) {
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     @Transactional
@@ -43,7 +49,13 @@ public class CreateProductUseCase {
                 LocalDateTime.now()
         );
         Product saved = productRepository.save(product);
-        log.info("Product created: id={} name='{}' seller={}", saved.getId().getValue(), saved.getName(), sellerId);
+
+        int initialStock = request.initialStock() != null ? request.initialStock() : 0;
+        InventoryItem inventory = new InventoryItem(
+                saved.getId().getValue(), StockLevel.of(initialStock), 5);
+        inventoryRepository.save(inventory);
+        log.info("Product created: id={} name='{}' seller={} initialStock={}",
+                saved.getId().getValue(), saved.getName(), sellerId, initialStock);
         return toDto(saved);
     }
 

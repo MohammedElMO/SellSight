@@ -1,6 +1,7 @@
 package org.example.sellsight.product.application.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -22,5 +23,8 @@ public record CreateProductRequest(
         @NotBlank(message = "Category is required")
         String category,
 
-        String imageUrl
+        String imageUrl,
+
+        @Min(value = 0, message = "Initial stock cannot be negative")
+        Integer initialStock
 ) {}

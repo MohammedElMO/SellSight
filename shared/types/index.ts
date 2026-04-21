@@ -77,6 +77,7 @@ export interface CreateProductRequest {
   price: number;
   category: string;
   imageUrl?: string;
+  initialStock?: number;
 }
 
 export interface UpdateProductRequest {
