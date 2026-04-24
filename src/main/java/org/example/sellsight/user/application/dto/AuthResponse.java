@@ -9,5 +9,6 @@ public record AuthResponse(
         String role,
         String firstName,
         String lastName,
-        boolean emailVerified
+        boolean emailVerified,
+        String sellerStatus
 ) {}

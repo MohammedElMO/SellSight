@@ -31,9 +31,15 @@ function VerifyEmailInner() {
         setRole(authData.role);
         setStatus('success');
         setTimeout(() => {
-          if (authData.role === 'ADMIN')       router.push('/admin/dashboard');
-          else if (authData.role === 'SELLER') router.push('/seller/dashboard');
-          else                                 router.push('/products');
+          if (authData.role === 'ADMIN') {
+            router.push('/admin/dashboard');
+          } else if (authData.role === 'SELLER' && authData.sellerStatus === 'PENDING') {
+            router.push('/seller/pending-approval');
+          } else if (authData.role === 'SELLER') {
+            router.push('/seller/dashboard');
+          } else {
+            router.push('/products');
+          }
         }, 2000);
       })
       .catch((err: unknown) => {

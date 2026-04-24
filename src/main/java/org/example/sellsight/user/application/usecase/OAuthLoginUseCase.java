@@ -93,7 +93,8 @@ public class OAuthLoginUseCase {
             }
         }
 
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true);
+        String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
+        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true, sellerStatusStr);
 
         return new AuthResponse(
                 token,
@@ -101,7 +102,8 @@ public class OAuthLoginUseCase {
                 user.getRole().name(),
                 user.getFirstName(),
                 user.getLastName(),
-                true
+                true,
+                sellerStatusStr
         );
     }
 }

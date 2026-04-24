@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Adapter implementing the domain UserRepository port.
@@ -55,6 +56,14 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public List<User> findAll() {
         return jpaRepository.findAll().stream()
+                .map(UserPersistenceMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<User> findPendingSellers() {
+        return jpaRepository.findAllByRoleAndSellerStatus(Role.SELLER, SellerStatus.PENDING)
+                .stream()
                 .map(UserPersistenceMapper::toDomain)
                 .toList();
     }

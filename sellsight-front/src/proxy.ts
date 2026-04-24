@@ -7,6 +7,7 @@ interface JwtPayload {
   role?: string;
   exp?: number;
   emailVerified?: boolean;
+  sellerStatus?: string;
 }
 
 function parseJwt(token: string): JwtPayload | null {
@@ -34,6 +35,7 @@ export function proxy(request: NextRequest) {
   const isExpired     = payload?.exp ? payload.exp < Math.floor(Date.now() / 1000) : false;
   const role          = (!isExpired && payload?.role) ? payload.role : null;
   const emailVerified = (!isExpired && payload?.emailVerified) ?? false;
+  const sellerStatus  = (!isExpired && payload?.sellerStatus) ? payload.sellerStatus : null;
   const authed        = !!role;
   const roleHome      = role ? (ROLE_HOME[role] ?? '/') : '/login';
 
@@ -41,11 +43,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(path, request.url));
   }
 
-  // Always pass through — OAuth exchange and verification screens
+  // Always pass through — OAuth exchange, verification, and seller-pending screens
   if (
     pathname.startsWith('/oauth/callback') ||
     pathname === '/pending-verification' ||
-    pathname === '/verify-email'
+    pathname === '/verify-email' ||
+    pathname === '/seller/pending-approval'
   ) {
     return NextResponse.next();
   }
@@ -85,6 +88,8 @@ export function proxy(request: NextRequest) {
   if (pathname.startsWith('/seller/')) {
     if (!authed)             return redirectTo('/login');
     if (role === 'CUSTOMER') return redirectTo('/products');
+    // Pending sellers can only see the pending-approval page (handled above)
+    if (role === 'SELLER' && sellerStatus === 'PENDING') return redirectTo('/seller/pending-approval');
     return NextResponse.next();
   }
 

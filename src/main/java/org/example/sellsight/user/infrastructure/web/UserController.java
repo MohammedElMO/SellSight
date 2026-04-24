@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.sellsight.shared.exception.ErrorResponse;
+import org.example.sellsight.user.application.dto.SellerApplicationDto;
 import org.example.sellsight.user.application.dto.UpdateProfileRequest;
 import org.example.sellsight.user.application.dto.UserDto;
+import org.example.sellsight.user.application.usecase.ApproveSeller;
 import org.example.sellsight.user.application.usecase.DeleteAccountUseCase;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
+import org.example.sellsight.user.application.usecase.ListPendingSellersUseCase;
 import org.example.sellsight.user.application.usecase.ListUsersUseCase;
+import org.example.sellsight.user.application.usecase.RejectSeller;
 import org.example.sellsight.user.application.usecase.UpdateUserProfileUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,15 +39,24 @@ public class UserController {
     private final UpdateUserProfileUseCase updateUserProfileUseCase;
     private final DeleteAccountUseCase deleteAccountUseCase;
     private final ListUsersUseCase listUsersUseCase;
+    private final ListPendingSellersUseCase listPendingSellersUseCase;
+    private final ApproveSeller approveSeller;
+    private final RejectSeller rejectSeller;
 
     public UserController(GetUserProfileUseCase getUserProfileUseCase,
                           UpdateUserProfileUseCase updateUserProfileUseCase,
                           DeleteAccountUseCase deleteAccountUseCase,
-                          ListUsersUseCase listUsersUseCase) {
+                          ListUsersUseCase listUsersUseCase,
+                          ListPendingSellersUseCase listPendingSellersUseCase,
+                          ApproveSeller approveSeller,
+                          RejectSeller rejectSeller) {
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.updateUserProfileUseCase = updateUserProfileUseCase;
         this.deleteAccountUseCase = deleteAccountUseCase;
         this.listUsersUseCase = listUsersUseCase;
+        this.listPendingSellersUseCase = listPendingSellersUseCase;
+        this.approveSeller = approveSeller;
+        this.rejectSeller = rejectSeller;
     }
 
     @Operation(
@@ -120,5 +133,31 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto>> listAllUsers() {
         return ResponseEntity.ok(listUsersUseCase.execute());
+    }
+
+    @Operation(operationId = "listPendingSellers", summary = "List pending seller applications (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/sellers/pending")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SellerApplicationDto>> listPendingSellers() {
+        return ResponseEntity.ok(listPendingSellersUseCase.execute());
+    }
+
+    @Operation(operationId = "approveSeller", summary = "Approve a seller application (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/sellers/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> approveSeller(@PathVariable String id) {
+        approveSeller.execute(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "rejectSeller", summary = "Reject a seller application (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/sellers/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> rejectSeller(@PathVariable String id) {
+        rejectSeller.execute(id);
+        return ResponseEntity.noContent().build();
     }
 }

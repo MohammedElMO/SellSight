@@ -34,6 +34,7 @@ import type {
   CartDto,
   RefundRequestDto,
   CreateRefundRequest,
+  SellerApplicationDto,
 } from '@shared/types';
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -249,4 +250,10 @@ export const adminApi = {
     api.post<AdminCouponDto>('/coupons', req).then((r) => r.data),
   deleteCoupon: (id: string) =>
     api.delete<void>(`/coupons/${id}`),
+  getPendingSellers: () =>
+    api.get<SellerApplicationDto[]>('/users/sellers/pending').then((r) => r.data),
+  approveSeller: (id: string) =>
+    api.post<void>(`/users/sellers/${id}/approve`),
+  rejectSeller: (id: string) =>
+    api.post<void>(`/users/sellers/${id}/reject`),
 };

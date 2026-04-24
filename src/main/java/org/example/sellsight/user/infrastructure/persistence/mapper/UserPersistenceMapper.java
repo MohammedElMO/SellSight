@@ -27,7 +27,8 @@ public final class UserPersistenceMapper {
                 entity.getAuthProvider() != null ? entity.getAuthProvider() : AuthProvider.LOCAL,
                 entity.getProviderId(),
                 entity.isEmailVerified(),
-                entity.getDeletedAt()
+                entity.getDeletedAt(),
+                entity.getSellerStatus()
         );
     }
 
@@ -44,7 +45,8 @@ public final class UserPersistenceMapper {
                 user.getAuthProvider(),
                 user.getProviderId(),
                 user.isEmailVerified(),
-                user.getDeletedAt()
+                user.getDeletedAt(),
+                user.getSellerStatus()
         );
     }
 }

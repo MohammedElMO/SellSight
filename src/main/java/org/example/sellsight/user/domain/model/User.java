@@ -24,19 +24,20 @@ public class User {
     private String providerId;          // null for LOCAL users
     private boolean emailVerified;
     private LocalDateTime deletedAt;    // soft delete marker (GDPR)
+    private SellerStatus sellerStatus;  // null for non-SELLER roles
 
     /** Convenience ctor for local (email+password) CUSTOMER users. */
     public User(UserId id, String firstName, String lastName,
                 Email email, Password password, Role role, LocalDateTime createdAt) {
         this(id, firstName, lastName, email, password, role, createdAt, false,
-             AuthProvider.LOCAL, null, false, null);
+             AuthProvider.LOCAL, null, false, null, null);
     }
 
     public User(UserId id, String firstName, String lastName,
                 Email email, Password password, Role role, LocalDateTime createdAt,
                 boolean isVirtual) {
         this(id, firstName, lastName, email, password, role, createdAt, isVirtual,
-             AuthProvider.LOCAL, null, false, null);
+             AuthProvider.LOCAL, null, false, null, null);
     }
 
     public User(UserId id, String firstName, String lastName,
@@ -45,14 +46,14 @@ public class User {
         this(id, firstName, lastName, email, password, role, createdAt, isVirtual,
              authProvider, providerId,
              authProvider != AuthProvider.LOCAL, // OAuth users auto-verified
-             null);
+             null, null);
     }
 
     /** Full constructor — used by the persistence mapper when rehydrating. */
     public User(UserId id, String firstName, String lastName,
                 Email email, Password password, Role role, LocalDateTime createdAt,
                 boolean isVirtual, AuthProvider authProvider, String providerId,
-                boolean emailVerified, LocalDateTime deletedAt) {
+                boolean emailVerified, LocalDateTime deletedAt, SellerStatus sellerStatus) {
         this.id = Objects.requireNonNull(id, "User ID cannot be null");
         this.email = Objects.requireNonNull(email, "Email cannot be null");
         this.role = Objects.requireNonNull(role, "Role cannot be null");
@@ -62,6 +63,7 @@ public class User {
         this.providerId = providerId;
         this.emailVerified = emailVerified;
         this.deletedAt = deletedAt;
+        this.sellerStatus = sellerStatus;
 
         if (authProvider == AuthProvider.LOCAL) {
             this.password = Objects.requireNonNull(password, "Password cannot be null for local users");
@@ -96,6 +98,18 @@ public class User {
 
     public boolean isDeleted() {
         return this.deletedAt != null;
+    }
+
+    public void markSellerPending() {
+        this.sellerStatus = SellerStatus.PENDING;
+    }
+
+    public void approveAsSeller() {
+        this.sellerStatus = SellerStatus.APPROVED;
+    }
+
+    public void rejectAsSeller() {
+        this.sellerStatus = SellerStatus.REJECTED;
     }
 
     /**
@@ -137,4 +151,5 @@ public class User {
     public String getProviderId() { return providerId; }
     public boolean isEmailVerified() { return emailVerified; }
     public LocalDateTime getDeletedAt() { return deletedAt; }
+    public SellerStatus getSellerStatus() { return sellerStatus; }
 }

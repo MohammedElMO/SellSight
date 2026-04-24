@@ -41,6 +41,14 @@ export default function LoginPage() {
         router.push(`/pending-verification?email=${encodeURIComponent(values.email)}`);
         return;
       }
+      if (errData?.errorCode === 'SELLER_PENDING_APPROVAL') {
+        toast.error(errData.message ?? 'Your seller account is pending admin approval.');
+        return;
+      }
+      if (errData?.errorCode === 'SELLER_REJECTED') {
+        toast.error(errData.message ?? 'Your seller application was rejected. Contact support.');
+        return;
+      }
       toast.error(errData?.message ?? 'Invalid email or password');
     }
   };

@@ -18,6 +18,8 @@ import {
   MapPin,
   Eye,
   Warehouse,
+  Tag,
+  Store,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn, initials } from '@/lib/utils';
@@ -47,9 +49,11 @@ function useNavLinks(): NavLink[] {
     ];
   if (role === 'ADMIN')
     return [
-      { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-      { label: 'Products',  href: '/admin/products',  icon: Package         },
-      { label: 'Inventory', href: '/admin/inventory', icon: Warehouse        },
+      { label: 'Dashboard', href: '/admin/dashboard',        icon: LayoutDashboard },
+      { label: 'Products',  href: '/admin/products',         icon: Package         },
+      { label: 'Inventory', href: '/admin/inventory',        icon: Warehouse       },
+      { label: 'Coupons',   href: '/admin/coupons',          icon: Tag             },
+      { label: 'Sellers',   href: '/admin/sellers/pending',  icon: Store           },
     ];
   return [];
 }
@@ -191,6 +195,9 @@ export function Navbar() {
                       <div className="p-1.5">
                         {role === 'CUSTOMER' && (
                           <>
+                            <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)] rounded-[var(--radius-xs)] transition-all">
+                              <User className="h-4 w-4" /> Profile
+                            </Link>
                             <Link href="/wishlists" onClick={() => setUserMenuOpen(false)} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)] rounded-[var(--radius-xs)] transition-all">
                               <Heart className="h-4 w-4" /> Wishlists
                             </Link>

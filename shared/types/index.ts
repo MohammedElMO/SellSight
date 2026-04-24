@@ -33,6 +33,18 @@ export interface AuthResponse {
   firstName: string;
   lastName: string;
   emailVerified: boolean;
+  sellerStatus: string | null;
+}
+
+export type SellerStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface SellerApplicationDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  sellerStatus: SellerStatus;
+  createdAt: string;
 }
 
 // ── User ────────────────────────────────────────────────────

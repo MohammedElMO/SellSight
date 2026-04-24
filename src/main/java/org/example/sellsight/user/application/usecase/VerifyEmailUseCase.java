@@ -60,14 +60,16 @@ public class VerifyEmailUseCase {
         eventPublisher.publish(userEventsTopic,
                 new EmailVerified(user.getId().getValue(), user.getEmail().getValue()));
 
-        String jwtToken = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true);
+        String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
+        String jwtToken = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true, sellerStatusStr);
         return new AuthResponse(
                 jwtToken,
                 user.getEmail().getValue(),
                 user.getRole().name(),
                 user.getFirstName(),
                 user.getLastName(),
-                true
+                true,
+                sellerStatusStr
         );
     }
 }

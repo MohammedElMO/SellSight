@@ -26,15 +26,19 @@ public class JwtService {
         this.expiration = expiration;
     }
 
-    public String generateToken(String email, String role, boolean emailVerified) {
-        return Jwts.builder()
+    public String generateToken(String email, String role, boolean emailVerified, String sellerStatus) {
+        var builder = Jwts.builder()
                 .subject(email)
                 .claim("role", role)
                 .claim("emailVerified", emailVerified)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(signingKey)
-                .compact();
+                .expiration(new Date(System.currentTimeMillis() + expiration));
+
+        if (sellerStatus != null) {
+            builder.claim("sellerStatus", sellerStatus);
+        }
+
+        return builder.signWith(signingKey).compact();
     }
 
     public String extractEmail(String token) {

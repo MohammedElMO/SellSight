@@ -31,6 +31,7 @@ interface AuthState {
   lastName: string | null;
   isAuthenticated: boolean;
   emailVerified: boolean;
+  sellerStatus: string | null;
 
   login: (data: AuthResponse) => void;
   logout: () => void;
@@ -45,6 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   lastName: null,
   isAuthenticated: false,
   emailVerified: false,
+  sellerStatus: null,
 
   login: (data: AuthResponse) => {
     localStorage.setItem('token', data.token);
@@ -58,6 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       lastName: data.lastName,
       isAuthenticated: true,
       emailVerified: data.emailVerified,
+      sellerStatus: data.sellerStatus ?? null,
     });
   },
 
@@ -73,6 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       lastName: null,
       isAuthenticated: false,
       emailVerified: false,
+      sellerStatus: null,
     });
   },
 
@@ -94,6 +98,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           lastName: data.lastName,
           isAuthenticated: true,
           emailVerified: data.emailVerified ?? false,
+          sellerStatus: data.sellerStatus ?? null,
         });
       } catch {
         localStorage.removeItem('auth');

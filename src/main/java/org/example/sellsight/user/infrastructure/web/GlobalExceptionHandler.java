@@ -8,6 +8,7 @@ import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessE
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.domain.exception.EmailNotVerifiedException;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
+import org.example.sellsight.user.domain.exception.SellerApprovalRequiredException;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
 import org.example.sellsight.user.domain.exception.InvalidTokenException;
 import org.example.sellsight.user.domain.exception.OAuthEmailConflictException;
@@ -47,6 +48,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponse.of(403, ex.getMessage(), "EMAIL_NOT_VERIFIED"));
+    }
+
+    @ExceptionHandler(SellerApprovalRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleSellerApprovalRequired(SellerApprovalRequiredException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage(), ex.getErrorCode()));
     }
 
     @ExceptionHandler(InvalidEmailException.class)

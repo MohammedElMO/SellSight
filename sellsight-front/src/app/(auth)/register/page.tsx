@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/auth';
 import { registerSchema, type RegisterFormValues } from '@/lib/schemas';
 import { startGoogleOAuth, startSlackOAuth } from '@/lib/oauth';
 import { toast } from 'sonner';
-import { Eye, EyeOff, ArrowRight, ShoppingBag, Store, Shield } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ShoppingBag, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Role } from '@shared/types';
 import { Reveal } from '@/components/ui/reveal';
@@ -19,7 +19,6 @@ import { MagButton } from '@/components/ui/mag-button';
 const ROLES: { value: Role; label: string; icon: React.ElementType; desc: string }[] = [
   { value: 'CUSTOMER', label: 'Customer', icon: ShoppingBag, desc: 'Shop & discover' },
   { value: 'SELLER',   label: 'Seller',   icon: Store,       desc: 'List & sell'     },
-  { value: 'ADMIN',    label: 'Admin',    icon: Shield,      desc: 'Manage platform' },
 ];
 
 export default function RegisterPage() {
@@ -47,6 +46,9 @@ export default function RegisterPage() {
       if (!data.emailVerified) {
         toast.success('Account created! Check your inbox to verify your email.');
         router.push(`/pending-verification?email=${encodeURIComponent(data.email)}`);
+      } else if (data.role === 'SELLER' && data.sellerStatus === 'PENDING') {
+        toast.success(`Welcome, ${data.firstName}! Your seller application is under review.`);
+        router.push('/seller/pending-approval');
       } else {
         toast.success(`Welcome, ${data.firstName}!`);
         if (data.role === 'ADMIN')       router.push('/admin/dashboard');

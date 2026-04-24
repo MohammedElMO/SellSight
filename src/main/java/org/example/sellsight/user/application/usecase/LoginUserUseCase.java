@@ -6,6 +6,8 @@ import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.dto.LoginRequest;
 import org.example.sellsight.user.domain.exception.EmailNotVerifiedException;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
+import org.example.sellsight.user.domain.exception.SellerApprovalRequiredException;
+import org.example.sellsight.user.domain.model.SellerStatus;
 import org.example.sellsight.user.domain.model.AuthProvider;
 import org.example.sellsight.user.domain.model.Email;
 import org.example.sellsight.user.domain.model.User;
@@ -71,8 +73,15 @@ public class LoginUserUseCase {
             throw new EmailNotVerifiedException();
         }
 
+        SellerStatus sellerStatus = user.getSellerStatus();
+        if (sellerStatus == SellerStatus.PENDING || sellerStatus == SellerStatus.REJECTED) {
+            log.warn("Login blocked — seller not approved: {} status={}", request.email(), sellerStatus);
+            throw new SellerApprovalRequiredException(sellerStatus);
+        }
+
         log.info("Login successful for email={} role={}", user.getEmail().getValue(), user.getRole());
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), user.isEmailVerified() || whitelisted);
+        String sellerStatusStr = sellerStatus != null ? sellerStatus.name() : null;
+        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), user.isEmailVerified() || whitelisted, sellerStatusStr);
 
         return new AuthResponse(
                 token,
@@ -80,7 +89,8 @@ public class LoginUserUseCase {
                 user.getRole().name(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.isEmailVerified() || whitelisted
+                user.isEmailVerified() || whitelisted,
+                sellerStatusStr
         );
     }
 }

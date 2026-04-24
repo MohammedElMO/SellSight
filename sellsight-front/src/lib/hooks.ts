@@ -626,6 +626,41 @@ export function useDeleteCoupon() {
   });
 }
 
+// ── Seller Management ────────────────────────────────────────
+
+export function usePendingSellers() {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['pending-sellers'],
+    queryFn: adminApi.getPendingSellers,
+    enabled: isAuthenticated && role === 'ADMIN',
+  });
+}
+
+export function useApproveSeller() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminApi.approveSeller(id),
+    onSuccess: () => {
+      toast.success('Seller approved!');
+      queryClient.invalidateQueries({ queryKey: ['pending-sellers'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to approve seller')),
+  });
+}
+
+export function useRejectSeller() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminApi.rejectSeller(id),
+    onSuccess: () => {
+      toast.success('Seller application rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending-sellers'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to reject seller')),
+  });
+}
+
 // ── Utils ────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';

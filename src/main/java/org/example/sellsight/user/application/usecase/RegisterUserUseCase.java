@@ -86,6 +86,10 @@ public class RegisterUserUseCase {
             user.markEmailVerified();
         }
 
+        if (role == Role.SELLER) {
+            user.markSellerPending();
+        }
+
         user = userRepository.save(user);
         log.info("User registered: id={} email={} role={} whitelisted={}", user.getId().getValue(), user.getEmail().getValue(), user.getRole(), whitelisted);
 
@@ -96,7 +100,8 @@ public class RegisterUserUseCase {
         eventPublisher.publish(userEventsTopic,
                 new UserRegistered(user.getId().getValue(), user.getEmail().getValue(), user.getRole().name()));
 
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), whitelisted);
+        String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
+        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), whitelisted, sellerStatusStr);
 
         return new AuthResponse(
                 token,
@@ -104,7 +109,8 @@ public class RegisterUserUseCase {
                 user.getRole().name(),
                 user.getFirstName(),
                 user.getLastName(),
-                whitelisted
+                whitelisted,
+                sellerStatusStr
         );
     }
 }

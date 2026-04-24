@@ -22,4 +22,6 @@ public interface UserRepository {
     Optional<User> findByAuthProviderAndProviderId(AuthProvider provider, String providerId);
 
     List<User> findAll();
+
+    List<User> findPendingSellers();
 }

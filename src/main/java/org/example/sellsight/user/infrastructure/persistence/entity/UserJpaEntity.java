@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.sellsight.user.domain.model.AuthProvider;
+import org.example.sellsight.user.domain.model.SellerStatus;
 
 import java.time.LocalDateTime;
 
@@ -58,4 +59,8 @@ public class UserJpaEntity {
 
     @Column(nullable = true)
     private LocalDateTime deletedAt;
+
+    @Column(nullable = true, length = 20)
+    @Enumerated(EnumType.STRING)
+    private SellerStatus sellerStatus;
 }
