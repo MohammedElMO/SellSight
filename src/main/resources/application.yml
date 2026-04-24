@@ -15,9 +15,9 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:sellsight}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 20
-      minimum-idle: 2
-      connection-timeout: 20000
+      maximum-pool-size: 100   # virtual threads are cheap; DB is the bottleneck
+      minimum-idle: 10
+      connection-timeout: 3000  # fail fast rather than hanging under load
       idle-timeout: 300000
       max-lifetime: 1200000
       leak-detection-threshold: 30000

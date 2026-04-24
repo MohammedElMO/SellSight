@@ -15,6 +15,7 @@ import org.example.sellsight.promotions.application.dto.CreateCouponRequest;
 import org.example.sellsight.promotions.application.usecase.CreateCouponUseCase;
 import org.example.sellsight.promotions.application.usecase.DeleteCouponUseCase;
 import org.example.sellsight.promotions.application.usecase.ListCouponsUseCase;
+import org.example.sellsight.promotions.application.usecase.ToggleCouponActiveUseCase;
 import org.example.sellsight.promotions.application.usecase.ValidateCouponUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,15 +35,18 @@ public class CouponController {
     private final ListCouponsUseCase listCouponsUseCase;
     private final CreateCouponUseCase createCouponUseCase;
     private final DeleteCouponUseCase deleteCouponUseCase;
+    private final ToggleCouponActiveUseCase toggleCouponActiveUseCase;
 
     public CouponController(ValidateCouponUseCase validateCouponUseCase,
                              ListCouponsUseCase listCouponsUseCase,
                              CreateCouponUseCase createCouponUseCase,
-                             DeleteCouponUseCase deleteCouponUseCase) {
+                             DeleteCouponUseCase deleteCouponUseCase,
+                             ToggleCouponActiveUseCase toggleCouponActiveUseCase) {
         this.validateCouponUseCase = validateCouponUseCase;
         this.listCouponsUseCase = listCouponsUseCase;
         this.createCouponUseCase = createCouponUseCase;
         this.deleteCouponUseCase = deleteCouponUseCase;
+        this.toggleCouponActiveUseCase = toggleCouponActiveUseCase;
     }
 
     @Operation(operationId = "validateCoupon", summary = "Validate a coupon code",
@@ -87,5 +91,18 @@ public class CouponController {
     public ResponseEntity<Void> delete(@PathVariable String id) {
         deleteCouponUseCase.execute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "toggleCouponActive", summary = "Activate or deactivate a coupon (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Coupon updated",
+        content = @Content(schema = @Schema(implementation = AdminCouponDto.class)))
+    @PatchMapping("/{id}/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminCouponDto> toggleActive(
+            @PathVariable String id,
+            @RequestBody Map<String, Boolean> body) {
+        boolean active = Boolean.TRUE.equals(body.get("active"));
+        return ResponseEntity.ok(toggleCouponActiveUseCase.execute(id, active));
     }
 }

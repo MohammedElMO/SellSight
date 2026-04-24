@@ -35,6 +35,8 @@ import type {
   RefundRequestDto,
   CreateRefundRequest,
   SellerApplicationDto,
+  MessageDto,
+  SendMessageRequest,
 } from '@shared/types';
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -236,7 +238,9 @@ export const eventApi = {
 
 export const paymentApi = {
   createIntent: (req: CreatePaymentIntentRequest) =>
-    api.post<{ clientSecret: string }>('/payments/create-intent', req).then((r) => r.data),
+    api.post<{ clientSecret: string | null }>('/payments/create-intent', req).then((r) => r.data),
+  confirmFree: (orderId: string) =>
+    api.post<OrderDto>(`/payments/confirm-free/${orderId}`).then((r) => r.data),
 };
 
 // ── Admin ─────────────────────────────────────────────────────
@@ -250,10 +254,27 @@ export const adminApi = {
     api.post<AdminCouponDto>('/coupons', req).then((r) => r.data),
   deleteCoupon: (id: string) =>
     api.delete<void>(`/coupons/${id}`),
+  toggleCouponActive: (id: string, active: boolean) =>
+    api.patch<AdminCouponDto>(`/coupons/${id}/active`, { active }).then((r) => r.data),
+  listRefunds: () =>
+    api.get<RefundRequestDto[]>('/orders/refunds').then((r) => r.data),
+  approveRefund: (refundId: string) =>
+    api.post<RefundRequestDto>(`/orders/refunds/${refundId}/approve`).then((r) => r.data),
+  rejectRefund: (refundId: string) =>
+    api.post<RefundRequestDto>(`/orders/refunds/${refundId}/reject`).then((r) => r.data),
   getPendingSellers: () =>
     api.get<SellerApplicationDto[]>('/users/sellers/pending').then((r) => r.data),
   approveSeller: (id: string) =>
     api.post<void>(`/users/sellers/${id}/approve`),
   rejectSeller: (id: string) =>
     api.post<void>(`/users/sellers/${id}/reject`),
+};
+
+// ── Messaging ────────────────────────────────────────────────
+
+export const messageApi = {
+  getMessages: (orderId: string) =>
+    api.get<MessageDto[]>(`/orders/${orderId}/messages`).then((r) => r.data),
+  sendMessage: (orderId: string, req: SendMessageRequest) =>
+    api.post<MessageDto>(`/orders/${orderId}/messages`, req).then((r) => r.data),
 };

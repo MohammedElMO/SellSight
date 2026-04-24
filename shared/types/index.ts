@@ -298,6 +298,7 @@ export interface CreateCouponRequest {
   maxUses?: number;
   startsAt: string;
   expiresAt: string;
+  isActive:boolean
 }
 
 // ── Loyalty ─────────────────────────────────────────────────
@@ -385,6 +386,21 @@ export interface TrackingEvent {
   sessionId?: string;
   metadata?: Record<string, string>;
   timestamp: string;
+}
+
+// ── Messaging ────────────────────────────────────────────────
+
+export interface MessageDto {
+  id: string;
+  orderId: string;
+  senderId: string;
+  senderRole: 'CUSTOMER' | 'SELLER' | 'ADMIN';
+  body: string;
+  sentAt: string;
+}
+
+export interface SendMessageRequest {
+  body: string;
 }
 
 // ── Shared ──────────────────────────────────────────────────

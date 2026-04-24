@@ -14,6 +14,7 @@ import org.example.sellsight.order.application.dto.CreateOrderRequest;
 import org.example.sellsight.order.application.dto.CreateRefundRequest;
 import org.example.sellsight.order.application.dto.OrderDto;
 import org.example.sellsight.order.application.dto.RefundRequestDto;
+import org.example.sellsight.order.application.usecase.ApproveRefundUseCase;
 import org.example.sellsight.order.application.usecase.*;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.application.dto.UserDto;
@@ -41,6 +42,7 @@ public class OrderController {
     private final GetUserOrdersUseCase getUserOrdersUseCase;
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
     private final CreateRefundRequestUseCase createRefundRequestUseCase;
+    private final ApproveRefundUseCase approveRefundUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
 
     public OrderController(CreateOrderUseCase createOrderUseCase,
@@ -48,12 +50,14 @@ public class OrderController {
                             GetUserOrdersUseCase getUserOrdersUseCase,
                             UpdateOrderStatusUseCase updateOrderStatusUseCase,
                             CreateRefundRequestUseCase createRefundRequestUseCase,
+                            ApproveRefundUseCase approveRefundUseCase,
                             GetUserProfileUseCase getUserProfileUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.getOrderUseCase = getOrderUseCase;
         this.getUserOrdersUseCase = getUserOrdersUseCase;
         this.updateOrderStatusUseCase = updateOrderStatusUseCase;
         this.createRefundRequestUseCase = createRefundRequestUseCase;
+        this.approveRefundUseCase = approveRefundUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
     }
 
@@ -186,6 +190,30 @@ public class OrderController {
     public ResponseEntity<RefundRequestDto> getRefundStatus(@PathVariable String id) {
         RefundRequestDto dto = createRefundRequestUseCase.getByOrderId(id);
         return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
+    }
+
+    @Operation(operationId = "listRefundRequests", summary = "List all refund requests (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/refunds")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<RefundRequestDto>> listRefunds() {
+        return ResponseEntity.ok(approveRefundUseCase.listPending());
+    }
+
+    @Operation(operationId = "approveRefund", summary = "Approve a refund request and issue Stripe refund (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/refunds/{refundId}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RefundRequestDto> approveRefund(@PathVariable String refundId) {
+        return ResponseEntity.ok(approveRefundUseCase.approve(refundId));
+    }
+
+    @Operation(operationId = "rejectRefund", summary = "Reject a refund request (ADMIN)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/refunds/{refundId}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RefundRequestDto> rejectRefund(@PathVariable String refundId) {
+        return ResponseEntity.ok(approveRefundUseCase.reject(refundId));
     }
 
     private UserDto getUserProfile(Authentication authentication) {

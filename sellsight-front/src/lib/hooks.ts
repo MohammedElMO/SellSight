@@ -8,12 +8,12 @@ import { useRouter } from 'next/navigation';
 import {
   authApi, productApi, orderApi, reviewApi, wishlistApi,
   questionApi, notificationApi, couponApi, loyaltyApi, addressApi,
-  cartApi, refundApi, subscriptionApi, adminApi,
+  cartApi, refundApi, subscriptionApi, adminApi, messageApi,
 } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { toast } from 'sonner';
-import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest, CreateCouponRequest } from '@shared/types';
+import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest, CreateCouponRequest, SendMessageRequest } from '@shared/types';
 import type { ProductFormValues, CreateProductFormValues } from '@/lib/schemas';
 
 // ── Internal helper ──────────────────────────────────────────
@@ -660,6 +660,77 @@ export function useRejectSeller() {
       queryClient.invalidateQueries({ queryKey: ['pending-sellers'] });
     },
     onError: (err: unknown) => toast.error(apiError(err, 'Failed to reject seller')),
+  });
+}
+
+// ── Coupon toggle ────────────────────────────────────────────
+
+export function useToggleCouponActive() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      adminApi.toggleCouponActive(id, active),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to update coupon')),
+  });
+}
+
+// ── Admin refunds ────────────────────────────────────────────
+
+export function useAdminRefunds() {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['admin-refunds'],
+    queryFn: adminApi.listRefunds,
+    enabled: isAuthenticated && role === 'ADMIN',
+  });
+}
+
+export function useApproveRefund() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (refundId: string) => adminApi.approveRefund(refundId),
+    onSuccess: () => {
+      toast.success('Refund approved and Stripe refund issued');
+      queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to approve refund')),
+  });
+}
+
+export function useRejectRefund() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (refundId: string) => adminApi.rejectRefund(refundId),
+    onSuccess: () => {
+      toast.success('Refund rejected');
+      queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to reject refund')),
+  });
+}
+
+// ── Messaging ────────────────────────────────────────────────
+
+export function useOrderMessages(orderId: string) {
+  return useQuery({
+    queryKey: ['messages', orderId],
+    queryFn: () => messageApi.getMessages(orderId),
+    enabled: !!orderId,
+    refetchInterval: 10000,
+  });
+}
+
+export function useSendMessage(orderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (req: SendMessageRequest) => messageApi.sendMessage(orderId, req),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', orderId] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to send message')),
   });
 }
 

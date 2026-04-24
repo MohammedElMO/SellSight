@@ -15,5 +15,6 @@ public record CreateCouponRequest(
         @DecimalMin("0") BigDecimal minOrder,
         Integer maxUses,
         @NotNull LocalDateTime startsAt,
-        @NotNull LocalDateTime expiresAt
+        @NotNull LocalDateTime expiresAt,
+        Boolean isActive
 ) {}

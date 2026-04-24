@@ -70,6 +70,7 @@ public class Coupon {
     }
 
     public void deactivate() { this.active = false; }
+    public void activate()   { this.active = true; }
 
     // ── Getters ─────────────────────────────────────────────
     public UUID getId() { return id; }

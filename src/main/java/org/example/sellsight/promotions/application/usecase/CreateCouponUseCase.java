@@ -30,7 +30,7 @@ public class CreateCouponUseCase {
                 0,
                 req.startsAt(),
                 req.expiresAt(),
-                true
+                req.isActive() != null ? req.isActive() : true
         );
         Coupon saved = couponRepository.save(coupon);
         return new AdminCouponDto(

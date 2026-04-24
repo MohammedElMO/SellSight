@@ -60,8 +60,6 @@ export default function CheckoutClient() {
     }
   }, [cartItems.length, cartLoading, router, currentStep]);
 
-  // Step 1 → 2: create the order first (PENDING), then create the PaymentIntent with the orderId.
-  // The webhook will confirm the order once Stripe fires payment_intent.succeeded.
   const handleAddressNext = async () => {
     setIsPreparingCheckout(true);
     try {
@@ -75,11 +73,19 @@ export default function CheckoutClient() {
       });
       setPendingOrderId(order.id);
 
+      if (finalTotal === 0) {
+        await paymentApi.confirmFree(order.id);
+        track('PURCHASE', { orderId: order.id, total: 0 });
+        await cartApi.clear().catch(() => {});
+        setCurrentStep(3);
+        return;
+      }
+
       const intent = await paymentApi.createIntent({
-        amount: Math.round(finalTotal * 100) || 50,
+        amount: Math.round(finalTotal * 100),
         orderId: order.id,
       });
-      setClientSecret(intent.clientSecret);
+      setClientSecret(intent.clientSecret ?? '');
       setCurrentStep(2);
     } catch {
       toast.error('Failed to initialize checkout. Please try again.');

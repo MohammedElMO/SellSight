@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useAdminCoupons, useCreateCoupon, useDeleteCoupon } from '@/lib/hooks';
+import { useAdminCoupons, useCreateCoupon, useDeleteCoupon, useToggleCouponActive } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
 import { MagButton } from '@/components/ui/mag-button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tag, Plus, Copy, Trash2, X } from 'lucide-react';
+import { Tag, Plus, Copy, Trash2, X, ToggleLeft, ToggleRight } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { AdminCouponDto, CreateCouponRequest } from '@shared/types';
@@ -38,6 +38,7 @@ function CreateCouponModal({ onClose }: { onClose: () => void }) {
     maxUses: undefined,
     startsAt: new Date().toISOString().slice(0, 16),
     expiresAt: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 16),
+    isActive:true
   });
 
   const set = <K extends keyof CreateCouponRequest>(k: K, v: CreateCouponRequest[K]) =>
@@ -141,6 +142,17 @@ function CreateCouponModal({ onClose }: { onClose: () => void }) {
                 className="w-full h-[38px] px-3 border border-[var(--border)] rounded-[var(--radius-xs)] bg-[var(--bg-input)] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
               />
             </Field>
+            <Field label="Active">
+              <button
+                type="button"
+                onClick={() => set('isActive', !form.isActive)}
+                className="flex items-center gap-2 h-[38px] px-3 border border-[var(--border)] rounded-[var(--radius-xs)] bg-[var(--bg-input)] text-[13px] text-[var(--text-primary)] w-full"
+              >
+                {form.isActive
+                  ? <><ToggleRight className="h-5 w-5 text-[var(--accent)]" /> Active</>
+                  : <><ToggleLeft  className="h-5 w-5 text-[var(--text-tertiary)]" /> Inactive</>}
+              </button>
+            </Field>
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -160,7 +172,8 @@ function CreateCouponModal({ onClose }: { onClose: () => void }) {
 // ── Row ───────────────────────────────────────────────────────
 
 function CouponRow({ coupon }: { coupon: AdminCouponDto }) {
-  const { mutate: del, isPending } = useDeleteCoupon();
+  const { mutate: del, isPending: delPending } = useDeleteCoupon();
+  const { mutate: toggle, isPending: togglePending } = useToggleCouponActive();
 
   const now = new Date();
   const expired = new Date(coupon.expiresAt) < now;
@@ -171,7 +184,7 @@ function CouponRow({ coupon }: { coupon: AdminCouponDto }) {
   return (
     <div
       className="grid items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)] last:border-0 hover:bg-[var(--surface)] transition-colors"
-      style={{ gridTemplateColumns: '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 60px' }}
+      style={{ gridTemplateColumns: '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 60px 60px' }}
     >
       <div className="flex items-center gap-2">
         <Tag className="h-3.5 w-3.5 shrink-0 text-[var(--text-tertiary)]" />
@@ -208,7 +221,18 @@ function CouponRow({ coupon }: { coupon: AdminCouponDto }) {
       <MagButton
         size="sm"
         variant="ghost"
-        disabled={isPending}
+        disabled={togglePending}
+        onClick={() => toggle({ id: coupon.id, active: !coupon.active })}
+      >
+        {coupon.active
+          ? <ToggleRight className="h-4 w-4 text-[var(--accent)]" />
+          : <ToggleLeft  className="h-4 w-4 text-[var(--text-tertiary)]" />}
+      </MagButton>
+
+      <MagButton
+        size="sm"
+        variant="ghost"
+        disabled={delPending}
         onClick={() => del(coupon.id)}
         className="text-[var(--danger)]"
       >
@@ -289,7 +313,7 @@ export default function AdminCouponsPage() {
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] overflow-hidden">
             <div
               className="grid gap-3 px-5 py-3 border-b border-[var(--border)] text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]"
-              style={{ background: 'var(--surface)', gridTemplateColumns: '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 60px' }}
+              style={{ background: 'var(--surface)', gridTemplateColumns: '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 60px 60px' }}
             >
               <span>Code</span>
               <span>Discount</span>
@@ -297,6 +321,7 @@ export default function AdminCouponsPage() {
               <span>Uses</span>
               <span>Expires</span>
               <span>Status</span>
+              <span />
               <span />
             </div>
 

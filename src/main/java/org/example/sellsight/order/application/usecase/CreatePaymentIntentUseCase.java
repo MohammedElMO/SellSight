@@ -6,6 +6,7 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.order.application.dto.PaymentIntentResponse;
+import org.example.sellsight.order.infrastructure.persistence.repository.OrderJpaRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,21 @@ public class CreatePaymentIntentUseCase {
     @Value("${STRIPE_SECRET_KEY}")
     private String stripeApiKey;
 
+    private final OrderJpaRepository orderJpaRepository;
+
+    public CreatePaymentIntentUseCase(OrderJpaRepository orderJpaRepository) {
+        this.orderJpaRepository = orderJpaRepository;
+    }
+
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeApiKey;
     }
 
     public PaymentIntentResponse execute(long amount, String orderId) {
+        if (amount == 0) {
+            return new PaymentIntentResponse(null);
+        }
         try {
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                 .setAmount(amount)
@@ -31,8 +41,12 @@ public class CreatePaymentIntentUseCase {
                 .putMetadata("order_id", orderId)
                 .build();
             PaymentIntent intent = PaymentIntent.create(params);
+            orderJpaRepository.findById(orderId).ifPresent(order -> {
+                order.setStripePaymentIntentId(intent.getId());
+                orderJpaRepository.save(order);
+            });
             return new PaymentIntentResponse(intent.getClientSecret());
-        }catch (StripeException e) {
+        } catch (StripeException e) {
             log.error("Stripe Error: {}", e.getMessage());
             if (e.getStripeError() != null) {
                 log.error("Code: {}", e.getStripeError().getCode());

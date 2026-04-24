@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useOrder, useRequestRefund, useRefundStatus } from '@/lib/hooks';
+import { useOrder, useRequestRefund, useRefundStatus, useOrderMessages, useSendMessage } from '@/lib/hooks';
 import { OrderStatusBadge } from '@/components/order/order-status-badge';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { useCartStore } from '@/store/cart';
-import { Package, ChevronRight, ArrowLeft, RotateCcw, Check } from 'lucide-react';
+import { Package, ChevronRight, ArrowLeft, RotateCcw, Check, MessageCircle, Send } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import type { ProductDto } from '@shared/types';
@@ -23,8 +23,11 @@ export default function OrderDetailPage() {
   const { data: order, isLoading, isError } = useOrder(id);
   const { data: refund } = useRefundStatus(id);
   const requestRefund = useRequestRefund(id);
+  const { data: messages = [] } = useOrderMessages(id);
+  const sendMessage = useSendMessage(id);
   const [refundReason, setRefundReason]     = useState('');
   const [showRefundModal, setShowRefundModal] = useState(false);
+  const [msgInput, setMsgInput] = useState('');
 
   const handleRefundSubmit = () => {
     if (refundReason.trim().length < 10) {
@@ -191,7 +194,63 @@ export default function OrderDetailPage() {
           </div>
         </Reveal>
 
+        {/* Messaging */}
         <Reveal delay={200}>
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5">
+            <h2 className="text-[13px] font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-[var(--accent)]" />
+              Messages
+            </h2>
+            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto mb-4">
+              {messages.length === 0 ? (
+                <p className="text-[12px] text-[var(--text-tertiary)] text-center py-4">
+                  No messages yet. Ask the seller a question.
+                </p>
+              ) : (
+                messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex flex-col gap-0.5 ${m.senderRole === 'CUSTOMER' ? 'items-end' : 'items-start'}`}
+                  >
+                    <span className="text-[10px] text-[var(--text-tertiary)] px-1 capitalize">{m.senderRole.toLowerCase()}</span>
+                    <div
+                      className="max-w-[80%] rounded-[var(--radius-sm)] px-3 py-2 text-[13px]"
+                      style={m.senderRole === 'CUSTOMER'
+                        ? { background: 'var(--accent)', color: 'white' }
+                        : { background: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                    >
+                      {m.body}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={msgInput}
+                onChange={(e) => setMsgInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && msgInput.trim()) {
+                    e.preventDefault();
+                    sendMessage.mutate({ body: msgInput.trim() }, { onSuccess: () => setMsgInput('') });
+                  }
+                }}
+                placeholder="Ask the seller a question…"
+                className="flex-1 h-[38px] px-3 border border-[var(--border)] rounded-[var(--radius-xs)] bg-[var(--bg-input)] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+              />
+              <MagButton
+                size="sm"
+                variant="primary"
+                disabled={!msgInput.trim() || sendMessage.isPending}
+                onClick={() => sendMessage.mutate({ body: msgInput.trim() }, { onSuccess: () => setMsgInput('') })}
+              >
+                <Send className="h-3.5 w-3.5" />
+              </MagButton>
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={240}>
           <button
             onClick={() => router.push('/orders')}
             className="self-start flex items-center gap-1.5 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--accent-text)] transition-colors"
