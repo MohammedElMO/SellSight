@@ -27,6 +27,8 @@ import type {
   QuestionDto,
   NotificationDto,
   CouponDto,
+  AdminCouponDto,
+  CreateCouponRequest,
   LoyaltyAccountDto,
   AddressDto,
   CartDto,
@@ -234,4 +236,17 @@ export const eventApi = {
 export const paymentApi = {
   createIntent: (req: CreatePaymentIntentRequest) =>
     api.post<{ clientSecret: string }>('/payments/create-intent', req).then((r) => r.data),
+};
+
+// ── Admin ─────────────────────────────────────────────────────
+
+export const adminApi = {
+  getUsers: () =>
+    api.get<UserDto[]>('/users').then((r) => r.data),
+  getCoupons: () =>
+    api.get<AdminCouponDto[]>('/coupons').then((r) => r.data),
+  createCoupon: (req: CreateCouponRequest) =>
+    api.post<AdminCouponDto>('/coupons', req).then((r) => r.data),
+  deleteCoupon: (id: string) =>
+    api.delete<void>(`/coupons/${id}`),
 };

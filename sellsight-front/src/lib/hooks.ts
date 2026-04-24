@@ -8,12 +8,12 @@ import { useRouter } from 'next/navigation';
 import {
   authApi, productApi, orderApi, reviewApi, wishlistApi,
   questionApi, notificationApi, couponApi, loyaltyApi, addressApi,
-  cartApi, refundApi, subscriptionApi,
+  cartApi, refundApi, subscriptionApi, adminApi,
 } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { toast } from 'sonner';
-import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest } from '@shared/types';
+import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest, CreateCouponRequest } from '@shared/types';
 import type { ProductFormValues, CreateProductFormValues } from '@/lib/schemas';
 
 // ── Internal helper ──────────────────────────────────────────
@@ -37,7 +37,8 @@ export function useProfile() {
 
 export function useUpdateProfile() {
   const qc = useQueryClient();
-  const { login, emailVerified } = useAuthStore((s) => ({ login: s.login, emailVerified: s.emailVerified, }));
+  const login = useAuthStore((s) => s.login);
+  const emailVerified = useAuthStore((s) => s.emailVerified);
   return useMutation({
     mutationFn: (req: UpdateProfileRequest) => authApi.updateProfile(req),
     onSuccess: (updated) => {
@@ -578,6 +579,50 @@ export function useTogglePriceDropSubscription(productId: string) {
       queryClient.invalidateQueries({ queryKey: ['price-drop-sub', productId] });
     },
     onError: (err) => toast.error(apiError(err, 'Failed to update subscription')),
+  });
+}
+
+// ── Admin ────────────────────────────────────────────────────
+
+export function useAdminUsers() {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['admin-users'],
+    queryFn: adminApi.getUsers,
+    enabled: isAuthenticated && role === 'ADMIN',
+  });
+}
+
+export function useAdminCoupons() {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['admin-coupons'],
+    queryFn: adminApi.getCoupons,
+    enabled: isAuthenticated && role === 'ADMIN',
+  });
+}
+
+export function useCreateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (req: CreateCouponRequest) => adminApi.createCoupon(req),
+    onSuccess: () => {
+      toast.success('Coupon created!');
+      queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to create coupon')),
+  });
+}
+
+export function useDeleteCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminApi.deleteCoupon(id),
+    onSuccess: () => {
+      toast.success('Coupon deleted');
+      queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+    },
+    onError: () => toast.error('Failed to delete coupon'),
   });
 }
 

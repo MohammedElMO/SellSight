@@ -6,6 +6,7 @@ import org.example.sellsight.promotions.domain.repository.CouponRepository;
 import org.example.sellsight.promotions.infrastructure.persistence.entity.CouponJpaEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,6 +33,16 @@ public class CouponRepositoryAdapter implements CouponRepository {
     @Override
     public Optional<Coupon> findByCode(String code) {
         return jpa.findByCode(code).map(this::toDomain);
+    }
+
+    @Override
+    public List<Coupon> findAll() {
+        return jpa.findAll().stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        jpa.deleteById(id);
     }
 
     private CouponJpaEntity toJpa(Coupon c) {

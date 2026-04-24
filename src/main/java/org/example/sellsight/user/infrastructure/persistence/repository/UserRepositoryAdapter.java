@@ -6,6 +6,7 @@ import org.example.sellsight.user.infrastructure.persistence.entity.UserJpaEntit
 import org.example.sellsight.user.infrastructure.persistence.mapper.UserPersistenceMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -49,5 +50,12 @@ public class UserRepositoryAdapter implements UserRepository {
     public Optional<User> findByAuthProviderAndProviderId(AuthProvider provider, String providerId) {
         return jpaRepository.findByAuthProviderAndProviderId(provider, providerId)
                 .map(UserPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(UserPersistenceMapper::toDomain)
+                .toList();
     }
 }

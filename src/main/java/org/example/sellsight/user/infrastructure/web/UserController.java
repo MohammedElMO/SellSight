@@ -1,6 +1,7 @@
 package org.example.sellsight.user.infrastructure.web;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,10 +14,14 @@ import org.example.sellsight.user.application.dto.UpdateProfileRequest;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.DeleteAccountUseCase;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
+import org.example.sellsight.user.application.usecase.ListUsersUseCase;
 import org.example.sellsight.user.application.usecase.UpdateUserProfileUseCase;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST controller for authenticated user operations.
@@ -29,13 +34,16 @@ public class UserController {
     private final GetUserProfileUseCase getUserProfileUseCase;
     private final UpdateUserProfileUseCase updateUserProfileUseCase;
     private final DeleteAccountUseCase deleteAccountUseCase;
+    private final ListUsersUseCase listUsersUseCase;
 
     public UserController(GetUserProfileUseCase getUserProfileUseCase,
                           UpdateUserProfileUseCase updateUserProfileUseCase,
-                          DeleteAccountUseCase deleteAccountUseCase) {
+                          DeleteAccountUseCase deleteAccountUseCase,
+                          ListUsersUseCase listUsersUseCase) {
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.updateUserProfileUseCase = updateUserProfileUseCase;
         this.deleteAccountUseCase = deleteAccountUseCase;
+        this.listUsersUseCase = listUsersUseCase;
     }
 
     @Operation(
@@ -94,5 +102,23 @@ public class UserController {
     public ResponseEntity<Void> deleteMyAccount(Authentication authentication) {
         deleteAccountUseCase.execute(authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+        operationId = "listAllUsers",
+        summary     = "List all users (ADMIN)",
+        description = "Returns all non-deleted user accounts. Requires ADMIN role.",
+        security    = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Users listed",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDto.class)))),
+        @ApiResponse(responseCode = "403", description = "Requires ADMIN role",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserDto>> listAllUsers() {
+        return ResponseEntity.ok(listUsersUseCase.execute());
     }
 }

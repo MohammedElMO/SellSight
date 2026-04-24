@@ -265,6 +265,29 @@ export interface CouponDto {
   discount: number;
 }
 
+export interface AdminCouponDto {
+  id: string;
+  code: string;
+  type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  value: number;
+  minOrder: number;
+  maxUses: number | null;
+  usedCount: number;
+  startsAt: string;
+  expiresAt: string;
+  active: boolean;
+}
+
+export interface CreateCouponRequest {
+  code: string;
+  type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  value: number;
+  minOrder?: number;
+  maxUses?: number;
+  startsAt: string;
+  expiresAt: string;
+}
+
 // ── Loyalty ─────────────────────────────────────────────────
 
 export interface LoyaltyTransactionDto {
