@@ -39,6 +39,7 @@ export function useUpdateProfile() {
   const qc = useQueryClient();
   const login = useAuthStore((s) => s.login);
   const emailVerified = useAuthStore((s) => s.emailVerified);
+  const sellerStatus = useAuthStore((s) => s.sellerStatus);
   return useMutation({
     mutationFn: (req: UpdateProfileRequest) => authApi.updateProfile(req),
     onSuccess: (updated) => {
@@ -50,6 +51,7 @@ export function useUpdateProfile() {
         firstName: updated.firstName,
         lastName: updated.lastName,
         emailVerified,
+        sellerStatus,
       });
       toast.success('Profile updated');
     },
