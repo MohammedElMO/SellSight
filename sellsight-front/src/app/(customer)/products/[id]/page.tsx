@@ -172,49 +172,63 @@ export default function ProductDetailPage() {
               {formatPrice(product.price)}
             </div>
 
-            <div className="flex items-center gap-2 mb-6">
-              <Pill size="sm" variant="accent">{product.category}</Pill>
-              {product.active
-                ? <Pill size="sm" variant="success">In stock</Pill>
-                : <Pill size="sm" variant="danger">Out of stock</Pill>}
-            </div>
+            {(() => {
+              const inStock = product.active && product.stockQuantity > 0;
+              const lowStock = inStock && product.stockQuantity <= 5;
+              return (
+                <div className="flex items-center gap-2 mb-6">
+                  <Pill size="sm" variant="accent">{product.category}</Pill>
+                  {!product.active
+                    ? <Pill size="sm" variant="danger">Unavailable</Pill>
+                    : inStock
+                      ? lowStock
+                        ? <Pill size="sm" variant="warning">Low stock — {product.stockQuantity} left</Pill>
+                        : <Pill size="sm" variant="success">In stock</Pill>
+                      : <Pill size="sm" variant="danger">Out of stock</Pill>}
+                </div>
+              );
+            })()}
 
             {/* Quantity + CTA */}
             {canAddToCart && (
               <>
-                <div className="flex flex-col gap-2 mb-5">
-                  <span className="text-[13px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Quantity</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-all"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span
-                      className="h-10 w-14 flex items-center justify-center text-sm font-bold text-[var(--text-primary)] rounded-[var(--radius-xs)] border border-[var(--border)]"
-                    >
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() => setQuantity((q) => q + 1)}
-                      className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-all"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
+                {product.active && product.stockQuantity > 0 ? (
+                  <div className="flex flex-col gap-2 mb-5">
+                    <span className="text-[13px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Quantity</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-all"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="h-10 w-14 flex items-center justify-center text-sm font-bold text-[var(--text-primary)] rounded-[var(--radius-xs)] border border-[var(--border)]">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))}
+                        className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-all"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 <div className="flex gap-3 mb-6">
                   <MagButton
                     onClick={handleAddToCart}
                     variant={added ? 'secondary' : 'primary'}
                     size="lg"
-                    disabled={!product.active}
+                    disabled={!product.active || product.stockQuantity === 0}
                     className="flex-1"
                   >
                     {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
-                    {added ? 'Added!' : 'Add to cart'}
+                    {added
+                      ? 'Added!'
+                      : (!product.active || product.stockQuantity === 0)
+                        ? 'Out of stock'
+                        : 'Add to cart'}
                   </MagButton>
                   <WishlistButton productId={product.id} className="h-[52px] w-[52px]" />
                 </div>

@@ -17,6 +17,7 @@ import {
   Award,
   MapPin,
   Eye,
+  Warehouse,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn, initials } from '@/lib/utils';
@@ -48,6 +49,7 @@ function useNavLinks(): NavLink[] {
     return [
       { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
       { label: 'Products',  href: '/admin/products',  icon: Package         },
+      { label: 'Inventory', href: '/admin/inventory', icon: Warehouse        },
     ];
   return [];
 }

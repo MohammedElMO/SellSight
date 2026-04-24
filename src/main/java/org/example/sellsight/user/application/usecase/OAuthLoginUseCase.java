@@ -93,14 +93,15 @@ public class OAuthLoginUseCase {
             }
         }
 
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name());
+        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true);
 
         return new AuthResponse(
                 token,
                 user.getEmail().getValue(),
                 user.getRole().name(),
                 user.getFirstName(),
-                user.getLastName()
+                user.getLastName(),
+                true
         );
     }
 }

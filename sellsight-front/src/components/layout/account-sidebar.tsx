@@ -29,23 +29,23 @@ export function AccountSidebar() {
   };
 
   return (
-    <div className="w-full md:w-[240px] shrink-0">
+    <div className="w-full md:w-60 shrink-0">
       {/* Avatar card */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5 mb-4 text-center">
+      <div className="bg-(--bg-card) border border-(--border) rounded-(--radius) p-5 mb-4 text-center">
         <div
           className="h-16 w-16 rounded-full mx-auto flex items-center justify-center text-white text-xl font-bold mb-3"
           style={{ background: 'var(--gradient)', boxShadow: '0 6px 24px var(--accent-glow)' }}
         >
           {initials(firstName, lastName) || <User className="h-7 w-7" />}
         </div>
-        <h2 className="font-display font-bold text-[15px] text-[var(--text-primary)]">
+        <h2 className="font-display font-bold text-[15px] text-(--text-primary)">
           {firstName} {lastName}
         </h2>
-        <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5 truncate">{email}</p>
+        <p className="text-[12px] text-(--text-tertiary) mt-0.5 truncate">{email}</p>
       </div>
 
       {/* Nav */}
-      <nav className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] overflow-hidden p-2 flex flex-col gap-0.5">
+      <nav className="bg-(--bg-card) border border-(--border) rounded-(--radius) overflow-hidden p-2 flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (

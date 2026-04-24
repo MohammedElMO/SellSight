@@ -44,10 +44,15 @@ export default function RegisterPage() {
     try {
       const data = await authApi.register(values);
       login(data);
-      toast.success(`Welcome, ${data.firstName}!`);
-      if (data.role === 'ADMIN')       router.push('/admin/dashboard');
-      else if (data.role === 'SELLER') router.push('/seller/dashboard');
-      else                             router.push('/products');
+      if (!data.emailVerified) {
+        toast.success('Account created! Check your inbox to verify your email.');
+        router.push(`/pending-verification?email=${encodeURIComponent(data.email)}`);
+      } else {
+        toast.success(`Welcome, ${data.firstName}!`);
+        if (data.role === 'ADMIN')       router.push('/admin/dashboard');
+        else if (data.role === 'SELLER') router.push('/seller/dashboard');
+        else                             router.push('/products');
+      }
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data

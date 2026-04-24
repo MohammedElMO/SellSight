@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @Slf4j
 @Service
@@ -26,6 +27,9 @@ public class RegisterUserUseCase {
     private final SendVerificationEmailUseCase sendVerificationEmail;
     private final EventPublisher eventPublisher;
     private final String userEventsTopic;
+
+    @Value("${app.verification.bypass-emails:}")
+    private String bypassEmailsRaw;
 
     public RegisterUserUseCase(UserRepository userRepository,
                                PasswordEncoder passwordEncoder,
@@ -73,22 +77,34 @@ public class RegisterUserUseCase {
                 LocalDateTime.now()
         );
 
-        user = userRepository.save(user);
-        log.info("User registered: id={} email={} role={}", user.getId().getValue(), user.getEmail().getValue(), user.getRole());
+        boolean whitelisted = Arrays.stream(bypassEmailsRaw.split(","))
+                .map(String::trim)
+                .filter(e -> !e.isEmpty())
+                .anyMatch(e -> e.equalsIgnoreCase(request.email()));
 
-        sendVerificationEmail.execute(user);
+        if (whitelisted) {
+            user.markEmailVerified();
+        }
+
+        user = userRepository.save(user);
+        log.info("User registered: id={} email={} role={} whitelisted={}", user.getId().getValue(), user.getEmail().getValue(), user.getRole(), whitelisted);
+
+        if (!whitelisted) {
+            sendVerificationEmail.execute(user);
+        }
 
         eventPublisher.publish(userEventsTopic,
                 new UserRegistered(user.getId().getValue(), user.getEmail().getValue(), user.getRole().name()));
 
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name());
+        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), whitelisted);
 
         return new AuthResponse(
                 token,
                 user.getEmail().getValue(),
                 user.getRole().name(),
                 user.getFirstName(),
-                user.getLastName()
+                user.getLastName(),
+                whitelisted
         );
     }
 }

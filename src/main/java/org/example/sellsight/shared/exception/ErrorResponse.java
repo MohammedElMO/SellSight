@@ -8,9 +8,14 @@ import java.time.LocalDateTime;
 public record ErrorResponse(
         int status,
         String message,
-        LocalDateTime timestamp
+        LocalDateTime timestamp,
+        String errorCode
 ) {
     public static ErrorResponse of(int status, String message) {
-        return new ErrorResponse(status, message, LocalDateTime.now());
+        return new ErrorResponse(status, message, LocalDateTime.now(), null);
+    }
+
+    public static ErrorResponse of(int status, String message, String errorCode) {
+        return new ErrorResponse(status, message, LocalDateTime.now(), errorCode);
     }
 }

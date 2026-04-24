@@ -69,7 +69,7 @@ spring:
     type: caffeine
 
 server:
-  port: 8081
+  port: 8080
   address: 0.0.0.0
 
 # Application-level config
@@ -90,6 +90,8 @@ app:
   tokens:
     email-verification-ttl-minutes: 1440
     password-reset-ttl-minutes: 60
+  verification:
+    bypass-emails: ${APP_VERIFICATION_BYPASS_EMAILS:}
 
 # JWT Configuration
 jwt:

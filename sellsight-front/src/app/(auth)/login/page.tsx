@@ -35,10 +35,13 @@ export default function LoginPage() {
       else if (data.role === 'SELLER') router.push('/seller/dashboard');
       else                             router.push('/products');
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Invalid email or password';
-      toast.error(msg);
+      const errData = (err as { response?: { data?: { message?: string; errorCode?: string } } })?.response?.data;
+      if (errData?.errorCode === 'EMAIL_NOT_VERIFIED') {
+        toast.error('Please verify your email before signing in.');
+        router.push(`/pending-verification?email=${encodeURIComponent(values.email)}`);
+        return;
+      }
+      toast.error(errData?.message ?? 'Invalid email or password');
     }
   };
 

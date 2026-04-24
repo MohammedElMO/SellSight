@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.sellsight.inventory.application.dto.BatchUpdateStockRequest;
 import org.example.sellsight.inventory.application.dto.StockDto;
 import org.example.sellsight.inventory.application.dto.UpdateStockRequest;
 import org.example.sellsight.inventory.application.usecase.GetStockUseCase;
@@ -104,5 +105,29 @@ public class InventoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<StockDto>> getLowStock() {
         return ResponseEntity.ok(getStockUseCase.getLowStock());
+    }
+
+    @Operation(
+        operationId = "batchUpdateStock",
+        summary     = "Batch-update stock levels",
+        description = "Updates stock quantities for multiple products in one request. Requires ADMIN role.",
+        security    = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "All stock levels updated",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = StockDto.class)))),
+        @ApiResponse(responseCode = "400", description = "Validation error",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Requires ADMIN role",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<StockDto>> batchUpdate(@Valid @RequestBody BatchUpdateStockRequest request) {
+        List<StockDto> results = request.items().stream()
+                .map(item -> updateStockUseCase.execute(
+                        item.productId(), new UpdateStockRequest(item.quantity(), null)))
+                .toList();
+        return ResponseEntity.ok(results);
     }
 }

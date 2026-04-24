@@ -2,7 +2,9 @@ package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import org.example.sellsight.config.security.JwtService;
 import org.example.sellsight.shared.events.EventPublisher;
+import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.event.EmailVerified;
 import org.example.sellsight.user.domain.exception.InvalidTokenException;
 import org.example.sellsight.user.domain.model.User;
@@ -25,12 +27,13 @@ public class VerifyEmailUseCase {
     private final EmailVerificationTokenJpaRepository tokenRepo;
     private final UserRepository userRepository;
     private final EventPublisher eventPublisher;
+    private final JwtService jwtService;
 
     @Value("${app.kafka.topics.user-events:user-events}")
     private String userEventsTopic;
 
     @Transactional
-    public void execute(String rawToken) {
+    public AuthResponse execute(String rawToken) {
         UUID token;
         try {
             token = UUID.fromString(rawToken);
@@ -56,5 +59,15 @@ public class VerifyEmailUseCase {
 
         eventPublisher.publish(userEventsTopic,
                 new EmailVerified(user.getId().getValue(), user.getEmail().getValue()));
+
+        String jwtToken = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true);
+        return new AuthResponse(
+                jwtToken,
+                user.getEmail().getValue(),
+                user.getRole().name(),
+                user.getFirstName(),
+                user.getLastName(),
+                true
+        );
     }
 }

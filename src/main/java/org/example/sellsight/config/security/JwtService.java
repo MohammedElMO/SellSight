@@ -26,29 +26,21 @@ public class JwtService {
         this.expiration = expiration;
     }
 
-    /**
-     * Generate a JWT token with email as subject and role as claim.
-     */
-    public String generateToken(String email, String role) {
+    public String generateToken(String email, String role, boolean emailVerified) {
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
+                .claim("emailVerified", emailVerified)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(signingKey)
                 .compact();
     }
 
-    /**
-     * Extract the email (subject) from a token.
-     */
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
     }
 
-    /**
-     * Extract the role claim from a token.
-     */
     public String extractRole(String token) {
         return extractClaims(token).get("role", String.class);
     }

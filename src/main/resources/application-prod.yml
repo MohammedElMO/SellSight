@@ -6,6 +6,7 @@ spring:
         format_sql: false
 
   # Flyway runs in prod; never auto-migrate schema via JPA
+
   flyway:
     enabled: true
     baseline-on-migrate: false
@@ -27,9 +28,12 @@ spring.data.redis:
   port: ${REDIS_PORT:6379}
 
 app:
+  # Must be the frontend URL, e.g. https://sellsights.com (NOT api.sellsights.com)
   base-url: ${APP_BASE_URL}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  verification:
+    bypass-emails: ${APP_VERIFICATION_BYPASS_EMAILS:}
 
 jwt:
   secret: ${JWT_SECRET}

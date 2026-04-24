@@ -24,6 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [added, setAdded] = useState(false);
 
   const canAddToCart = role !== 'SELLER' && role !== 'ADMIN';
+  const inStock = product.active && product.stockQuantity > 0;
 
   const flash = () => {
     setAdded(true);
@@ -33,6 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!inStock) return;
     if (isAuthenticated && role === 'CUSTOMER') {
       addToDbCart(
         { productId: product.id, quantity: 1 },
@@ -67,8 +69,17 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
 
+            {/* Out-of-stock overlay */}
+          {!inStock && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className="text-[11px] font-bold text-white uppercase tracking-widest px-3 py-1 rounded-full bg-black/60">
+                Out of stock
+              </span>
+            </div>
+          )}
+
           {/* Hover add-to-cart */}
-          {canAddToCart && (
+          {canAddToCart && inStock && (
             <button
               onClick={handleAddToCart}
               className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 whitespace-nowrap h-8 px-4 bg-white text-[#111] text-[12px] font-semibold rounded-full shadow-[0_4px_16px_oklch(0_0_0/0.12)] opacity-0 translate-y-[6px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200"

@@ -72,11 +72,10 @@ public class AuthController {
         return ResponseEntity.ok(oAuthLoginUseCase.execute(request));
     }
 
-    @Operation(operationId = "verifyEmail", summary = "Verify email with token")
+    @Operation(operationId = "verifyEmail", summary = "Verify email with token — returns a fresh JWT")
     @PostMapping("/verify-email")
-    public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
-        verifyEmailUseCase.execute(request.token());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<AuthResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        return ResponseEntity.ok(verifyEmailUseCase.execute(request.token()));
     }
 
     @Operation(operationId = "resendVerification", summary = "Resend the verification email")

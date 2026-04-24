@@ -8,11 +8,13 @@ import org.example.sellsight.engagement.application.dto.NotificationDto;
 import org.example.sellsight.engagement.application.usecase.GetNotificationsUseCase;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.concurrent.Executors;
@@ -98,6 +100,8 @@ public class NotificationController {
                         .name("unread-count")
                         .data(unread));
                 emitter.complete();
+            } catch (io.jsonwebtoken.JwtException e) {
+                emitter.completeWithError(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token", e));
             } catch (Exception e) {
                 emitter.completeWithError(e);
             }

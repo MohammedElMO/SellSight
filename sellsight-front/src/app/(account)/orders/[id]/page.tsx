@@ -43,7 +43,7 @@ export default function OrderDetailPage() {
         id: item.productId, name: item.productName, description: '',
         price: item.unitPrice, category: '', sellerId: '', imageUrl: null,
         brand: null, ratingAvg: 0, ratingCount: 0, soldCount: 0,
-        active: true, createdAt: '', updatedAt: null,
+        active: true, createdAt: '', updatedAt: null, stockQuantity: 99,
       };
       addItem(stub, item.quantity);
     });

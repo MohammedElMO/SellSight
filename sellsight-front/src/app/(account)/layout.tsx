@@ -8,19 +8,22 @@ import { PageLayout } from '@/components/layout/page-layout';
 import { Loader2 } from 'lucide-react';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, role } = useAuthStore();
+  const { isAuthenticated, role, emailVerified, email } = useAuthStore();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => { setIsClient(true); }, []);
 
   useEffect(() => {
-    if (isClient && (!isAuthenticated || role !== 'CUSTOMER')) {
+    if (!isClient) return;
+    if (!isAuthenticated || role !== 'CUSTOMER') {
       router.replace('/login');
+    } else if (!emailVerified) {
+      router.replace(`/pending-verification${email ? `?email=${encodeURIComponent(email)}` : ''}`);
     }
-  }, [isAuthenticated, role, router, isClient]);
+  }, [isAuthenticated, role, emailVerified, email, router, isClient]);
 
-  if (!isClient || !isAuthenticated || role !== 'CUSTOMER') {
+  if (!isClient || !isAuthenticated || role !== 'CUSTOMER' || !emailVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent)' }} />

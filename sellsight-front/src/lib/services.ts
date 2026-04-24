@@ -20,6 +20,7 @@ import type {
   CreatePaymentIntentRequest,
   StockDto,
   UpdateStockRequest,
+  BatchUpdateStockItem,
   ReviewDto,
   CreateReviewRequest,
   WishlistDto,
@@ -53,7 +54,9 @@ export const authApi = {
   resetPassword: (token: string, newPassword: string) =>
     api.post<void>('/auth/reset-password', { token, newPassword }),
   verifyEmail: (token: string) =>
-    api.post<void>('/auth/verify-email', { token }),
+    api.post<AuthResponse>('/auth/verify-email', { token }).then((r) => r.data),
+  resendVerification: (email: string) =>
+    api.post<void>('/auth/resend-verification', { email }),
   deleteAccount: () =>
     api.delete<void>('/users/me'),
 };
@@ -99,6 +102,10 @@ export const inventoryApi = {
     api.get<StockDto>(`/inventory/${productId}`).then((r) => r.data),
   update: (productId: string, req: UpdateStockRequest) =>
     api.put<StockDto>(`/inventory/${productId}`, req).then((r) => r.data),
+  batchUpdate: (items: BatchUpdateStockItem[]) =>
+    api.post<StockDto[]>('/inventory/batch', { items }).then((r) => r.data),
+  getLowStock: () =>
+    api.get<StockDto[]>('/inventory/low-stock').then((r) => r.data),
 };
 
 // ── Reviews ──────────────────────────────────────────────────

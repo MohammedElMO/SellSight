@@ -32,6 +32,7 @@ export interface AuthResponse {
   role: Role;
   firstName: string;
   lastName: string;
+  emailVerified: boolean;
 }
 
 // ── User ────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ export interface ProductDto {
   active: boolean;
   createdAt: string;
   updatedAt: string | null;
+  stockQuantity: number;
 }
 
 export interface ProductPageDto {
@@ -164,6 +166,15 @@ export interface StockDto {
 export interface UpdateStockRequest {
   quantity: number;
   reorderThreshold?: number;
+}
+
+export interface BatchUpdateStockItem {
+  productId: string;
+  quantity: number;
+}
+
+export interface BatchUpdateStockRequest {
+  items: BatchUpdateStockItem[];
 }
 
 // ── Reviews ─────────────────────────────────────────────────

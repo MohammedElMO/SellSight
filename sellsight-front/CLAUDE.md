@@ -60,9 +60,18 @@ pnpm lint
 - Cast as `{ response?: { data?: { message?: string } } }` to extract the Spring Boot error message
 
 **State:**
-- Auth: `useAuthStore` from `store/auth.ts` (Zustand, persisted to localStorage) — provides `isAuthenticated`, `role`, `user`, `login()`, `logout()`
+- Auth: `useAuthStore` from `store/auth.ts` (Zustand, persisted to localStorage) — provides `isAuthenticated`, `role`, `emailVerified`, `login()`, `logout()`. **`emailVerified` must be passed through any `login()` call**, including profile-update re-logins in `hooks.ts`.
 - Cart: `useCartStore` from `store/cart.ts` (Zustand, in-memory) — `items`, `addItem()`, `removeItem()`, `updateQuantity()`, `clearCart()`, `totalItems()`, `totalPrice()`
 - Server data: React Query `useQuery` / `useMutation` via `lib/services.ts`
+
+**Route protection (two layers):**
+1. `src/proxy.ts` — Edge runtime, reads `app_token` cookie, decodes JWT (no verification — backend handles that). Redirects unauthenticated, wrong-role, and unverified users before the page loads.
+2. Client layouts — e.g. `(account)/layout.tsx` checks Zustand auth state as a second guard.
+
+**Stock rules:**
+- `ProductDto.stockQuantity` is the live quantity. Use `product.active && product.stockQuantity > 0` to determine if add-to-cart is allowed.
+- Cap quantity stepper at `product.stockQuantity`.
+- Do NOT use `product.active` alone — a product can be active but have 0 stock.
 
 ## Pages & Route Structure
 
@@ -71,13 +80,18 @@ pnpm lint
 | `/` | `app/page.tsx` | Public (hero) / redirects by role |
 | `/login` | `app/(auth)/login/page.tsx` | Public |
 | `/register` | `app/(auth)/register/page.tsx` | Public |
+| `/pending-verification` | `app/(auth)/pending-verification/page.tsx` | Public — shown after registration |
+| `/verify-email` | `app/(auth)/verify-email/page.tsx` | Public — auto-logs in on success |
 | `/products` | `app/(customer)/products/page.tsx` | Public |
 | `/products/[id]` | `app/(customer)/products/[id]/page.tsx` | Public |
-| `/cart` | `app/(customer)/cart/page.tsx` | CUSTOMER |
-| `/orders` | `app/(customer)/orders/page.tsx` | CUSTOMER |
-| `/orders/[id]` | `app/(customer)/orders/[id]/page.tsx` | CUSTOMER |
-| `/seller/dashboard` | `app/seller/dashboard/page.tsx` | SELLER / ADMIN |
-| `/seller/products` | `app/seller/products/page.tsx` | SELLER / ADMIN |
-| `/seller/products/new` | `app/seller/products/new/page.tsx` | SELLER / ADMIN |
-| `/seller/products/[id]/edit` | `app/seller/products/[id]/edit/page.tsx` | SELLER / ADMIN |
-| `/admin/orders` | `app/admin/orders/page.tsx` | ADMIN |
+| `/cart` | `app/(customer)/cart/page.tsx` | CUSTOMER (middleware) |
+| `/orders` | `app/(customer)/orders/page.tsx` | CUSTOMER (middleware) |
+| `/orders/[id]` | `app/(customer)/orders/[id]/page.tsx` | CUSTOMER (middleware) |
+| `/seller/dashboard` | `app/seller/dashboard/page.tsx` | SELLER / ADMIN (middleware) |
+| `/seller/inventory` | `app/seller/inventory/page.tsx` | SELLER / ADMIN (middleware) |
+| `/seller/products` | `app/seller/products/page.tsx` | SELLER / ADMIN (middleware) |
+| `/seller/products/new` | `app/seller/products/new/page.tsx` | SELLER / ADMIN (middleware) |
+| `/seller/products/[id]/edit` | `app/seller/products/[id]/edit/page.tsx` | SELLER / ADMIN (middleware) |
+| `/admin/dashboard` | `app/admin/dashboard/page.tsx` | ADMIN (middleware) |
+| `/admin/inventory` | `app/admin/inventory/page.tsx` | ADMIN (middleware) — vector search + batch stock update |
+| `/admin/orders` | `app/admin/orders/page.tsx` | ADMIN (middleware) |
