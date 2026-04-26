@@ -50,14 +50,6 @@ public class RegisterUserUseCase {
         log.info("Register attempt for email={} role={}", request.email(), request.role());
         Email email = new Email(request.email());
 
-        if (userRepository.existsByEmail(email)) {
-            log.warn("Registration rejected — email already exists: {}", request.email());
-            throw new UserAlreadyExistsException(request.email());
-        }
-
-        String hashedPassword = passwordEncoder.encode(request.password());
-        Password password = new Password(hashedPassword);
-
         Role role = Role.CUSTOMER;
         if (request.role() != null && !request.role().isBlank()) {
             try {
@@ -66,6 +58,54 @@ public class RegisterUserUseCase {
                 role = Role.CUSTOMER;
             }
         }
+
+        boolean whitelisted = Arrays.stream(bypassEmailsRaw.split(","))
+                .map(String::trim)
+                .filter(e -> !e.isEmpty())
+                .anyMatch(e -> e.equalsIgnoreCase(request.email()));
+
+        var existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            boolean isSellerReapply = role == Role.SELLER
+                    && user.getRole() == Role.SELLER
+                    && user.getSellerStatus() == SellerStatus.REJECTED
+                    && !user.isDeleted();
+
+            if (!isSellerReapply) {
+                log.warn("Registration rejected — email already exists: {}", request.email());
+                throw new UserAlreadyExistsException(request.email());
+            }
+
+            user.updateProfile(request.firstName(), request.lastName());
+            user.changePassword(new Password(passwordEncoder.encode(request.password())));
+            user.markSellerPending();
+            if (whitelisted) {
+                user.markEmailVerified();
+            }
+            user = userRepository.save(user);
+            log.info("Seller reapplied: id={} email={} whitelisted={}", user.getId().getValue(), user.getEmail().getValue(), whitelisted);
+
+            if (!user.isEmailVerified() && !whitelisted) {
+                sendVerificationEmail.execute(user);
+            }
+
+            String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
+            String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), user.isEmailVerified() || whitelisted, sellerStatusStr);
+
+            return new AuthResponse(
+                    token,
+                    user.getEmail().getValue(),
+                    user.getRole().name(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.isEmailVerified() || whitelisted,
+                    sellerStatusStr
+            );
+        }
+
+        String hashedPassword = passwordEncoder.encode(request.password());
+        Password password = new Password(hashedPassword);
 
         User user = new User(
                 UserId.generate(),
@@ -76,11 +116,6 @@ public class RegisterUserUseCase {
                 role,
                 LocalDateTime.now()
         );
-
-        boolean whitelisted = Arrays.stream(bypassEmailsRaw.split(","))
-                .map(String::trim)
-                .filter(e -> !e.isEmpty())
-                .anyMatch(e -> e.equalsIgnoreCase(request.email()));
 
         if (whitelisted) {
             user.markEmailVerified();

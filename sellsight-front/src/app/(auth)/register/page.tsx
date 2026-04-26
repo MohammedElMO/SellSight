@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
@@ -25,6 +25,11 @@ export default function RegisterPage() {
   const [showPwd, setShowPwd] = useState(false);
   const login  = useAuthStore((s) => s.login);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialRole = useMemo<Role>(() => {
+    return searchParams.get('role')?.toUpperCase() === 'SELLER' ? 'SELLER' : 'CUSTOMER';
+  }, [searchParams]);
+  const initialEmail = searchParams.get('email') ?? '';
 
   const {
     register,
@@ -34,7 +39,10 @@ export default function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'CUSTOMER' },
+    defaultValues: {
+      role: initialRole,
+      email: initialEmail,
+    },
   });
 
   const selectedRole = watch('role');

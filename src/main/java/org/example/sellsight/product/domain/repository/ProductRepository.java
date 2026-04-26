@@ -25,6 +25,8 @@ public interface ProductRepository {
 
     ProductSlice search(String query, int page, int size);
 
+    ProductSlice hybridSearch(String query, float[] queryEmbedding, int page, int size);
+
     ProductSlice findWithFilters(
             String category, BigDecimal minPrice, BigDecimal maxPrice,
             Double minRating, Boolean inStock, String sort, int page, int size);

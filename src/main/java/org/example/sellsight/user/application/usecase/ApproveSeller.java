@@ -9,9 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ApproveSeller {
 
     private final UserRepository userRepository;
+    private final SendSellerDecisionEmailUseCase sendSellerDecisionEmail;
 
-    public ApproveSeller(UserRepository userRepository) {
+    public ApproveSeller(UserRepository userRepository,
+                         SendSellerDecisionEmailUseCase sendSellerDecisionEmail) {
         this.userRepository = userRepository;
+        this.sendSellerDecisionEmail = sendSellerDecisionEmail;
     }
 
     @Transactional
@@ -20,5 +23,6 @@ public class ApproveSeller {
                 .orElseThrow(() -> new IllegalArgumentException("Seller not found: " + sellerId));
         user.approveAsSeller();
         userRepository.save(user);
+        sendSellerDecisionEmail.sendApproved(user);
     }
 }

@@ -10,9 +10,12 @@ import org.example.sellsight.product.domain.model.Money;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.example.sellsight.product.infrastructure.embedding.ProductEmbeddingService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 
@@ -25,11 +28,14 @@ public class CreateProductUseCase {
 
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+    private final ProductEmbeddingService embeddingService;
 
     public CreateProductUseCase(ProductRepository productRepository,
-                                InventoryRepository inventoryRepository) {
+                                InventoryRepository inventoryRepository,
+                                ProductEmbeddingService embeddingService) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
+        this.embeddingService = embeddingService;
     }
 
     @Transactional
@@ -56,6 +62,17 @@ public class CreateProductUseCase {
         inventoryRepository.save(inventory);
         log.info("Product created: id={} name='{}' seller={} initialStock={}",
                 saved.getId().getValue(), saved.getName(), sellerId, initialStock);
+
+        String savedId = saved.getId().getValue();
+        String savedName = saved.getName();
+        String savedDescription = saved.getDescription();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                embeddingService.updateEmbeddingAsync(savedId, savedName, savedDescription);
+            }
+        });
+
         return toDto(saved);
     }
 
