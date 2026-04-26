@@ -44,6 +44,8 @@ function SearchPageInner() {
 
   const data      = isSearching ? searchData  : browseData;
   const isLoading = isSearching ? searchLoading : browseLoading;
+  const searchMode = isSearching ? data?.searchMode : undefined;
+  const displayQuery = inputQ.trim() || initialQ;
 
   const products     = data?.products ?? [];
   const total        = data?.totalElements ?? 0;
@@ -98,10 +100,17 @@ function SearchPageInner() {
       <Reveal delay={40}>
         <div className="mb-5">
           <h1 className="font-display font-extrabold text-[22px] text-[var(--text-primary)] tracking-[-0.02em]">
-            {initialQ ? (
-              <>Results for <span style={{ color: 'var(--accent-text)' }}>"{initialQ}"</span></>
+            {displayQuery ? (
+              <>Results for <span style={{ color: 'var(--accent-text)' }}>"{displayQuery}"</span></>
             ) : 'All products'}
           </h1>
+          {isSearching && searchMode && searchMode !== 'NONE' && searchMode !== 'BROWSE' && (
+            <p className="mt-2 text-xs text-[var(--text-tertiary)]">
+              {searchMode === 'HYBRID'
+                ? 'Hybrid semantic + full-text search'
+                : 'Full-text fallback (embedding service unavailable)'}
+            </p>
+          )}
         </div>
       </Reveal>
 
@@ -130,9 +139,9 @@ function SearchPageInner() {
             <Search className="h-12 w-12 text-[var(--text-tertiary)] mb-4" />
             <p className="font-semibold text-[16px] text-[var(--text-secondary)] mb-2">No products found</p>
             <p className="text-[13px] text-[var(--text-tertiary)] mb-6">
-              {initialQ ? `No results for "${initialQ}". Try different terms or adjust filters.` : 'Start searching or browse with filters above.'}
+              {displayQuery ? `No results for "${displayQuery}". Try different terms or adjust filters.` : 'Start searching or browse with filters above.'}
             </p>
-            {(initialQ || filters.category || filters.minPrice || filters.minRating > 0) && (
+            {(displayQuery || filters.category || filters.minPrice || filters.minRating > 0) && (
               <MagButton variant="secondary" onClick={() => { clearQuery(); handleFilterChange(DEFAULT_FILTERS); }}>
                 Clear all
               </MagButton>

@@ -80,6 +80,8 @@ server:
 embedding:
   service:
     url: ${EMBEDDING_SERVICE_URL:http://localhost:8000}
+    connect-timeout: ${EMBEDDING_SERVICE_CONNECT_TIMEOUT:2s}
+    read-timeout: ${EMBEDDING_SERVICE_READ_TIMEOUT:3s}
 
 # Application-level config
 app:

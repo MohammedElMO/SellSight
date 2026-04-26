@@ -39,16 +39,19 @@ public class SearchProductsUseCase {
     @Transactional(readOnly = true)
     public ProductPageDto execute(String query, int page, int size) {
         if (query == null || query.trim().isEmpty()) {
-            return new ProductPageDto(List.of(), page, size, false, 0, 0L);
+            return new ProductPageDto(List.of(), page, size, false, 0, 0L, "NONE");
         }
         String q = query.trim();
         ProductSlice slice;
+        String searchMode;
         try {
             float[] embedding = embeddingPort.embed(q);
             slice = productRepository.hybridSearch(q, embedding, page, size);
+            searchMode = "HYBRID";
         } catch (Exception e) {
             log.warn("Embedding service unavailable, using full-text search: {}", e.getMessage());
             slice = productRepository.search(q, page, size);
+            searchMode = "FULL_TEXT";
         }
         List<Product> products = slice.items();
         List<String> ids = products.stream().map(p -> p.getId().getValue()).toList();
@@ -56,7 +59,7 @@ public class SearchProductsUseCase {
                 .collect(Collectors.toMap(InventoryItem::getProductId, i -> i.getStockLevel().getQuantity()));
         List<ProductDto> dtos = products.stream().map(p -> toDto(p, stockMap)).toList();
         int totalPages = size == 0 ? 0 : (int) Math.ceil((double) slice.totalElements() / size);
-        return new ProductPageDto(dtos, page, size, slice.hasMore(), totalPages, slice.totalElements());
+        return new ProductPageDto(dtos, page, size, slice.hasMore(), totalPages, slice.totalElements(), searchMode);
     }
 
     private ProductDto toDto(Product p, Map<String, Integer> stockMap) {

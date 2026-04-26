@@ -11,5 +11,6 @@ public record ProductPageDto(
         int size,
         boolean hasMore,
         int totalPages,
-        long totalElements
+        long totalElements,
+        String searchMode
 ) {}

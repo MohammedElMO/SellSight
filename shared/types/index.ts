@@ -119,6 +119,8 @@ export interface ProductDto {
   stockQuantity: number;
 }
 
+export type SearchMode = 'HYBRID' | 'FULL_TEXT' | 'BROWSE' | 'NONE';
+
 export interface ProductPageDto {
   products: ProductDto[];
   page: number;
@@ -126,6 +128,7 @@ export interface ProductPageDto {
   hasMore: boolean;
   totalPages: number;
   totalElements: number;
+  searchMode?: SearchMode;
 }
 
 // ── Order ───────────────────────────────────────────────────

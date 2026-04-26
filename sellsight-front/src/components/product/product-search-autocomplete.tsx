@@ -39,7 +39,7 @@ export function ProductSearchAutocomplete() {
     e.preventDefault();
     if (query.trim()) {
       setIsOpen(false);
-      router.push(`/products?q=${encodeURIComponent(query.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
     }
   };
 

@@ -65,6 +65,7 @@ export default function AdminInventoryPage() {
   });
 
   const products: ProductDto[] = productsData?.products ?? [];
+  const searchMode = debouncedSearch.trim() ? productsData?.searchMode : undefined;
 
   const displayed = useMemo(() => {
     if (filter === 'out') return products.filter((p) => p.stockQuantity === 0);
@@ -270,6 +271,13 @@ export default function AdminInventoryPage() {
           </button>
         </div>
       </Reveal>
+      {searchMode && searchMode !== 'NONE' && searchMode !== 'BROWSE' && (
+        <p className="text-xs text-[var(--text-tertiary)] mb-5">
+          {searchMode === 'HYBRID'
+            ? 'Hybrid semantic + full-text search'
+            : 'Full-text fallback (embedding service unavailable)'}
+        </p>
+      )}
 
       {/* ── Batch controls ── */}
       {selected.size > 0 && (

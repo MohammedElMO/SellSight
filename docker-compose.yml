@@ -65,6 +65,10 @@ services:
       context: ./embedding-model
       dockerfile: Dockerfile
     container_name: sellsight-embedding
+    environment:
+      MODEL_NAME: ${EMBEDDING_MODEL_NAME:-sentence-transformers/all-MiniLM-L6-v2}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-CPUExecutionProvider}
+      MAX_TEXT_CHARS: ${EMBEDDING_MAX_TEXT_CHARS:-300}
     ports:
       - "8000:8000"
     healthcheck:
@@ -101,6 +105,8 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       EMBEDDING_SERVICE_URL: ${EMBEDDING_SERVICE_URL:-http://embedding:8000}
+      EMBEDDING_SERVICE_CONNECT_TIMEOUT: ${EMBEDDING_SERVICE_CONNECT_TIMEOUT:-2s}
+      EMBEDDING_SERVICE_READ_TIMEOUT: ${EMBEDDING_SERVICE_READ_TIMEOUT:-3s}
     ports:
       - "8081:8081"
     depends_on:

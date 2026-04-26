@@ -66,10 +66,11 @@ public class CreateProductUseCase {
         String savedId = saved.getId().getValue();
         String savedName = saved.getName();
         String savedDescription = saved.getDescription();
+        String savedCategory = saved.getCategory();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                embeddingService.updateEmbeddingAsync(savedId, savedName, savedDescription);
+                embeddingService.updateEmbeddingAsync(savedId, savedName, savedDescription, savedCategory);
             }
         });
 
