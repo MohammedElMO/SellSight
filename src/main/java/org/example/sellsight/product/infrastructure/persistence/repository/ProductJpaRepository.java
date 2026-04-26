@@ -17,7 +17,7 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, St
 
     Page<ProductJpaEntity> findByActiveTrue(Pageable pageable);
 
-    Page<ProductJpaEntity> findBySellerIdAndActiveTrue(String sellerId, Pageable pageable);
+        Page<ProductJpaEntity> findBySellerId(String sellerId, Pageable pageable);
 
     Page<ProductJpaEntity> findByCategoryAndActiveTrue(String category, Pageable pageable);
 
