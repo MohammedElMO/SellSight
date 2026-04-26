@@ -93,7 +93,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public ProductSlice findBySellerId(String sellerId, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        return toProductSlice(jpaRepository.findBySellerIdAndActiveTrue(sellerId, pageable));
+        return toProductSlice(jpaRepository.findBySellerId(sellerId, pageable));
     }
 
     @Override
