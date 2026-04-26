@@ -1,5 +1,6 @@
 package org.example.sellsight.product.infrastructure.persistence.repository;
 
+import org.example.sellsight.product.domain.model.Money;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.model.ProductSlice;
@@ -9,9 +10,14 @@ import org.example.sellsight.product.infrastructure.persistence.mapper.ProductPe
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,10 +27,48 @@ import java.util.Optional;
 @Component
 public class ProductRepositoryAdapter implements ProductRepository {
 
-    private final ProductJpaRepository jpaRepository;
+    private static final String HYBRID_SEARCH_SQL = """
+            WITH q AS (
+                SELECT CAST(? AS vector) AS vec,
+                       websearch_to_tsquery('english', ?) AS ts
+            )
+            SELECT p.id, p.name, p.description, p.price, p.category, p.seller_id,
+                   p.image_url, p.brand, p.rating_avg, p.rating_count, p.sold_count,
+                   p.active, p.created_at, p.updated_at
+            FROM products p
+            CROSS JOIN q
+            WHERE p.active = true
+              AND (
+                (p.embedding IS NOT NULL AND (p.embedding <=> q.vec) < 0.7)
+                OR (p.search_vector @@ q.ts)
+              )
+            ORDER BY
+              COALESCE(CASE WHEN p.embedding IS NOT NULL THEN 1.0 - (p.embedding <=> q.vec) ELSE 0.0 END, 0.0) * 0.7
+              + COALESCE(ts_rank(p.search_vector, q.ts), 0.0) * 0.3 DESC
+            LIMIT ? OFFSET ?
+            """;
 
-    public ProductRepositoryAdapter(ProductJpaRepository jpaRepository) {
+    private static final String HYBRID_COUNT_SQL = """
+            WITH q AS (
+                SELECT CAST(? AS vector) AS vec,
+                       websearch_to_tsquery('english', ?) AS ts
+            )
+            SELECT COUNT(*)
+            FROM products p
+            CROSS JOIN q
+            WHERE p.active = true
+              AND (
+                (p.embedding IS NOT NULL AND (p.embedding <=> q.vec) < 0.7)
+                OR (p.search_vector @@ q.ts)
+              )
+            """;
+
+    private final ProductJpaRepository jpaRepository;
+    private final JdbcTemplate jdbcTemplate;
+
+    public ProductRepositoryAdapter(ProductJpaRepository jpaRepository, JdbcTemplate jdbcTemplate) {
         this.jpaRepository = jpaRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -115,5 +159,47 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public boolean existsById(ProductId id) {
         return jpaRepository.existsById(id.getValue());
+    }
+
+    @Override
+    public ProductSlice hybridSearch(String query, float[] queryEmbedding, int page, int size) {
+        String vectorStr = Arrays.toString(queryEmbedding);
+        int offset = page * size;
+
+        List<Product> products = jdbcTemplate.query(
+            HYBRID_SEARCH_SQL,
+            (rs, rowNum) -> mapRow(rs),
+            vectorStr, query, size, offset
+        );
+
+        Long total = jdbcTemplate.queryForObject(
+            HYBRID_COUNT_SQL,
+            Long.class,
+            vectorStr, query
+        );
+        long totalElements = total != null ? total : 0L;
+        boolean hasMore = (long) (page + 1) * size < totalElements;
+        return new ProductSlice(products, hasMore, totalElements);
+    }
+
+    private Product mapRow(ResultSet rs) throws SQLException {
+        double ratingAvg = rs.getBigDecimal("rating_avg") != null
+            ? rs.getBigDecimal("rating_avg").doubleValue() : 0.0;
+        return new Product(
+            ProductId.from(rs.getString("id")),
+            rs.getString("name"),
+            rs.getString("description"),
+            new Money(rs.getBigDecimal("price")),
+            rs.getString("category"),
+            rs.getString("seller_id"),
+            rs.getString("image_url"),
+            rs.getString("brand"),
+            ratingAvg,
+            rs.getInt("rating_count"),
+            rs.getInt("sold_count"),
+            rs.getBoolean("active"),
+            rs.getObject("created_at", LocalDateTime.class),
+            rs.getObject("updated_at", LocalDateTime.class)
+        );
     }
 }

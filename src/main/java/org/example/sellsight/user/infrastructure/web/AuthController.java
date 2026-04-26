@@ -29,6 +29,7 @@ public class AuthController {
     private final RequestPasswordResetUseCase requestPasswordResetUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
+    private final RefreshTokenUseCase refreshTokenUseCase;
 
     public AuthController(RegisterUserUseCase registerUserUseCase,
                           LoginUserUseCase loginUserUseCase,
@@ -37,7 +38,8 @@ public class AuthController {
                           ResendVerificationUseCase resendVerificationUseCase,
                           RequestPasswordResetUseCase requestPasswordResetUseCase,
                           ResetPasswordUseCase resetPasswordUseCase,
-                          ChangePasswordUseCase changePasswordUseCase) {
+                          ChangePasswordUseCase changePasswordUseCase,
+                          RefreshTokenUseCase refreshTokenUseCase) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
         this.oAuthLoginUseCase = oAuthLoginUseCase;
@@ -46,6 +48,7 @@ public class AuthController {
         this.requestPasswordResetUseCase = requestPasswordResetUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
         this.changePasswordUseCase = changePasswordUseCase;
+        this.refreshTokenUseCase = refreshTokenUseCase;
     }
 
     @Operation(operationId = "register", summary = "Register a new user")
@@ -106,5 +109,12 @@ public class AuthController {
                                                @AuthenticationPrincipal UserDetails principal) {
         changePasswordUseCase.execute(principal.getUsername(), request.oldPassword(), request.newPassword());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "refreshToken", summary = "Re-issue JWT with current user state from DB")
+    @PostMapping("/refresh-token")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AuthResponse> refreshToken(@AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(refreshTokenUseCase.execute(principal.getUsername()));
     }
 }

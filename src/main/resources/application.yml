@@ -76,6 +76,11 @@ server:
   port: 8080
   address: 0.0.0.0
 
+# Embedding microservice
+embedding:
+  service:
+    url: ${EMBEDDING_SERVICE_URL:http://localhost:8000}
+
 # Application-level config
 app:
   base-url: ${APP_BASE_URL:http://localhost:3000}

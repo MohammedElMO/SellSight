@@ -60,6 +60,8 @@ export const authApi = {
     api.post<void>('/auth/reset-password', { token, newPassword }),
   verifyEmail: (token: string) =>
     api.post<AuthResponse>('/auth/verify-email', { token }).then((r) => r.data),
+  refreshToken: () =>
+    api.post<AuthResponse>('/auth/refresh-token').then((r) => r.data),
   resendVerification: (email: string) =>
     api.post<void>('/auth/resend-verification', { email }),
   deleteAccount: () =>

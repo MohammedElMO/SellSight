@@ -9,10 +9,13 @@ import org.example.sellsight.product.domain.model.Money;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.example.sellsight.product.infrastructure.embedding.ProductEmbeddingService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Use case: Update an existing product.
@@ -23,9 +26,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UpdateProductUseCase {
 
     private final ProductRepository productRepository;
+    private final ProductEmbeddingService embeddingService;
 
-    public UpdateProductUseCase(ProductRepository productRepository) {
+    public UpdateProductUseCase(ProductRepository productRepository,
+                                 ProductEmbeddingService embeddingService) {
         this.productRepository = productRepository;
+        this.embeddingService = embeddingService;
     }
 
     @Transactional
@@ -53,6 +59,15 @@ public class UpdateProductUseCase {
         );
 
         Product saved = productRepository.save(product);
+        String savedId = saved.getId().getValue();
+        String savedName = saved.getName();
+        String savedDescription = saved.getDescription();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                embeddingService.updateEmbeddingAsync(savedId, savedName, savedDescription);
+            }
+        });
         return toDto(saved);
     }
 
