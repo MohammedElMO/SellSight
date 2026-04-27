@@ -12,8 +12,8 @@ interface AnimCounterProps {
 
 export function AnimCounter({ target, suffix = '', prefix = '', duration = 1200, className }: AnimCounterProps) {
   const [val, setVal] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const started = useRef(false);
   const num = parseInt(String(target).replace(/[^\d]/g, ''));
 
   useEffect(() => {
@@ -21,23 +21,28 @@ export function AnimCounter({ target, suffix = '', prefix = '', duration = 1200,
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !started.current) {
-          started.current = true;
-          const start = performance.now();
-          const step = (now: number) => {
-            const p = Math.min((now - start) / duration, 1);
-            const ease = 1 - Math.pow(1 - p, 3);
-            setVal(Math.round(num * ease));
-            if (p < 1) requestAnimationFrame(step);
-          };
-          requestAnimationFrame(step);
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          obs.disconnect();
         }
       },
       { threshold: 0.3 },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [num, duration]);
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    const start = performance.now();
+    const step = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(num * ease));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [isVisible, num, duration]);
 
   return (
     <span ref={ref} className={className}>
