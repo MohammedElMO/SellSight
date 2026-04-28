@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Adapter implementing the domain ProductRepository port.
@@ -105,7 +106,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public ProductSlice search(String query, int page, int size) {
         var pageable = PageRequest.of(page, size);
-        return toProductSlice(jpaRepository.searchByFullText(query, pageable));
+        return toProductSlice(jpaRepository.searchByFullText(toOrFtsQuery(query), pageable));
     }
 
     @Override
@@ -164,22 +165,34 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public ProductSlice hybridSearch(String query, float[] queryEmbedding, int page, int size) {
         String vectorStr = Arrays.toString(queryEmbedding);
+        String ftsQuery = toOrFtsQuery(query);
         int offset = page * size;
 
         List<Product> products = jdbcTemplate.query(
             HYBRID_SEARCH_SQL,
             (rs, rowNum) -> mapRow(rs),
-            vectorStr, query, size, offset
+            vectorStr, ftsQuery, size, offset
         );
 
         Long total = jdbcTemplate.queryForObject(
             HYBRID_COUNT_SQL,
             Long.class,
-            vectorStr, query
+            vectorStr, ftsQuery
         );
         long totalElements = total != null ? total : 0L;
         boolean hasMore = (long) (page + 1) * size < totalElements;
         return new ProductSlice(products, hasMore, totalElements);
+    }
+
+    /**
+     * Converts a raw user query to OR-based websearch_to_tsquery syntax.
+     * "im cold" → "im or cold" so products matching ANY word are included.
+     * Single words are returned unchanged (AND == OR for one term).
+     */
+    private static String toOrFtsQuery(String query) {
+        return Arrays.stream(query.trim().split("\\s+"))
+                .filter(w -> !w.isEmpty())
+                .collect(Collectors.joining(" or "));
     }
 
     private Product mapRow(ResultSet rs) throws SQLException {

@@ -2,10 +2,11 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { wishlistApi } from '@/lib/services';
+import { useSetDefaultWishlist } from '@/lib/hooks';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { Pill } from '@/components/ui/pill';
-import { Heart, Plus, Trash2, ShoppingCart, X } from 'lucide-react';
+import { Heart, Plus, Trash2, ShoppingCart, X, Star } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -38,6 +39,8 @@ export default function WishlistsPage() {
       toast.success('Removed from wishlist');
     },
   });
+
+  const setDefaultMutation = useSetDefaultWishlist();
 
   return (
     <div className="w-full">
@@ -80,15 +83,33 @@ export default function WishlistsPage() {
         <div className="space-y-4">
           {wishlists.map((wl, i) => (
             <Reveal key={wl.id} delay={i * 60}>
-              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] overflow-hidden">
+              <div className={`bg-[var(--bg-card)] border rounded-[var(--radius)] overflow-hidden transition-colors ${wl.isDefault ? 'border-amber-300' : 'border-[var(--border)]'}`}>
                 <div
-                  className="p-5 border-b border-[var(--border-subtle)] flex items-center justify-between"
+                  className="p-5 border-b border-[var(--border-subtle)] flex items-center justify-between gap-3"
                   style={{ background: 'var(--surface)' }}
                 >
-                  <h3 className="font-semibold text-[15px] text-[var(--text-primary)] flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-[var(--danger)]" /> {wl.name}
+                  <h3 className="font-semibold text-[15px] text-[var(--text-primary)] flex items-center gap-2 min-w-0">
+                    <Heart className="h-4 w-4 text-[var(--danger)] shrink-0" />
+                    <span className="truncate">{wl.name}</span>
+                    {wl.isDefault && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 shrink-0">
+                        <Star className="h-2.5 w-2.5 fill-current" /> Default
+                      </span>
+                    )}
                   </h3>
-                  <Pill size="sm" variant="subtle">{wl.items.length} {wl.items.length === 1 ? 'item' : 'items'}</Pill>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {!wl.isDefault && (
+                      <button
+                        onClick={() => setDefaultMutation.mutate(wl.id)}
+                        disabled={setDefaultMutation.isPending}
+                        title="Set as default wishlist"
+                        className="h-7 px-2.5 flex items-center gap-1.5 rounded-[var(--radius-xs)] text-[11px] font-medium text-[var(--text-tertiary)] hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-all"
+                      >
+                        <Star className="h-3 w-3" /> Set default
+                      </button>
+                    )}
+                    <Pill size="sm" variant="subtle">{wl.items.length} {wl.items.length === 1 ? 'item' : 'items'}</Pill>
+                  </div>
                 </div>
 
                 {wl.items.length === 0 ? (
@@ -115,11 +136,13 @@ export default function WishlistsPage() {
                             href={`/products/${item.productId}`}
                             className="text-[13px] font-semibold text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
                           >
-                            {item.productName}
+                            {item.productName || item.productId}
                           </Link>
-                          <p className="text-[13px] font-bold mt-0.5" style={{ color: 'var(--success)' }}>
-                            ${Number(item.productPrice).toFixed(2)}
-                          </p>
+                          {item.productPrice > 0 && (
+                            <p className="text-[13px] font-bold mt-0.5" style={{ color: 'var(--success)' }}>
+                              ${Number(item.productPrice).toFixed(2)}
+                            </p>
+                          )}
                         </div>
                         <button
                           onClick={() => removeItemMutation.mutate({ wishlistId: wl.id, productId: item.productId })}

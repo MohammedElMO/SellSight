@@ -137,6 +137,8 @@ export const wishlistApi = {
     api.post<WishlistDto>(`/wishlists/${wishlistId}/items`, { productId }).then((r) => r.data),
   removeItem: (wishlistId: string, productId: string) =>
     api.delete<WishlistDto>(`/wishlists/${wishlistId}/items/${productId}`).then((r) => r.data),
+  setDefault: (wishlistId: string) =>
+    api.put<WishlistDto>(`/wishlists/${wishlistId}/default`).then((r) => r.data),
 };
 
 // ── Q&A ──────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import org.example.sellsight.engagement.domain.repository.WishlistRepository;
 import org.example.sellsight.engagement.infrastructure.persistence.entity.WishlistItemJpaEntity;
 import org.example.sellsight.engagement.infrastructure.persistence.entity.WishlistJpaEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,17 @@ public class WishlistRepositoryAdapter implements WishlistRepository {
     }
 
     @Override
+    public Optional<Wishlist> findDefaultByUserId(String userId) {
+        return jpa.findByUserIdAndIsDefaultTrue(userId).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional
+    public void clearDefaultForUser(String userId) {
+        jpa.clearDefaultByUserId(userId);
+    }
+
+    @Override
     public void deleteById(WishlistId id) {
         jpa.deleteById(id.value());
     }
@@ -48,6 +60,7 @@ public class WishlistRepositoryAdapter implements WishlistRepository {
         e.setId(w.getId().value());
         e.setUserId(w.getUserId());
         e.setName(w.getName());
+        e.setDefault(w.isDefault());
         e.setCreatedAt(w.getCreatedAt());
 
         var items = w.getItems().stream().map(item -> {
@@ -70,6 +83,7 @@ public class WishlistRepositoryAdapter implements WishlistRepository {
                 WishlistId.of(e.getId()),
                 e.getUserId(),
                 e.getName(),
+                e.isDefault(),
                 items,
                 e.getCreatedAt()
         );

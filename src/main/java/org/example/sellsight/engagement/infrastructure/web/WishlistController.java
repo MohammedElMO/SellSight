@@ -7,6 +7,7 @@ import org.example.sellsight.engagement.application.dto.WishlistDto;
 import org.example.sellsight.engagement.application.usecase.CreateWishlistUseCase;
 import org.example.sellsight.engagement.application.usecase.GetWishlistsUseCase;
 import org.example.sellsight.engagement.application.usecase.ManageWishlistItemUseCase;
+import org.example.sellsight.engagement.application.usecase.SetDefaultWishlistUseCase;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
 import org.springframework.http.ResponseEntity;
@@ -25,15 +26,18 @@ public class WishlistController {
     private final CreateWishlistUseCase createWishlistUseCase;
     private final GetWishlistsUseCase getWishlistsUseCase;
     private final ManageWishlistItemUseCase manageItemUseCase;
+    private final SetDefaultWishlistUseCase setDefaultUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
 
     public WishlistController(CreateWishlistUseCase createWishlistUseCase,
                                GetWishlistsUseCase getWishlistsUseCase,
                                ManageWishlistItemUseCase manageItemUseCase,
+                               SetDefaultWishlistUseCase setDefaultUseCase,
                                GetUserProfileUseCase getUserProfileUseCase) {
         this.createWishlistUseCase = createWishlistUseCase;
         this.getWishlistsUseCase = getWishlistsUseCase;
         this.manageItemUseCase = manageItemUseCase;
+        this.setDefaultUseCase = setDefaultUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
     }
 
@@ -76,5 +80,14 @@ public class WishlistController {
                                                    Authentication auth) {
         UserDto user = getUserProfileUseCase.execute(auth.getName());
         return ResponseEntity.ok(manageItemUseCase.removeProduct(wishlistId, productId, user.id()));
+    }
+
+    @Operation(operationId = "setDefaultWishlist", summary = "Mark a wishlist as the default",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PutMapping("/{wishlistId}/default")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<WishlistDto> setDefault(@PathVariable String wishlistId, Authentication auth) {
+        UserDto user = getUserProfileUseCase.execute(auth.getName());
+        return ResponseEntity.ok(setDefaultUseCase.execute(wishlistId, user.id()));
     }
 }

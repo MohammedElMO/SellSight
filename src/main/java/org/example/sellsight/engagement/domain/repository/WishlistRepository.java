@@ -11,5 +11,7 @@ public interface WishlistRepository {
     Wishlist save(Wishlist wishlist);
     Optional<Wishlist> findById(WishlistId id);
     List<Wishlist> findByUserId(String userId);
+    Optional<Wishlist> findDefaultByUserId(String userId);
+    void clearDefaultForUser(String userId);
     void deleteById(WishlistId id);
 }

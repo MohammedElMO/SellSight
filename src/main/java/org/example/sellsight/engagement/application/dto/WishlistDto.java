@@ -7,6 +7,7 @@ public record WishlistDto(
         String id,
         String userId,
         String name,
+        boolean isDefault,
         List<WishlistItemDto> items,
         LocalDateTime createdAt
 ) {

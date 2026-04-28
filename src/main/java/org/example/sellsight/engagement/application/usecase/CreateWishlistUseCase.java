@@ -5,14 +5,13 @@ import org.example.sellsight.engagement.application.dto.WishlistDto;
 import org.example.sellsight.engagement.domain.model.Wishlist;
 import org.example.sellsight.engagement.domain.model.WishlistId;
 import org.example.sellsight.engagement.domain.repository.WishlistRepository;
+import org.example.sellsight.product.domain.model.Product;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Create a new named wishlist for a user.
- */
 @Slf4j
 @Component
 public class CreateWishlistUseCase {
@@ -28,21 +27,30 @@ public class CreateWishlistUseCase {
                 WishlistId.generate(),
                 userId,
                 name != null && !name.isBlank() ? name : "My Wishlist",
+                false,
                 List.of(),
                 LocalDateTime.now()
         );
         Wishlist saved = wishlistRepository.save(wishlist);
-        return toDto(saved);
+        return toDto(saved, Map.of());
     }
 
-    static WishlistDto toDto(Wishlist w) {
+    /**
+     * @param products map of productId → Product for enriching item details; missing IDs use fallback zeros
+     */
+    static WishlistDto toDto(Wishlist w, Map<String, Product> products) {
         return new WishlistDto(
                 w.getId().value().toString(),
                 w.getUserId(),
                 w.getName(),
-                w.getItems().stream().map(i -> new WishlistDto.WishlistItemDto(
-                        i.id(), i.productId(), "", "", 0.0, i.addedAt()
-                )).toList(),
+                w.isDefault(),
+                w.getItems().stream().<WishlistDto.WishlistItemDto>map(i -> {
+                    Product p = products.get(i.productId());
+                    String name = p != null ? p.getName() : "";
+                    String imageUrl = p != null ? p.getImageUrl() : "";
+                    double price = p != null ? p.getPrice().getAmount().doubleValue() : 0.0;
+                    return new WishlistDto.WishlistItemDto(i.id(), i.productId(), name, imageUrl, price, i.addedAt());
+                }).toList(),
                 w.getCreatedAt()
         );
     }

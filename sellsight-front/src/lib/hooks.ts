@@ -316,6 +316,18 @@ export function useRemoveFromWishlist() {
   });
 }
 
+export function useSetDefaultWishlist() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (wishlistId: string) => wishlistApi.setDefault(wishlistId),
+    onSuccess: () => {
+      toast.success('Default wishlist updated');
+      queryClient.invalidateQueries({ queryKey: ['wishlists'] });
+    },
+    onError: () => toast.error('Failed to update default wishlist'),
+  });
+}
+
 // ── Q&A ──────────────────────────────────────────────────────
 
 export function useProductQuestions(productId: string) {

@@ -1,18 +1,15 @@
 import os
-import os
 os.environ["TRANSFORMERS_NO_TF"] = "1"
 os.environ["USE_TF"] = "0"
 from typing import Iterable
 
 import numpy as np
-import onnxruntime as ort
-from optimum.onnxruntime.modeling_ort import ORTModelForFeatureExtraction
-from transformers import AutoTokenizer
+import torch
+from sentence_transformers import SentenceTransformer
 
 
-DEFAULT_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_MODEL_NAME = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
 DEFAULT_MAX_TEXT_CHARS = 300
-DEFAULT_MAX_TOKEN_LENGTH = 128
 
 
 def compact_whitespace(value: str | None) -> str:
@@ -34,35 +31,27 @@ def build_product_text(
     return text
 
 
+def _resolve_device(preferred: str | None) -> str:
+    if preferred:
+        return preferred
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
 class EmbeddingEngine:
     def __init__(
         self,
         model_name: str = DEFAULT_MODEL_NAME,
-        provider: str | None = None,
+        provider: str | None = None,  # kept for API compat; maps to torch device
         max_text_chars: int = DEFAULT_MAX_TEXT_CHARS,
-        max_token_length: int = DEFAULT_MAX_TOKEN_LENGTH,
+        max_token_length: int = 128,  # kept for API compat, unused
     ) -> None:
         self.model_name = model_name
         self.max_text_chars = max_text_chars
-        self.max_token_length = max_token_length
-        self.provider = self._resolve_provider(provider)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = ORTModelForFeatureExtraction.from_pretrained(model_name, provider=self.provider)
-        self.model.use_io_binding = False
-        self.dimension = int(getattr(self.model.config, "hidden_size", 384))
-
-    @staticmethod
-    def _resolve_provider(preferred_provider: str | None) -> str:
-        available = ort.get_available_providers()
-        if preferred_provider and preferred_provider in available:
-            return preferred_provider
-        if "CUDAExecutionProvider" in available:
-            return "CUDAExecutionProvider"
-        if "CPUExecutionProvider" in available:
-            return "CPUExecutionProvider"
-        if not available:
-            raise RuntimeError("No ONNX Runtime providers are available")
-        return available[0]
+        self.provider = _resolve_device(provider)
+        self._model = SentenceTransformer(model_name, device=self.provider)
+        self.dimension = self._model.get_sentence_embedding_dimension()
 
     def prepare_text(self, text: str | None) -> str:
         prepared = compact_whitespace(text)
@@ -71,34 +60,16 @@ class EmbeddingEngine:
         return prepared
 
     def embed(self, texts: Iterable[str]) -> np.ndarray:
-        prepared_texts = [self.prepare_text(text) for text in texts]
-        if not prepared_texts:
+        text_list = list(texts)
+        if not text_list:
             raise ValueError("At least one text is required")
-        encoded = self.tokenizer(
-            prepared_texts,
-            padding=True,
-            truncation=True,
-            max_length=self.max_token_length,
-            return_tensors="np",
-        )
-        outputs = self.model(**encoded)
-        pooled = self._mean_pool(outputs.last_hidden_state, encoded["attention_mask"])
-        embeddings = self._normalize(pooled).astype(np.float32)
-        self.dimension = int(embeddings.shape[1])
-        return embeddings
+        return self._model.encode(
+            text_list,
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+            show_progress_bar=False,
+            batch_size=128,
+        ).astype(np.float32)
 
     def embed_one(self, text: str) -> np.ndarray:
         return self.embed([text])[0]
-
-    @staticmethod
-    def _mean_pool(last_hidden: np.ndarray, attention_mask: np.ndarray) -> np.ndarray:
-        mask = attention_mask[..., None]
-        masked = last_hidden * mask
-        summed = masked.sum(axis=1)
-        counts = np.clip(mask.sum(axis=1), 1e-9, None)
-        return summed / counts
-
-    @staticmethod
-    def _normalize(vectors: np.ndarray) -> np.ndarray:
-        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
-        return vectors / np.clip(norms, 1e-12, None)

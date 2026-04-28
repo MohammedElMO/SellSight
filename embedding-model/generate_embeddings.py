@@ -11,7 +11,7 @@ from embedding_engine import DEFAULT_MODEL_NAME, EmbeddingEngine, build_product_
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", "256"))
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", "512"))  # larger batch = better GPU utilisation
 MODEL_NAME = os.getenv("MODEL_NAME", DEFAULT_MODEL_NAME)
 EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER")
 MAX_TEXT_CHARS = int(os.getenv("MAX_TEXT_CHARS", "300"))

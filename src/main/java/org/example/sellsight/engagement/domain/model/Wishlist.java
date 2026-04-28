@@ -15,13 +15,15 @@ public class Wishlist {
     private final WishlistId id;
     private final String userId;
     private String name;
+    private boolean isDefault;
     private final List<WishlistItem> items;
     private final LocalDateTime createdAt;
 
     public Wishlist(WishlistId id, String userId, String name,
-                    List<WishlistItem> items, LocalDateTime createdAt) {
+                    boolean isDefault, List<WishlistItem> items, LocalDateTime createdAt) {
         this.id = Objects.requireNonNull(id);
         this.userId = Objects.requireNonNull(userId);
+        this.isDefault = isDefault;
         this.items = new ArrayList<>(items != null ? items : List.of());
         this.createdAt = Objects.requireNonNull(createdAt);
         setName(name);
@@ -48,6 +50,9 @@ public class Wishlist {
         setName(newName);
     }
 
+    public void markAsDefault() { this.isDefault = true; }
+    public void unmarkAsDefault() { this.isDefault = false; }
+
     // ── Validation ──────────────────────────────────────────
 
     private void setName(String name) {
@@ -65,6 +70,7 @@ public class Wishlist {
     public WishlistId getId() { return id; }
     public String getUserId() { return userId; }
     public String getName() { return name; }
+    public boolean isDefault() { return isDefault; }
     public List<WishlistItem> getItems() { return Collections.unmodifiableList(items); }
     public LocalDateTime getCreatedAt() { return createdAt; }
 

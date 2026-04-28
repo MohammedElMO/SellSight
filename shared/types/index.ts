@@ -233,6 +233,7 @@ export interface WishlistDto {
   id: string;
   userId: string;
   name: string;
+  isDefault: boolean;
   items: WishlistItemDto[];
   createdAt: string;
 }

@@ -26,6 +26,9 @@ public class WishlistJpaEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault;
+
     @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<WishlistItemJpaEntity> items = new ArrayList<>();
 }
