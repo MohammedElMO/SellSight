@@ -13,6 +13,7 @@ import type {
   UpdateProfileRequest,
   ProductDto,
   ProductPageDto,
+  AutocompleteDto,
   CreateProductRequest,
   UpdateProductRequest,
   OrderDto,
@@ -90,6 +91,8 @@ export const productApi = {
     api.get<ProductPageDto>(`/products/seller/${sellerId}`, { params: { page, size } }).then((r) => r.data),
   search: (query: string, page = 0, size = 12) =>
     api.get<ProductPageDto>('/products/search', { params: { q: query, page, size } }).then((r) => r.data),
+  autocomplete: (query: string, limit = 8) =>
+    api.get<AutocompleteDto[]>('/products/autocomplete', { params: { q: query, limit } }).then((r) => r.data),
   create: (req: CreateProductRequest) =>
     api.post<ProductDto>('/products', req).then((r) => r.data),
   update: (id: string, req: UpdateProductRequest) =>
@@ -240,6 +243,19 @@ export const subscriptionApi = {
     api.delete<void>(`/subscriptions/price-drop/${productId}`),
   checkPriceDrop: (productId: string) =>
     api.get<{ subscribed: boolean }>(`/subscriptions/price-drop/${productId}`).then((r) => r.data),
+  subscribeBackInStock: (productId: string) =>
+    api.post<void>(`/subscriptions/back-in-stock/${productId}`),
+  unsubscribeBackInStock: (productId: string) =>
+    api.delete<void>(`/subscriptions/back-in-stock/${productId}`),
+  checkBackInStock: (productId: string) =>
+    api.get<{ subscribed: boolean }>(`/subscriptions/back-in-stock/${productId}`).then((r) => r.data),
+};
+
+export const recentlyViewedApi = {
+  record: (productId: string) =>
+    api.post<void>('/users/me/recently-viewed', null, { params: { productId } }),
+  getAll: () =>
+    api.get<ProductDto[]>('/users/me/recently-viewed').then((r) => r.data),
 };
 
 // ── Events ───────────────────────────────────────────────────

@@ -3,6 +3,7 @@ package org.example.sellsight.engagement.infrastructure.web;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.example.sellsight.engagement.application.usecase.ManageBackInStockSubscriptionUseCase;
 import org.example.sellsight.engagement.application.usecase.ManagePriceDropSubscriptionUseCase;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
@@ -20,11 +21,14 @@ import java.util.Map;
 public class SubscriptionController {
 
     private final ManagePriceDropSubscriptionUseCase priceDropUseCase;
+    private final ManageBackInStockSubscriptionUseCase backInStockUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
 
     public SubscriptionController(ManagePriceDropSubscriptionUseCase priceDropUseCase,
+                                   ManageBackInStockSubscriptionUseCase backInStockUseCase,
                                    GetUserProfileUseCase getUserProfileUseCase) {
         this.priceDropUseCase = priceDropUseCase;
+        this.backInStockUseCase = backInStockUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
     }
 
@@ -58,6 +62,38 @@ public class SubscriptionController {
     public ResponseEntity<Map<String, Boolean>> checkPriceDrop(@PathVariable String productId, Authentication auth) {
         UserDto user = getUserProfileUseCase.execute(auth.getName());
         boolean subscribed = priceDropUseCase.isSubscribed(user.id(), productId);
+        return ResponseEntity.ok(Map.of("subscribed", subscribed));
+    }
+
+    // ── Back-in-stock ──────────────────────────────────────────
+
+    @Operation(operationId = "subscribeBackInStock", summary = "Subscribe to back-in-stock alerts",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/back-in-stock/{productId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> subscribeBackInStock(@PathVariable String productId, Authentication auth) {
+        UserDto user = getUserProfileUseCase.execute(auth.getName());
+        backInStockUseCase.subscribe(user.id(), productId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(operationId = "unsubscribeBackInStock", summary = "Unsubscribe from back-in-stock alerts",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @DeleteMapping("/back-in-stock/{productId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> unsubscribeBackInStock(@PathVariable String productId, Authentication auth) {
+        UserDto user = getUserProfileUseCase.execute(auth.getName());
+        backInStockUseCase.unsubscribe(user.id(), productId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "checkBackInStockSubscription", summary = "Check if subscribed to back-in-stock alerts",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/back-in-stock/{productId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Boolean>> checkBackInStock(@PathVariable String productId, Authentication auth) {
+        UserDto user = getUserProfileUseCase.execute(auth.getName());
+        boolean subscribed = backInStockUseCase.isSubscribed(user.id(), productId);
         return ResponseEntity.ok(Map.of("subscribed", subscribed));
     }
 }

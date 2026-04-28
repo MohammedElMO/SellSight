@@ -24,7 +24,8 @@ public class ListUsersUseCase {
                         u.getFirstName(),
                         u.getLastName(),
                         u.getRole().name(),
-                        u.getCreatedAt()
+                        u.getCreatedAt(),
+                        u.getAvatarUrl()
                 ))
                 .toList();
     }

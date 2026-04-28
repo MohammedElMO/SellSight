@@ -2,7 +2,11 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useProduct, useAddToCart, usePriceDropSubscription, useTogglePriceDropSubscription } from '@/lib/hooks';
+import {
+  useProduct, useAddToCart,
+  usePriceDropSubscription, useTogglePriceDropSubscription,
+  useBackInStockSubscription, useToggleBackInStockSubscription,
+} from '@/lib/hooks';
 import { useTracker } from '@/hooks/useTracker';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -47,6 +51,10 @@ export default function ProductDetailPage() {
   const { data: priceDropSub } = usePriceDropSubscription(id);
   const togglePriceDrop = useTogglePriceDropSubscription(id);
   const isSubscribedPriceDrop = priceDropSub?.subscribed ?? false;
+
+  const { data: backInStockSub } = useBackInStockSubscription(id);
+  const toggleBackInStock = useToggleBackInStockSubscription(id);
+  const isSubscribedBackInStock = backInStockSub?.subscribed ?? false;
 
   const { data: product, isLoading, isError } = useProduct(id);
 
@@ -236,15 +244,29 @@ export default function ProductDetailPage() {
             )}
 
             {isLoggedInCustomer && (
-              <button
-                onClick={() => togglePriceDrop.mutate({ subscribed: isSubscribedPriceDrop })}
-                disabled={togglePriceDrop.isPending}
-                className="flex items-center gap-2 text-[13px] font-medium mb-4 transition-colors"
-                style={{ color: isSubscribedPriceDrop ? 'var(--accent-text)' : 'var(--text-secondary)' }}
-              >
-                {isSubscribedPriceDrop ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-                {isSubscribedPriceDrop ? 'Subscribed to price drops' : 'Notify me of price drops'}
-              </button>
+              <div className="flex flex-col gap-1 mb-4">
+                <button
+                  onClick={() => togglePriceDrop.mutate({ subscribed: isSubscribedPriceDrop })}
+                  disabled={togglePriceDrop.isPending}
+                  className="flex items-center gap-2 text-[13px] font-medium transition-colors"
+                  style={{ color: isSubscribedPriceDrop ? 'var(--accent-text)' : 'var(--text-secondary)' }}
+                >
+                  {isSubscribedPriceDrop ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                  {isSubscribedPriceDrop ? 'Subscribed to price drops' : 'Notify me of price drops'}
+                </button>
+
+                {(!product.active || product.stockQuantity === 0) && (
+                  <button
+                    onClick={() => toggleBackInStock.mutate({ subscribed: isSubscribedBackInStock })}
+                    disabled={toggleBackInStock.isPending}
+                    className="flex items-center gap-2 text-[13px] font-medium transition-colors"
+                    style={{ color: isSubscribedBackInStock ? 'var(--success)' : 'var(--text-secondary)' }}
+                  >
+                    {isSubscribedBackInStock ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                    {isSubscribedBackInStock ? 'Watching for restock' : 'Notify me when back in stock'}
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="flex items-center gap-2 text-[13px] text-[var(--text-secondary)] py-4 border-t border-[var(--border-subtle)]">

@@ -13,12 +13,14 @@ import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.application.dto.SellerApplicationDto;
 import org.example.sellsight.user.application.dto.UpdateProfileRequest;
 import org.example.sellsight.user.application.dto.UserDto;
+import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.user.application.usecase.ApproveSeller;
 import org.example.sellsight.user.application.usecase.DeleteAccountUseCase;
 import org.example.sellsight.user.application.usecase.DeleteAvatarUseCase;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
 import org.example.sellsight.user.application.usecase.ListPendingSellersUseCase;
 import org.example.sellsight.user.application.usecase.ListUsersUseCase;
+import org.example.sellsight.user.application.usecase.RecentlyViewedUseCase;
 import org.example.sellsight.user.application.usecase.RejectSeller;
 import org.example.sellsight.user.application.usecase.UpdateUserProfileUseCase;
 import org.example.sellsight.user.application.usecase.UploadAvatarUseCase;
@@ -50,6 +52,7 @@ public class UserController {
     private final RejectSeller rejectSeller;
     private final UploadAvatarUseCase uploadAvatarUseCase;
     private final DeleteAvatarUseCase deleteAvatarUseCase;
+    private final RecentlyViewedUseCase recentlyViewedUseCase;
 
     public UserController(GetUserProfileUseCase getUserProfileUseCase,
                           UpdateUserProfileUseCase updateUserProfileUseCase,
@@ -59,7 +62,8 @@ public class UserController {
                           ApproveSeller approveSeller,
                           RejectSeller rejectSeller,
                           UploadAvatarUseCase uploadAvatarUseCase,
-                          DeleteAvatarUseCase deleteAvatarUseCase) {
+                          DeleteAvatarUseCase deleteAvatarUseCase,
+                          RecentlyViewedUseCase recentlyViewedUseCase) {
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.updateUserProfileUseCase = updateUserProfileUseCase;
         this.deleteAccountUseCase = deleteAccountUseCase;
@@ -69,6 +73,7 @@ public class UserController {
         this.rejectSeller = rejectSeller;
         this.uploadAvatarUseCase = uploadAvatarUseCase;
         this.deleteAvatarUseCase = deleteAvatarUseCase;
+        this.recentlyViewedUseCase = recentlyViewedUseCase;
     }
 
     @Operation(
@@ -174,6 +179,29 @@ public class UserController {
     public ResponseEntity<UserDto> deleteMyAvatar(Authentication authentication) {
         UserDto updated = deleteAvatarUseCase.execute(authentication.getName());
         return ResponseEntity.ok(updated);
+    }
+
+    // ── Recently viewed ──────────────────────────────────────────
+
+    @Operation(operationId = "recordRecentlyViewed", summary = "Record a product view",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/me/recently-viewed")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> recordRecentlyViewed(
+            @RequestParam String productId,
+            Authentication authentication) {
+        UserDto user = getUserProfileUseCase.execute(authentication.getName());
+        recentlyViewedUseCase.record(user.id(), productId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(operationId = "getRecentlyViewed", summary = "Get recently viewed products",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/me/recently-viewed")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ProductDto>> getRecentlyViewed(Authentication authentication) {
+        UserDto user = getUserProfileUseCase.execute(authentication.getName());
+        return ResponseEntity.ok(recentlyViewedUseCase.getRecent(user.id()));
     }
 
     @Operation(

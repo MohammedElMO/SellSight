@@ -120,6 +120,14 @@ export interface ProductDto {
   stockQuantity: number;
 }
 
+export interface AutocompleteDto {
+  id: string;
+  name: string;
+  category: string;
+  imageUrl: string | null;
+  price: number;
+}
+
 export type SearchMode = 'HYBRID' | 'FULL_TEXT' | 'BROWSE' | 'NONE';
 
 export interface ProductPageDto {

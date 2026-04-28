@@ -54,4 +54,17 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, St
             """, nativeQuery = true)
     List<ProductJpaEntity> findActiveBefore(@Param("lastId") String lastId, @Param("size") int size);
 
+    @Query(value = """
+            SELECT * FROM products
+            WHERE active = true
+              AND (
+                similarity(name, :query) > 0.15
+                OR name ILIKE concat('%', :query, '%')
+                OR brand ILIKE concat('%', :query, '%')
+              )
+            ORDER BY similarity(name, :query) DESC, name ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<ProductJpaEntity> autocomplete(@Param("query") String query, @Param("limit") int limit);
+
 }

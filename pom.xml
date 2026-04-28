@@ -166,6 +166,20 @@
 			<version>24.22.0</version>
 		</dependency>
 
+		<!-- Brevo transactional email SDK -->
+		<dependency>
+			<groupId>com.brevo</groupId>
+			<artifactId>brevo</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<!-- Cloudinary (avatar upload + on-the-fly transformations) -->
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http5</artifactId>
+			<version>2.3.2</version>
+		</dependency>
+
 		<!-- Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

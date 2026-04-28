@@ -36,6 +36,7 @@ public class ProductController {
     private final SearchProductsUseCase searchProductsUseCase;
     private final GetProductByIdUseCase getProductByIdUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
+    private final AutocompleteProductsUseCase autocompleteProductsUseCase;
 
     public ProductController(CreateProductUseCase createProductUseCase,
                               UpdateProductUseCase updateProductUseCase,
@@ -43,7 +44,8 @@ public class ProductController {
                               GetProductsUseCase getProductsUseCase,
                               SearchProductsUseCase searchProductsUseCase,
                               GetProductByIdUseCase getProductByIdUseCase,
-                              GetUserProfileUseCase getUserProfileUseCase) {
+                              GetUserProfileUseCase getUserProfileUseCase,
+                              AutocompleteProductsUseCase autocompleteProductsUseCase) {
         this.createProductUseCase = createProductUseCase;
         this.updateProductUseCase = updateProductUseCase;
         this.deleteProductUseCase = deleteProductUseCase;
@@ -51,6 +53,7 @@ public class ProductController {
         this.searchProductsUseCase = searchProductsUseCase;
         this.getProductByIdUseCase = getProductByIdUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
+        this.autocompleteProductsUseCase = autocompleteProductsUseCase;
     }
 
     // ── Public read endpoints ────────────────────────────────
@@ -93,6 +96,20 @@ public class ProductController {
             return ResponseEntity.ok(getProductsUseCase.executeKeyset(lastId, size));
         }
         return ResponseEntity.ok(getProductsUseCase.execute(page, size));
+    }
+
+    @Operation(
+        operationId = "autocompleteProducts",
+        summary     = "Autocomplete product search",
+        description = "Returns lightweight suggestions using pg_trgm fuzzy matching. Handles typos, prefix, and suffix."
+    )
+    @GetMapping("/autocomplete")
+    public ResponseEntity<java.util.List<AutocompleteDto>> autocomplete(
+            @Parameter(description = "Partial search query", example = "lapt")
+            @RequestParam("q") String query,
+            @Parameter(description = "Max results (capped at 20)", example = "8")
+            @RequestParam(defaultValue = "8") int limit) {
+        return ResponseEntity.ok(autocompleteProductsUseCase.execute(query, limit));
     }
 
     @Operation(

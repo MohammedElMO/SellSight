@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import {
   authApi, productApi, orderApi, reviewApi, wishlistApi,
   questionApi, notificationApi, couponApi, loyaltyApi, addressApi,
-  cartApi, refundApi, subscriptionApi, adminApi, messageApi,
+  cartApi, refundApi, subscriptionApi, adminApi, messageApi, recentlyViewedApi,
 } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
@@ -65,6 +65,42 @@ export function useChangePassword() {
       authApi.changePassword(oldPassword, newPassword),
     onSuccess: () => toast.success('Password changed successfully'),
     onError: (err) => toast.error(apiError(err, 'Failed to change password')),
+  });
+}
+
+// Avatar upload constraints — keep in sync with backend UploadAvatarUseCase.
+export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+export const AVATAR_ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
+export function useUploadAvatar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      if (file.size > AVATAR_MAX_BYTES) {
+        return Promise.reject(new Error('Image must be 5MB or smaller'));
+      }
+      if (!AVATAR_ALLOWED_MIME.includes(file.type as typeof AVATAR_ALLOWED_MIME[number])) {
+        return Promise.reject(new Error('Use JPEG, PNG, or WebP'));
+      }
+      return authApi.uploadAvatar(file);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Avatar updated');
+    },
+    onError: (err) => toast.error(apiError(err, (err as Error).message ?? 'Upload failed')),
+  });
+}
+
+export function useDeleteAvatar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => authApi.deleteAvatar(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['profile'] });
+      toast.success('Avatar removed');
+    },
+    onError: (err) => toast.error(apiError(err, 'Failed to remove avatar')),
   });
 }
 
@@ -569,6 +605,29 @@ export function useRefundStatus(orderId: string) {
   });
 }
 
+// ── Recently viewed (server-backed) ─────────────────────────
+
+export function useRecentlyViewedProducts() {
+  const { isAuthenticated } = useAuthStore();
+  return useQuery({
+    queryKey: ['recently-viewed'],
+    queryFn: recentlyViewedApi.getAll,
+    enabled: isAuthenticated,
+    staleTime: 30000,
+  });
+}
+
+export function useRecordRecentlyViewed() {
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuthStore();
+  return useMutation({
+    mutationFn: (productId: string) => recentlyViewedApi.record(productId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recently-viewed'] }),
+    onError: () => { /* silent — non-critical */ },
+    meta: { skipToast: true },
+  });
+}
+
 // ── Price drop subscriptions ─────────────────────────────────
 
 export function usePriceDropSubscription(productId: string) {
@@ -593,6 +652,33 @@ export function useTogglePriceDropSubscription(productId: string) {
       queryClient.invalidateQueries({ queryKey: ['price-drop-sub', productId] });
     },
     onError: (err) => toast.error(apiError(err, 'Failed to update subscription')),
+  });
+}
+
+// ── Back-in-stock subscriptions ──────────────────────────────
+
+export function useBackInStockSubscription(productId: string) {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['back-in-stock-sub', productId],
+    queryFn: () => subscriptionApi.checkBackInStock(productId),
+    enabled: !!productId && isAuthenticated && role === 'CUSTOMER',
+    retry: false,
+  });
+}
+
+export function useToggleBackInStockSubscription(productId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subscribed }: { subscribed: boolean }) =>
+      subscribed
+        ? subscriptionApi.unsubscribeBackInStock(productId)
+        : subscriptionApi.subscribeBackInStock(productId),
+    onSuccess: (_data, { subscribed }) => {
+      toast.success(subscribed ? 'Alert removed' : "We'll notify you when it's back in stock!");
+      queryClient.invalidateQueries({ queryKey: ['back-in-stock-sub', productId] });
+    },
+    onError: (err) => toast.error(apiError(err, 'Failed to update alert')),
   });
 }
 
