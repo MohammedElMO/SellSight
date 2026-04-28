@@ -95,6 +95,7 @@ services:
       REDIS_PORT: "6379"
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-SellSight <noreply@sellsight.local>}
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
       OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
       OAUTH_GOOGLE_REDIRECT_URI: ${OAUTH_GOOGLE_REDIRECT_URI:-http://localhost:3000/oauth/callback}
