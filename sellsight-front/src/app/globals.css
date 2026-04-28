@@ -169,6 +169,36 @@ body {
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Dual-thumb price range slider ────────────────────────── */
+.range-thumb {
+  height: 100%;
+}
+.range-thumb::-webkit-slider-thumb {
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.18);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 120ms ease;
+}
+.range-thumb::-webkit-slider-thumb:hover { transform: scale(1.1); }
+.range-thumb::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.18);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.range-thumb::-webkit-slider-runnable-track { background: transparent; }
+.range-thumb::-moz-range-track { background: transparent; }
+
 /* ── Focus visible ────────────────────────────────────────── */
 
 :focus-visible {

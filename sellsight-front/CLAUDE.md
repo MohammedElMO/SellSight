@@ -47,7 +47,20 @@ pnpm lint
 
 **`Input` component (`components/ui/input.tsx`):**
 - `InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'>` — intentional, HTML's `prefix` is `string` but we need `ReactNode`
-- Spread `{...register('field')}` directly onto `<Input>`, `<Textarea>`, or `<Select>`
+- Spread `{...register('field')}` directly onto `<Input>` or `<Textarea>` (NOT `<Select>` — see below)
+
+**`Select` component (`components/ui/select.tsx`) — Headless UI Listbox:**
+- Custom dropdown built on `@headlessui/react` Listbox, anchored via `anchor={{ to, gap }}`. Native `<select>` is no longer used in the app.
+- Generic API: `<Select<T> value onChange options={[{ value, label, icon?, description? }]} size align fullWidth prefix label error placeholder triggerClassName />`. Cannot accept `register()` because there is no underlying form element.
+- For react-hook-form, wrap with `Controller`:
+  ```tsx
+  <Controller name="category" control={control} render={({ field }) => (
+    <Select fullWidth value={field.value ?? ''} onChange={field.onChange}
+      options={PRODUCT_CATEGORIES.map(c => ({ value: c, label: c }))}
+      error={errors.category?.message} />
+  )} />
+  ```
+- `input.tsx` re-exports `Select` and `SelectOption` for back-compat.
 
 **Utility functions (`lib/utils.ts`):**
 - `cn(...classes)` — merge Tailwind classes

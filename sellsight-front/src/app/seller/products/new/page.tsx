@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateProduct } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
 import { createProductSchema, type CreateProductFormValues } from '@/lib/schemas';
 import { PageLayout } from '@/components/layout/page-layout';
-import { Input, Textarea, Select } from '@/components/ui/input';
+import { Input, Textarea } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { PRODUCT_CATEGORIES } from '@/components/product/product-filters';
 import { ArrowLeft, Package } from 'lucide-react';
@@ -18,6 +19,7 @@ export default function NewProductPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
@@ -81,16 +83,21 @@ export default function NewProductPage() {
               prefix={<span className="text-xs font-medium">$</span>}
               {...register('price', { valueAsNumber: true })}
             />
-            <Select
-              label="Category"
-              error={errors.category?.message}
-              {...register('category')}
-            >
-              <option value="">Select category…</option>
-              {PRODUCT_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </Select>
+            <Controller
+              name="category"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Category"
+                  fullWidth
+                  error={errors.category?.message}
+                  placeholder="Select category…"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  options={PRODUCT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+                />
+              )}
+            />
           </div>
 
           <Input

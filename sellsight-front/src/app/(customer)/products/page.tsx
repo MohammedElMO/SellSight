@@ -1,79 +1,93 @@
 'use client';
 
 import { useState } from 'react';
+import { Package } from 'lucide-react';
 import { useProducts, useSearchProducts, useDebounce } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
-import { ProductCard } from '@/components/product/product-card';
-import { ProductFilters, DEFAULT_FILTERS, type ProductFilterState } from '@/components/product/product-filters';
-import { ProductCardSkeleton } from '@/components/ui/skeleton';
+import { ShopHeader } from '@/components/product/shop-header';
+import { SearchAndSortBar } from '@/components/product/search-sort-bar';
+import { CategoryTabs } from '@/components/product/category-tabs';
+import { FilterDrawer } from '@/components/product/filter-drawer';
+import { ActiveFilterChips } from '@/components/product/active-filter-chips';
+import { ProductGrid } from '@/components/product/product-grid';
+import {
+  DEFAULT_FILTERS,
+  countActiveFilters,
+  type ProductFilterState,
+} from '@/components/product/product-filters';
 import { Pagination } from '@/components/ui/pagination';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Reveal } from '@/components/ui/reveal';
-import { Package } from 'lucide-react';
 
 const PAGE_SIZE = 16;
 
 function buildApiFilters(f: ProductFilterState): Record<string, string> | undefined {
   const params: Record<string, string> = {};
-  if (f.category)    params.category  = f.category;
-  if (f.minPrice)    params.minPrice  = f.minPrice;
-  if (f.maxPrice)    params.maxPrice  = f.maxPrice;
-  if (f.minRating)   params.minRating = String(f.minRating);
-  if (f.sort && f.sort !== 'newest') params.sort = f.sort;
+  if (f.category)                params.category    = f.category;
+  if (f.minPrice)                params.minPrice    = f.minPrice;
+  if (f.maxPrice)                params.maxPrice    = f.maxPrice;
+  if (f.minRating)               params.minRating   = String(f.minRating);
+  if (f.inStockOnly)             params.inStock     = 'true';
+  if (f.sort && f.sort !== 'newest') params.sort    = f.sort;
   return Object.keys(params).length ? params : undefined;
 }
 
 export default function ProductsPage() {
-  const [page,    setPage]    = useState(0);
-  const [filters, setFilters] = useState<ProductFilterState>(DEFAULT_FILTERS);
+  const [page, setPage]         = useState(0);
+  const [filters, setFilters]   = useState<ProductFilterState>(DEFAULT_FILTERS);
+  const [drawerOpen, setDrawer] = useState(false);
 
   const debouncedSearch = useDebounce(filters.search, 300);
-  const isSearching = debouncedSearch.length >= 2;
+  const isSearching     = debouncedSearch.length >= 2;
 
   const apiFilters = buildApiFilters(filters);
-  const hasExtraFilters = !!(apiFilters && Object.keys(apiFilters).length > 0);
 
-  const { data: browseData,  isLoading: browseLoading  } = useProducts(page, PAGE_SIZE, apiFilters);
-  const { data: searchData,  isLoading: searchLoading  } = useSearchProducts(debouncedSearch, 0, PAGE_SIZE);
+  const { data: browseData,  isLoading: browseLoading } = useProducts(page, PAGE_SIZE, apiFilters);
+  const { data: searchData,  isLoading: searchLoading } = useSearchProducts(debouncedSearch, 0, PAGE_SIZE);
 
-  const isLoading = isSearching ? searchLoading : browseLoading;
-
-  const products   = isSearching ? (searchData?.products ?? []) : (browseData?.products ?? []);
-  const totalPages = isSearching ? (searchData?.totalPages ?? 1) : (browseData?.totalPages ?? 1);
+  const isLoading     = isSearching ? searchLoading : browseLoading;
+  const products      = isSearching ? (searchData?.products ?? []) : (browseData?.products ?? []);
+  const totalPages    = isSearching ? (searchData?.totalPages ?? 1) : (browseData?.totalPages ?? 1);
   const totalElements = isSearching ? searchData?.totalElements : browseData?.totalElements;
 
-  const handleFilterChange = (next: Partial<ProductFilterState>) => {
+  const updateFilters = (next: Partial<ProductFilterState>) => {
     setFilters((prev) => ({ ...prev, ...next }));
     setPage(0);
   };
 
-  const hasActiveFilters = filters.search || filters.category || filters.minPrice ||
-    filters.maxPrice || filters.minRating > 0 || filters.sort !== 'newest';
+  const clearAll = () => {
+    setFilters(DEFAULT_FILTERS);
+    setPage(0);
+  };
+
+  const activeFilterCount = countActiveFilters(filters);
+  const hasActiveFilters  = activeFilterCount > 0 || filters.search.length > 0;
 
   return (
     <PageLayout>
-      <Reveal>
-        <div className="flex items-end justify-between mb-7">
-          <div>
-            <h1 className="font-display font-extrabold text-[32px] text-[var(--text-primary)] tracking-[-0.03em]">Shop</h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-1">Discover products from quality sellers worldwide</p>
-          </div>
-        </div>
-      </Reveal>
+      <ShopHeader totalElements={totalElements} isSearching={isSearching} />
 
-      <Reveal delay={60}>
-        <ProductFilters
-          filters={filters}
-          onChange={handleFilterChange}
-          totalElements={totalElements}
-          className="mb-8"
-        />
-      </Reveal>
+      <SearchAndSortBar
+        search={filters.search}
+        sort={filters.sort}
+        activeFilterCount={activeFilterCount}
+        onSearchChange={(s) => updateFilters({ search: s })}
+        onSortChange={(s) => updateFilters({ sort: s })}
+        onOpenFilters={() => setDrawer(true)}
+      />
+
+      <CategoryTabs
+        active={filters.category}
+        onChange={(cat) => updateFilters({ category: cat })}
+      />
+
+      <ActiveFilterChips
+        filters={filters}
+        onChange={updateFilters}
+        onClearAll={clearAll}
+      />
 
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: PAGE_SIZE }).map((_, i) => <ProductCardSkeleton key={i} />)}
-        </div>
+        <ProductGrid loading skeletonCount={PAGE_SIZE} products={[]} />
       ) : products.length === 0 ? (
         <EmptyState
           icon={Package}
@@ -86,8 +100,8 @@ export default function ProductsPage() {
           action={
             hasActiveFilters ? (
               <button
-                onClick={() => handleFilterChange(DEFAULT_FILTERS)}
-                className="h-9 px-5 text-sm font-semibold text-white rounded-[var(--radius-xs)] hover:opacity-90 transition-all"
+                onClick={clearAll}
+                className="h-10 px-5 text-sm font-semibold text-white rounded-[var(--radius-sm)] hover:opacity-90 transition-all"
                 style={{ background: 'var(--accent)' }}
               >
                 Clear filters
@@ -97,21 +111,23 @@ export default function ProductsPage() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product, i) => (
-              <Reveal key={product.id} delay={i * 30}>
-                <ProductCard product={product} />
-              </Reveal>
-            ))}
-          </div>
+          <ProductGrid products={products} featureFirst={!isSearching && page === 0} />
 
           {!isSearching && totalPages > 1 && (
-            <div className="flex justify-center mt-12">
+            <div className="flex justify-center mt-14">
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           )}
         </>
       )}
+
+      <FilterDrawer
+        open={drawerOpen}
+        onClose={() => setDrawer(false)}
+        filters={filters}
+        onChange={updateFilters}
+        onClearAll={clearAll}
+      />
     </PageLayout>
   );
 }

@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
 import { MagButton } from '@/components/ui/mag-button';
+import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag, Plus, Copy, Trash2, X, ToggleLeft, ToggleRight } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -79,14 +80,16 @@ function CreateCouponModal({ onClose }: { onClose: () => void }) {
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Type">
-              <select
+              <Select
+                fullWidth
+                size="sm"
                 value={form.type}
-                onChange={(e) => set('type', e.target.value as CreateCouponRequest['type'])}
-                className="w-full h-[38px] px-3 border border-[var(--border)] rounded-[var(--radius-xs)] bg-[var(--bg-input)] text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-              >
-                <option value="PERCENTAGE">Percentage</option>
-                <option value="FIXED_AMOUNT">Fixed amount</option>
-              </select>
+                onChange={(v) => set('type', v as CreateCouponRequest['type'])}
+                options={[
+                  { value: 'PERCENTAGE', label: 'Percentage' },
+                  { value: 'FIXED_AMOUNT', label: 'Fixed amount' },
+                ]}
+              />
             </Field>
             <Field label={form.type === 'PERCENTAGE' ? 'Value (%)' : 'Value ($)'}>
               <input

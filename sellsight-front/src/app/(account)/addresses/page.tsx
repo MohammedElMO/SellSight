@@ -4,6 +4,7 @@ import { useAddresses, useCreateAddress, useDeleteAddress } from '@/lib/hooks';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { Pill } from '@/components/ui/pill';
+import { Select } from '@/components/ui/select';
 import { MapPin, Plus, Trash2, Star } from 'lucide-react';
 import { useState } from 'react';
 import type { AddressDto } from '@shared/types';
@@ -62,9 +63,17 @@ export default function AddressesPage() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className={labelCls}>Label</label>
-                <select value={form.label} onChange={(e) => set('label', e.target.value)} className={inputCls}>
-                  <option>Home</option><option>Work</option><option>Other</option>
-                </select>
+                <Select
+                  fullWidth
+                  size="sm"
+                  value={form.label}
+                  onChange={(v) => set('label', v)}
+                  options={[
+                    { value: 'Home', label: 'Home' },
+                    { value: 'Work', label: 'Work' },
+                    { value: 'Other', label: 'Other' },
+                  ]}
+                />
               </div>
               <div><label className={labelCls}>Phone</label><input value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} className={inputCls} /></div>
             </div>

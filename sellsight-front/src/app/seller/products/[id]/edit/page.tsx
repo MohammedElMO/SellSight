@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useProduct, useUpdateProduct } from '@/lib/hooks';
 import { useParams, useRouter } from 'next/navigation';
 import { updateProductSchema, type ProductFormValues } from '@/lib/schemas';
 import { PageLayout } from '@/components/layout/page-layout';
-import { Input, Textarea, Select } from '@/components/ui/input';
+import { Input, Textarea } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PRODUCT_CATEGORIES } from '@/components/product/product-filters';
@@ -20,6 +21,7 @@ export default function EditProductPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     reset,
@@ -107,15 +109,20 @@ export default function EditProductPage() {
               prefix={<span className="text-xs font-medium">$</span>}
               {...register('price', { valueAsNumber: true })}
             />
-            <Select
-              label="Category"
-              error={errors.category?.message}
-              {...register('category')}
-            >
-              {PRODUCT_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </Select>
+            <Controller
+              name="category"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Category"
+                  fullWidth
+                  error={errors.category?.message}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  options={PRODUCT_CATEGORIES.map((c) => ({ value: c, label: c }))}
+                />
+              )}
+            />
           </div>
 
           <Input

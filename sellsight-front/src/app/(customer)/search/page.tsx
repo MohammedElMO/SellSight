@@ -8,19 +8,29 @@ import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { ProductCard } from '@/components/product/product-card';
 import { ProductCardSkeleton } from '@/components/ui/skeleton';
-import { ProductFilters, DEFAULT_FILTERS, type ProductFilterState } from '@/components/product/product-filters';
+import {
+  DEFAULT_FILTERS,
+  countActiveFilters,
+  type ProductFilterState,
+} from '@/components/product/product-filters';
+import { CategoryTabs } from '@/components/product/category-tabs';
+import { FilterDrawer } from '@/components/product/filter-drawer';
+import { ActiveFilterChips } from '@/components/product/active-filter-chips';
+import { Select } from '@/components/ui/select';
+import { SORT_OPTIONS, type SortValue } from '@/components/product/product-filters';
 import { Pagination } from '@/components/ui/pagination';
-import { Search, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 
 const PAGE_SIZE = 24;
 
 function buildApiFilters(q: string, f: ProductFilterState): Record<string, string> {
   const params: Record<string, string> = {};
-  if (q)           params.q        = q;
-  if (f.category)  params.category = f.category;
-  if (f.minPrice)  params.minPrice = f.minPrice;
-  if (f.maxPrice)  params.maxPrice = f.maxPrice;
-  if (f.minRating) params.minRating = String(f.minRating);
+  if (q)             params.q          = q;
+  if (f.category)    params.category   = f.category;
+  if (f.minPrice)    params.minPrice   = f.minPrice;
+  if (f.maxPrice)    params.maxPrice   = f.maxPrice;
+  if (f.minRating)   params.minRating  = String(f.minRating);
+  if (f.inStockOnly) params.inStock    = 'true';
   if (f.sort && f.sort !== 'newest') params.sort = f.sort;
   return params;
 }
@@ -33,6 +43,7 @@ function SearchPageInner() {
   const [inputQ,   setInputQ]   = useState(initialQ);
   const [page,     setPage]     = useState(0);
   const [filters,  setFilters]  = useState<ProductFilterState>(DEFAULT_FILTERS);
+  const [drawerOpen, setDrawer] = useState(false);
 
   const debouncedQ = useDebounce(inputQ, 300);
   const isSearching = debouncedQ.length >= 2;
@@ -114,16 +125,48 @@ function SearchPageInner() {
         </div>
       </Reveal>
 
-      {/* Filters (hide search bar since we have the big one above) */}
+      {/* Sort + filter actions row */}
       <Reveal delay={60}>
-        <ProductFilters
-          filters={filters}
-          onChange={handleFilterChange}
-          totalElements={total}
-          hideSearch
-          className="mb-8"
-        />
+        <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+          <p className="text-[13px] text-[var(--text-tertiary)]">
+            <span className="font-semibold text-[var(--text-secondary)]">{(total ?? 0).toLocaleString()}</span>
+            {' '}result{total === 1 ? '' : 's'}
+          </p>
+          <div className="flex items-center gap-2">
+            <Select<SortValue>
+              value={filters.sort}
+              onChange={(v) => handleFilterChange({ sort: v })}
+              options={SORT_OPTIONS as unknown as { value: SortValue; label: string }[]}
+              size="md"
+              align="right"
+              triggerClassName="min-w-[180px]"
+            />
+            <button
+              onClick={() => setDrawer(true)}
+              className="h-11 px-4 inline-flex items-center gap-2 rounded-[var(--radius-sm)] text-sm font-semibold bg-[var(--text-primary)] text-white hover:opacity-90 transition-opacity"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {countActiveFilters(filters) > 0 && (
+                <span className="h-5 min-w-5 px-1.5 rounded-full bg-white text-[var(--text-primary)] text-[11px] font-bold flex items-center justify-center">
+                  {countActiveFilters(filters)}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
       </Reveal>
+
+      <CategoryTabs
+        active={filters.category}
+        onChange={(c) => handleFilterChange({ category: c })}
+      />
+
+      <ActiveFilterChips
+        filters={filters}
+        onChange={handleFilterChange}
+        onClearAll={() => handleFilterChange(DEFAULT_FILTERS)}
+      />
 
       {/* Grid */}
       {isLoading ? (
@@ -165,6 +208,14 @@ function SearchPageInner() {
           )}
         </>
       )}
+
+      <FilterDrawer
+        open={drawerOpen}
+        onClose={() => setDrawer(false)}
+        filters={filters}
+        onChange={handleFilterChange}
+        onClearAll={() => handleFilterChange(DEFAULT_FILTERS)}
+      />
     </PageLayout>
   );
 }
