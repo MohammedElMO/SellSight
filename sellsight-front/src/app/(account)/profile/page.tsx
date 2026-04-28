@@ -10,6 +10,7 @@ import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { Input } from '@/components/ui/input';
 import { Pill } from '@/components/ui/pill';
+import { AvatarUploader } from '@/components/common/avatar-uploader';
 import { User, Calendar, Mail, Clock, Pencil, X, Check, Trash2, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -69,11 +70,13 @@ export default function ProfilePage() {
           {/* Avatar card */}
           <Reveal delay={60}>
             <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-6 text-center">
-              <div
-                className="w-24 h-24 mx-auto rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4"
-                style={{ background: 'var(--gradient)', boxShadow: '0 8px 32px var(--accent-glow)' }}
-              >
-                {profile.firstName[0]}{profile.lastName[0]}
+              <div className="mb-4">
+                <AvatarUploader
+                  src={profile.avatarUrl ?? null}
+                  firstName={profile.firstName}
+                  lastName={profile.lastName}
+                  size={96}
+                />
               </div>
               <h2 className="font-display font-bold text-[18px] text-[var(--text-primary)]">
                 {profile.firstName} {profile.lastName}

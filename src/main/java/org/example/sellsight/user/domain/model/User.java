@@ -25,6 +25,7 @@ public class User {
     private boolean emailVerified;
     private LocalDateTime deletedAt;    // soft delete marker (GDPR)
     private SellerStatus sellerStatus;  // null for non-SELLER roles
+    private String avatarUrl;           // Cloudinary secure_url, nullable
 
     /** Convenience ctor for local (email+password) CUSTOMER users. */
     public User(UserId id, String firstName, String lastName,
@@ -112,6 +113,14 @@ public class User {
         this.sellerStatus = SellerStatus.REJECTED;
     }
 
+    public void changeAvatar(String url) {
+        this.avatarUrl = url;
+    }
+
+    public void removeAvatar() {
+        this.avatarUrl = null;
+    }
+
     /**
      * Link this local account to an OAuth provider. Used when the same email
      * registers first via password, then later signs in via Google/Slack.
@@ -152,4 +161,5 @@ public class User {
     public boolean isEmailVerified() { return emailVerified; }
     public LocalDateTime getDeletedAt() { return deletedAt; }
     public SellerStatus getSellerStatus() { return sellerStatus; }
+    public String getAvatarUrl() { return avatarUrl; }
 }

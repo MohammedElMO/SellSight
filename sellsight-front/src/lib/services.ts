@@ -66,6 +66,17 @@ export const authApi = {
     api.post<void>('/auth/resend-verification', { email }),
   deleteAccount: () =>
     api.delete<void>('/users/me'),
+  uploadAvatar: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api
+      .post<UserDto>('/users/me/avatar', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
+  deleteAvatar: () =>
+    api.delete<UserDto>('/users/me/avatar').then((r) => r.data),
 };
 
 // ── Products ─────────────────────────────────────────────────

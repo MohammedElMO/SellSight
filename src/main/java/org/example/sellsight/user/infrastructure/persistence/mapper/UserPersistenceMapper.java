@@ -15,7 +15,7 @@ public final class UserPersistenceMapper {
                 ? new Password(entity.getPassword())
                 : null;
 
-        return new User(
+        User user = new User(
                 UserId.from(entity.getId()),
                 entity.getFirstName(),
                 entity.getLastName(),
@@ -30,6 +30,10 @@ public final class UserPersistenceMapper {
                 entity.getDeletedAt(),
                 entity.getSellerStatus()
         );
+        if (entity.getAvatarUrl() != null) {
+            user.changeAvatar(entity.getAvatarUrl());
+        }
+        return user;
     }
 
     public static UserJpaEntity toJpa(User user) {
@@ -46,7 +50,8 @@ public final class UserPersistenceMapper {
                 user.getProviderId(),
                 user.isEmailVerified(),
                 user.getDeletedAt(),
-                user.getSellerStatus()
+                user.getSellerStatus(),
+                user.getAvatarUrl()
         );
     }
 }

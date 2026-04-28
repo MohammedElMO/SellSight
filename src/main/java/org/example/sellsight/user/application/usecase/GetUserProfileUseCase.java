@@ -30,7 +30,8 @@ public class GetUserProfileUseCase {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getRole().name(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getAvatarUrl()
         );
     }
 }

@@ -15,15 +15,21 @@ import org.example.sellsight.user.application.dto.UpdateProfileRequest;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.ApproveSeller;
 import org.example.sellsight.user.application.usecase.DeleteAccountUseCase;
+import org.example.sellsight.user.application.usecase.DeleteAvatarUseCase;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
 import org.example.sellsight.user.application.usecase.ListPendingSellersUseCase;
 import org.example.sellsight.user.application.usecase.ListUsersUseCase;
 import org.example.sellsight.user.application.usecase.RejectSeller;
 import org.example.sellsight.user.application.usecase.UpdateUserProfileUseCase;
+import org.example.sellsight.user.application.usecase.UploadAvatarUseCase;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.List;
 
@@ -42,6 +48,8 @@ public class UserController {
     private final ListPendingSellersUseCase listPendingSellersUseCase;
     private final ApproveSeller approveSeller;
     private final RejectSeller rejectSeller;
+    private final UploadAvatarUseCase uploadAvatarUseCase;
+    private final DeleteAvatarUseCase deleteAvatarUseCase;
 
     public UserController(GetUserProfileUseCase getUserProfileUseCase,
                           UpdateUserProfileUseCase updateUserProfileUseCase,
@@ -49,7 +57,9 @@ public class UserController {
                           ListUsersUseCase listUsersUseCase,
                           ListPendingSellersUseCase listPendingSellersUseCase,
                           ApproveSeller approveSeller,
-                          RejectSeller rejectSeller) {
+                          RejectSeller rejectSeller,
+                          UploadAvatarUseCase uploadAvatarUseCase,
+                          DeleteAvatarUseCase deleteAvatarUseCase) {
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.updateUserProfileUseCase = updateUserProfileUseCase;
         this.deleteAccountUseCase = deleteAccountUseCase;
@@ -57,6 +67,8 @@ public class UserController {
         this.listPendingSellersUseCase = listPendingSellersUseCase;
         this.approveSeller = approveSeller;
         this.rejectSeller = rejectSeller;
+        this.uploadAvatarUseCase = uploadAvatarUseCase;
+        this.deleteAvatarUseCase = deleteAvatarUseCase;
     }
 
     @Operation(
@@ -115,6 +127,53 @@ public class UserController {
     public ResponseEntity<Void> deleteMyAccount(Authentication authentication) {
         deleteAccountUseCase.execute(authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+        operationId = "uploadMyAvatar",
+        summary     = "Upload my avatar",
+        description = "Uploads a new avatar image (JPEG/PNG/WebP, max 5MB) to Cloudinary " +
+                      "and returns the updated profile with the new avatar URL.",
+        security    = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Avatar uploaded",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid file (size/type)",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserDto> uploadMyAvatar(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Avatar file is required");
+        }
+        UserDto updated = uploadAvatarUseCase.execute(
+                authentication.getName(),
+                file.getBytes(),
+                file.getContentType());
+        return ResponseEntity.ok(updated);
+    }
+
+    @Operation(
+        operationId = "deleteMyAvatar",
+        summary     = "Delete my avatar",
+        description = "Removes the current avatar from Cloudinary and clears the URL.",
+        security    = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Avatar removed",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/me/avatar")
+    public ResponseEntity<UserDto> deleteMyAvatar(Authentication authentication) {
+        UserDto updated = deleteAvatarUseCase.execute(authentication.getName());
+        return ResponseEntity.ok(updated);
     }
 
     @Operation(

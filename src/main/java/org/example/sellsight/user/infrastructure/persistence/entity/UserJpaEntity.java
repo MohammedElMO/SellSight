@@ -63,4 +63,7 @@ public class UserJpaEntity {
     @Column(nullable = true, length = 20)
     @Enumerated(EnumType.STRING)
     private SellerStatus sellerStatus;
+
+    @Column(name = "avatar_url", length = 512)
+    private String avatarUrl;
 }

@@ -58,6 +58,7 @@ export interface UserDto {
   lastName: string;
   role: Role;
   createdAt: string; // ISO 8601
+  avatarUrl?: string | null;
 }
 
 export interface UpdateProfileRequest {
