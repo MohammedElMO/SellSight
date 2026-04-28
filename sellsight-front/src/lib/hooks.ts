@@ -6,7 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import {
-  authApi, productApi, orderApi, reviewApi, wishlistApi,
+  authApi, productApi, analyticsApi, orderApi, reviewApi, wishlistApi,
   questionApi, notificationApi, couponApi, loyaltyApi, addressApi,
   cartApi, refundApi, subscriptionApi, adminApi, messageApi,
 } from '@/lib/services';
@@ -104,6 +104,37 @@ export function useSellerProducts(sellerId: string | undefined, page = 0, size =
     queryKey: ['seller-products', sellerId, page, size],
     queryFn: () => productApi.getBySeller(sellerId!, page, size),
     enabled: !!sellerId,
+  });
+}
+
+export function useTrendingProducts(limit = 10) {
+  return useQuery({
+    queryKey: ['analytics', 'trending-products', limit],
+    queryFn: () => analyticsApi.getTrendingProducts(limit),
+  });
+}
+
+export function useSellerAnalyticsSummary(sellerId: string | undefined) {
+  return useQuery({
+    queryKey: ['analytics', 'seller-summary', sellerId],
+    queryFn: () => analyticsApi.getSellerSummary(sellerId!),
+    enabled: !!sellerId,
+  });
+}
+
+export function useSellerTopProducts(sellerId: string | undefined, limit = 10) {
+  return useQuery({
+    queryKey: ['analytics', 'seller-top-products', sellerId, limit],
+    queryFn: () => analyticsApi.getSellerTopProducts(sellerId!, limit),
+    enabled: !!sellerId,
+  });
+}
+
+export function useUserRecommendations(userId: string | undefined, limit = 10) {
+  return useQuery({
+    queryKey: ['analytics', 'recommendations', userId, limit],
+    queryFn: () => analyticsApi.getUserRecommendations(userId!, limit),
+    enabled: !!userId,
   });
 }
 

@@ -1,0 +1,111 @@
+
+> sellsight-front@0.1.0 dev /workspaces/SellSight/sellsight-front
+> next dev
+
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.0.1.112:3000
+- Environments: .env.local
+✓ Ready in 720ms
+
+○ Compiling / ...
+ GET / 200 in 47s (next.js: 46s, proxy.ts: 45ms, application-code: 287ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html
+                          lang="en"
+-                         data-kantu="1"
+-                         webcrx=""
+                        >
+                  ...
+ 
+ GET /profile 200 in 401ms (next.js: 280ms, proxy.ts: 7ms, application-code: 115ms)
+ GET /orders 200 in 533ms (next.js: 144ms, proxy.ts: 334ms, application-code: 55ms)
+ GET / 200 in 1451ms (next.js: 936ms, proxy.ts: 80ms, application-code: 435ms)
+ GET /login 200 in 2.8s (next.js: 1953ms, proxy.ts: 775ms, application-code: 77ms)
+ GET /admin/dashboard 200 in 721ms (next.js: 586ms, proxy.ts: 6ms, application-code: 129ms)
+✓ Finished filesystem cache database compaction in 15.1s
+ GET /admin/products 200 in 278ms (next.js: 234ms, proxy.ts: 3ms, application-code: 42ms)
+ GET /admin/inventory 200 in 317ms (next.js: 202ms, proxy.ts: 3ms, application-code: 112ms)
+ GET /admin/coupons 200 in 125ms (next.js: 80ms, proxy.ts: 4ms, application-code: 42ms)
+ GET /admin/sellers/pending 200 in 230ms (next.js: 147ms, proxy.ts: 5ms, application-code: 79ms)
+ GET / 200 in 34ms (next.js: 5ms, proxy.ts: 3ms, application-code: 26ms)
+ GET /login 200 in 31ms (next.js: 5ms, proxy.ts: 3ms, application-code: 23ms)
+ GET /oauth/callback?provider=GOOGLE&iss=https%3A%2F%2Faccounts.google.com&code=4%2F0AeoWuM9qJybzzTbrPEqqSR3RWImgAREFM3Y_wIRU-AWXU4iWjinzBw3-FrQS3Y3o_1AdPQ&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&authuser=1&hd=ensam-casa.ma&prompt=none 200 in 392ms (next.js: 110ms, proxy.ts: 3ms, application-code: 279ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/oauth/cal..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html
+                          lang="en"
+-                         data-kantu="1"
+-                         webcrx=""
+                        >
+                  ...
+ 
+ GET /seller/dashboard 200 in 267ms (next.js: 140ms, proxy.ts: 3ms, application-code: 124ms)
+ GET /seller/products 200 in 357ms (next.js: 256ms, proxy.ts: 4ms, application-code: 96ms)
+ GET /seller/dashboard 200 in 34ms (next.js: 5ms, proxy.ts: 3ms, application-code: 25ms)
+ GET /products/B01M7YDZ9R 200 in 1970ms (next.js: 1815ms, proxy.ts: 4ms, application-code: 151ms)
+ GET /products/B01M7YDZ9R 200 in 199ms (next.js: 107ms, proxy.ts: 14ms, application-code: 79ms)
+ GET / 200 in 29ms (next.js: 4ms, proxy.ts: 4ms, application-code: 22ms)
+ GET /login 200 in 38ms (next.js: 7ms, proxy.ts: 3ms, application-code: 29ms)
+ GET /admin/dashboard 200 in 62ms (next.js: 8ms, proxy.ts: 11ms, application-code: 43ms)
+ GET /admin/sellers/pending 200 in 32ms (next.js: 4ms, proxy.ts: 3ms, application-code: 24ms)
+ GET /admin/inventory 200 in 28ms (next.js: 4ms, proxy.ts: 3ms, application-code: 21ms)
+ GET / 200 in 74ms (next.js: 10ms, proxy.ts: 12ms, application-code: 52ms)
+ GET /admin/dashboard 200 in 40ms (next.js: 8ms, proxy.ts: 4ms, application-code: 28ms)

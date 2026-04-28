@@ -13,6 +13,9 @@ import type {
   UpdateProfileRequest,
   ProductDto,
   ProductPageDto,
+  AnalyticsProductScoreDto,
+  SellerAnalyticsSummaryDto,
+  RecommendationDto,
   CreateProductRequest,
   UpdateProductRequest,
   OrderDto,
@@ -85,6 +88,19 @@ export const productApi = {
     api.put<ProductDto>(`/products/${id}`, req).then((r) => r.data),
   delete: (id: string) =>
     api.delete<void>(`/products/${id}`),
+};
+
+// ── Analytics / Serving ────────────────────────────────────
+
+export const analyticsApi = {
+  getTrendingProducts: (limit = 10) =>
+    api.get<AnalyticsProductScoreDto[]>('/analytics/trending-products', { params: { limit } }).then((r) => r.data),
+  getSellerSummary: (sellerId: string) =>
+    api.get<SellerAnalyticsSummaryDto>(`/analytics/sellers/${sellerId}`).then((r) => r.data),
+  getSellerTopProducts: (sellerId: string, limit = 10) =>
+    api.get<AnalyticsProductScoreDto[]>(`/analytics/sellers/${sellerId}/products`, { params: { limit } }).then((r) => r.data),
+  getUserRecommendations: (userId: string, limit = 10) =>
+    api.get<RecommendationDto[]>(`/analytics/users/${userId}/recommendations`, { params: { limit } }).then((r) => r.data),
 };
 
 // ── Orders ───────────────────────────────────────────────────

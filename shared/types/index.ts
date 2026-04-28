@@ -128,6 +128,43 @@ export interface ProductPageDto {
   totalElements: number;
 }
 
+// ── Analytics / Serving ────────────────────────────────────
+
+export interface AnalyticsProductScoreDto {
+  productId: string;
+  productName: string;
+  sellerId: string;
+  category: string;
+  viewsCount: number;
+  clicksCount: number;
+  addToCartCount: number;
+  purchaseCount: number;
+  revenue30d: number;
+  score: number;
+  computedAt: string;
+}
+
+export interface SellerAnalyticsSummaryDto {
+  sellerId: string;
+  sellerName: string;
+  viewsCount: number;
+  clicksCount: number;
+  addToCartCount: number;
+  purchaseCount: number;
+  revenue30d: number;
+  score: number;
+  computedAt: string;
+}
+
+export interface RecommendationDto {
+  productId: string;
+  productName: string;
+  category: string;
+  reason: string;
+  score: number;
+  createdAt: string;
+}
+
 // ── Order ───────────────────────────────────────────────────
 
 export interface OrderItemRequest {

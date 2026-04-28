@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
+import { useProfile, useTrendingProducts, useUserRecommendations } from '@/lib/hooks';
 import { productApi } from '@/lib/services';
 import { useCart } from '@/lib/hooks';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
@@ -11,7 +12,7 @@ import { Footer } from '@/components/layout/footer';
 import { ProductRail } from '@/components/product/product-rail';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
-import { ArrowRight, Package } from 'lucide-react';
+import { ArrowRight, Package, TrendingUp, BarChart3, Sparkles } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import type { ProductDto } from '@shared/types';
 
@@ -67,8 +68,61 @@ function InstaGrid({ products, isLoading }: { products?: ProductDto[]; isLoading
   );
 }
 
+function TrendScoreTile({ item }: { item: { productId: string; productName: string; category: string; score: number; viewsCount: number; clicksCount: number; purchaseCount: number } }) {
+  return (
+    <Link
+      href={`/products/${item.productId}`}
+      className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-card)] p-4 hover:border-[var(--accent)] transition-colors"
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="text-[12px] uppercase tracking-wider text-[var(--text-tertiary)] font-semibold">{item.category}</p>
+          <h3 className="text-[14px] font-semibold text-[var(--text-primary)] line-clamp-2 mt-1">{item.productName}</h3>
+        </div>
+        <div className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold bg-[var(--accent-muted)] text-[var(--accent-text)]">
+          {item.score.toFixed(2)}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-[11px] text-[var(--text-secondary)]">
+        <div>
+          <span className="block text-[var(--text-tertiary)]">Views</span>
+          <strong className="text-[var(--text-primary)]">{item.viewsCount}</strong>
+        </div>
+        <div>
+          <span className="block text-[var(--text-tertiary)]">Clicks</span>
+          <strong className="text-[var(--text-primary)]">{item.clicksCount}</strong>
+        </div>
+        <div>
+          <span className="block text-[var(--text-tertiary)]">Purchases</span>
+          <strong className="text-[var(--text-primary)]">{item.purchaseCount}</strong>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function RecommendationTile({ item }: { item: { productId: string; productName: string; category: string; reason: string; score: number } }) {
+  return (
+    <Link
+      href={`/products/${item.productId}`}
+      className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-card)] p-4 hover:border-[var(--accent)] transition-colors"
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="text-[12px] uppercase tracking-wider text-[var(--text-tertiary)] font-semibold">{item.category}</p>
+          <h3 className="text-[14px] font-semibold text-[var(--text-primary)] line-clamp-2 mt-1">{item.productName}</h3>
+        </div>
+        <Sparkles className="h-4 w-4 text-[var(--accent-text)]" />
+      </div>
+      <p className="text-[12px] text-[var(--text-secondary)] mb-2">{item.reason}</p>
+      <p className="text-[12px] font-semibold text-[var(--text-primary)]">Recommendation score: {item.score.toFixed(2)}</p>
+    </Link>
+  );
+}
+
 export default function HomePage() {
   const { isAuthenticated, role, firstName } = useAuthStore();
+  const { data: profile } = useProfile();
   const dashboardHref = role ? ROLE_HOME[role] || '/products' : '/';
   const { products: recentlyViewed } = useRecentlyViewed();
   const { data: cart } = useCart();
@@ -84,11 +138,13 @@ export default function HomePage() {
     queryFn:  () => productApi.getAll(0, 8, { sort: 'createdAt,desc' }),
     staleTime: 5 * 60 * 1000,
   });
-  const { data: trendingProducts, isLoading: loadingTrending } = useQuery({
-    queryKey: ['products', 'trending'],
+  const { data: bestSellingProducts, isLoading: loadingBestSelling } = useQuery({
+    queryKey: ['products', 'best-selling'],
     queryFn:  () => productApi.getAll(0, 8, { sort: 'best_selling' }),
     staleTime: 5 * 60 * 1000,
   });
+  const { data: trendingScores } = useTrendingProducts(8);
+  const { data: recommendations, isLoading: loadingRecommendations } = useUserRecommendations(profile?.id, 8);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
@@ -146,15 +202,67 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── Trending rail ── */}
-      {trendingProducts?.products && trendingProducts.products.length > 0 && (
+      {/* ── Trend score rail ── */}
+      {trendingScores && trendingScores.length > 0 && (
+        <div className="max-w-[1200px] mx-auto w-full px-5 sm:px-10 pb-8">
+          <Reveal>
+            <div className="flex items-center gap-2 mb-5">
+              <BarChart3 className="h-5 w-5 text-[var(--accent-text)]" />
+              <div>
+                <h2 className="font-display font-bold text-[18px] text-[var(--text-primary)] tracking-[-0.01em]">Trending Score</h2>
+                <p className="text-[13px] text-[var(--text-secondary)]">Computed from views, clicks, cart events, and purchases</p>
+              </div>
+            </div>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {trendingScores.map((item, i) => (
+              <Reveal key={item.productId} delay={i * 60}>
+                <TrendScoreTile item={item} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Best selling rail ── */}
+      {bestSellingProducts?.products && bestSellingProducts.products.length > 0 && (
         <div className="max-w-[1200px] mx-auto w-full px-5 sm:px-10 pb-8">
           <ProductRail
-            title="Trending Now"
-            description="Top-selling products this week"
-            products={trendingProducts.products}
-            isLoading={loadingTrending}
+            title="Best Selling"
+            description="Best sellers based on product sales"
+            products={bestSellingProducts.products}
+            isLoading={loadingBestSelling}
           />
+        </div>
+      )}
+
+      {/* ── Recommendations rail ── */}
+      {isAuthenticated && role === 'CUSTOMER' && recommendations && recommendations.length > 0 && (
+        <div className="max-w-[1200px] mx-auto w-full px-5 sm:px-10 pb-8">
+          <Reveal>
+            <div className="flex items-center gap-2 mb-5">
+              <TrendingUp className="h-5 w-5 text-[var(--accent-text)]" />
+              <div>
+                <h2 className="font-display font-bold text-[18px] text-[var(--text-primary)] tracking-[-0.01em]">Recommended for you</h2>
+                <p className="text-[13px] text-[var(--text-secondary)]">Ranked by your behavior and product scores</p>
+              </div>
+            </div>
+          </Reveal>
+          {loadingRecommendations ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-36 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-card)] skeleton" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {recommendations.map((item, i) => (
+                <Reveal key={item.productId} delay={i * 60}>
+                  <RecommendationTile item={item} />
+                </Reveal>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -56,6 +56,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         // Public — read-only product browsing
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
+                        // Public — read-only analytics serving endpoints
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/analytics/**").permitAll()
                         // Public — read-only reviews and Q&A
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews/product/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/questions/product/**").permitAll()

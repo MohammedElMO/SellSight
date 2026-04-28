@@ -1,6 +1,6 @@
 'use client';
 
-import { useProfile, useSellerProducts } from '@/lib/hooks';
+import { useProfile, useSellerAnalyticsSummary, useSellerProducts, useSellerTopProducts } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProductCard } from '@/components/product/product-card';
 import { ProductCardSkeleton } from '@/components/ui/skeleton';
@@ -9,17 +9,26 @@ import { TiltCard } from '@/components/ui/tilt-card';
 import { MagButton } from '@/components/ui/mag-button';
 import { AnimCounter } from '@/components/ui/anim-counter';
 import { formatPrice } from '@/lib/utils';
-import { Package, Plus, TrendingUp, Eye, Tag } from 'lucide-react';
+import { Package, Plus, TrendingUp, Eye, Tag, BarChart3, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SellerDashboardPage() {
   const { data: profile } = useProfile();
   const { data: productsPage, isLoading } = useSellerProducts(profile?.id, 0, 20);
+  const { data: analyticsSummary } = useSellerAnalyticsSummary(profile?.id);
+  const { data: topProducts, isLoading: loadingTopProducts } = useSellerTopProducts(profile?.id, 5);
 
   const products      = productsPage?.products ?? [];
   const activeCount   = products.filter((p) => p.active).length;
   const totalValue    = products.reduce((s, p) => s + p.price, 0);
   const categoryCount = new Set(products.map((p) => p.category)).size;
+
+  const summaryCards = analyticsSummary ? [
+    { label: 'Views', value: analyticsSummary.viewsCount, icon: Eye, numeric: true },
+    { label: 'Clicks', value: analyticsSummary.clicksCount, icon: BarChart3, numeric: true },
+    { label: 'Cart adds', value: analyticsSummary.addToCartCount, icon: ShoppingCart, numeric: true },
+    { label: 'Purchases', value: analyticsSummary.purchaseCount, icon: Package, numeric: true },
+  ] : [];
 
   const stats = [
     { label: 'Total products',  value: products.length,                                              icon: Package,    numeric: true  },
@@ -31,6 +40,77 @@ export default function SellerDashboardPage() {
   return (
     <PageLayout>
       <Reveal>
+
+      {analyticsSummary && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          {summaryCards.map(({ label, value, icon: Icon, numeric }, i) => (
+            <Reveal key={label} delay={i * 60}>
+              <TiltCard intensity={4} className="bg-[var(--bg-card)] rounded-[var(--radius)] p-5 cursor-default">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">{label}</span>
+                  <div className="w-8 h-8 rounded-[var(--radius-xs)] flex items-center justify-center" style={{ background: 'var(--accent-muted)' }}>
+                    <Icon className="h-4 w-4 text-[var(--accent-text)]" />
+                  </div>
+                </div>
+                <div className="font-display font-extrabold text-[26px] text-[var(--text-primary)] tracking-[-0.02em]">
+                  {numeric ? <AnimCounter target={value as number} /> : (value as number)}
+                </div>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      )}
+
+      {analyticsSummary && (
+        <Reveal delay={240}>
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5 mb-10">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h2 className="font-display font-semibold text-[17px] text-[var(--text-primary)]">Trend score summary</h2>
+                <p className="text-[13px] text-[var(--text-secondary)]">Aggregated from the serving layer in PostgreSQL</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-semibold">Score</p>
+                <p className="font-display font-extrabold text-[24px] text-[var(--text-primary)]">{analyticsSummary.score.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[13px] text-[var(--text-secondary)]">
+              <div><span className="block text-[var(--text-tertiary)]">Revenue 30d</span><strong className="text-[var(--text-primary)]">{formatPrice(analyticsSummary.revenue30d)}</strong></div>
+              <div><span className="block text-[var(--text-tertiary)]">Views</span><strong className="text-[var(--text-primary)]">{analyticsSummary.viewsCount}</strong></div>
+              <div><span className="block text-[var(--text-tertiary)]">Clicks</span><strong className="text-[var(--text-primary)]">{analyticsSummary.clicksCount}</strong></div>
+              <div><span className="block text-[var(--text-tertiary)]">Updated</span><strong className="text-[var(--text-primary)]">{new Date(analyticsSummary.computedAt).toLocaleDateString()}</strong></div>
+            </div>
+          </div>
+        </Reveal>
+      )}
+
+      <Reveal delay={280}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display font-semibold text-[17px] text-[var(--text-primary)]">Top analytics products</h2>
+          <span className="text-[13px] text-[var(--text-secondary)]">From /api/analytics/sellers/{profile?.id}/products</span>
+        </div>
+      </Reveal>
+
+      {loadingTopProducts ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-36 rounded-[var(--radius)] bg-[var(--bg-card)] skeleton" />)}
+        </div>
+      ) : topProducts && topProducts.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          {topProducts.map((item) => (
+            <TiltCard key={item.productId} intensity={4} className="bg-[var(--bg-card)] rounded-[var(--radius)] p-5 border border-[var(--border)]">
+              <p className="text-[12px] uppercase tracking-wider text-[var(--text-tertiary)] font-semibold">{item.category}</p>
+              <h3 className="mt-2 text-[15px] font-semibold text-[var(--text-primary)] line-clamp-2">{item.productName}</h3>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-[12px] text-[var(--text-secondary)]">
+                <div><span className="block text-[var(--text-tertiary)]">Score</span><strong className="text-[var(--text-primary)]">{item.score.toFixed(2)}</strong></div>
+                <div><span className="block text-[var(--text-tertiary)]">Purchases</span><strong className="text-[var(--text-primary)]">{item.purchaseCount}</strong></div>
+                <div><span className="block text-[var(--text-tertiary)]">Views</span><strong className="text-[var(--text-primary)]">{item.viewsCount}</strong></div>
+                <div><span className="block text-[var(--text-tertiary)]">Clicks</span><strong className="text-[var(--text-primary)]">{item.clicksCount}</strong></div>
+              </div>
+            </TiltCard>
+          ))}
+        </div>
+      ) : null}
         <div className="flex items-start justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display font-extrabold text-[28px] text-[var(--text-primary)] tracking-[-0.02em]">
