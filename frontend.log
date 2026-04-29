@@ -1,0 +1,20 @@
+
+> sellsight-front@0.1.0 dev /workspaces/SellSight/sellsight-front
+> next dev
+
+⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://10.0.5.130:3001
+- Environments: .env.local
+✓ Ready in 2.5s
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          57114
+- Dir:          /workspaces/SellSight/sellsight-front
+- Log:          .next/dev/logs/next-development.log
+
+Run kill 57114 to stop it.
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.

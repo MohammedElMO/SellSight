@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import {
   authApi, productApi, orderApi, reviewApi, wishlistApi,
   questionApi, notificationApi, couponApi, loyaltyApi, addressApi,
-  cartApi, refundApi, subscriptionApi, adminApi, messageApi,
+  cartApi, refundApi, subscriptionApi, adminApi, messageApi, bigDataApi,
 } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
@@ -79,6 +79,35 @@ export function useDeleteAccount() {
       router.push('/');
     },
     onError: (err) => toast.error(apiError(err, 'Failed to delete account')),
+  });
+}
+
+// ── Big Data Analytics ──────────────────────────────────────
+
+export function useSellerTopProducts(sellerId: string | undefined, limit = 10) {
+  return useQuery({
+    queryKey: ['bigdata-seller-top-products', sellerId, limit],
+    queryFn: () => bigDataApi.getSellerTopProducts(sellerId!, limit),
+    enabled: !!sellerId,
+    retry: false,
+  });
+}
+
+export function useCategoryTrends() {
+  return useQuery({
+    queryKey: ['bigdata-category-trends'],
+    queryFn: bigDataApi.getCategoryTrends,
+    retry: false,
+  });
+}
+
+export function useMyInsights() {
+  const { isAuthenticated } = useAuthStore();
+  return useQuery({
+    queryKey: ['bigdata-my-insights'],
+    queryFn: bigDataApi.getMyInsights,
+    enabled: isAuthenticated,
+    retry: false,
   });
 }
 

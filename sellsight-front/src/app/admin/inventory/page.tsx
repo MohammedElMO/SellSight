@@ -59,8 +59,8 @@ export default function AdminInventoryPage() {
     queryKey: ['admin-inventory', debouncedSearch],
     queryFn: () =>
       debouncedSearch.trim()
-        ? productApi.search(debouncedSearch, 0, 50)
-        : productApi.getAll(0, 100),
+      ? productApi.search(debouncedSearch, 0, 500)
+      : productApi.getAll(0, 500),
     staleTime: 30_000,
   });
 

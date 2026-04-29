@@ -8,6 +8,7 @@ import { Reveal } from '@/components/ui/reveal';
 import { TiltCard } from '@/components/ui/tilt-card';
 import { MagButton } from '@/components/ui/mag-button';
 import { AnimCounter } from '@/components/ui/anim-counter';
+import { SellerTopProductsWidget } from '@/components/bigdata/seller-top-products-widget';
 import { formatPrice } from '@/lib/utils';
 import { Package, Plus, TrendingUp, Eye, Tag } from 'lucide-react';
 import Link from 'next/link';
@@ -108,6 +109,12 @@ export default function SellerDashboardPage() {
           ))}
         </div>
       )}
+
+      <div className="mt-10">
+        <Reveal delay={420}>
+          {profile?.id && <SellerTopProductsWidget sellerId={String(profile.id)} limit={8} />}
+        </Reveal>
+      </div>
     </PageLayout>
   );
 }

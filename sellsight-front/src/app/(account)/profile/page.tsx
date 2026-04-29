@@ -10,6 +10,7 @@ import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { Input } from '@/components/ui/input';
 import { Pill } from '@/components/ui/pill';
+import { UserInsightsWidget } from '@/components/bigdata/user-insights-widget';
 import { User, Calendar, Mail, Clock, Pencil, X, Check, Trash2, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -194,6 +195,14 @@ export default function ProfilePage() {
                 </MagButton>
               </div>
             )}
+          </div>
+        </Reveal>
+      )}
+
+      {profile && (
+        <Reveal delay={260}>
+          <div className="mt-8">
+            <UserInsightsWidget />
           </div>
         </Reveal>
       )}

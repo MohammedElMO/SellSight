@@ -282,3 +282,44 @@ export const messageApi = {
   sendMessage: (orderId: string, req: SendMessageRequest) =>
     api.post<MessageDto>(`/orders/${orderId}/messages`, req).then((r) => r.data),
 };
+
+// ── Big Data Analytics ──────────────────────────────────────
+
+export interface SellerTopProductDto {
+  id: string;
+  name: string;
+  views: number;
+  addToCart: number;
+  purchase: number;
+  avgRating: number;
+  popularityScore: number;
+}
+
+export interface CategoryTrendDto {
+  category: string;
+  totalViews: number;
+  totalCarts: number;
+  topProducts: string;
+  avgRating: number;
+  trendScore: number;
+}
+
+export interface UserInsightsDto {
+  userId: string;
+  productsViewed: number;
+  productsCarted: number;
+  productsPurchased: number;
+  avgRatingGiven: number;
+  preferredCategory: string;
+}
+
+export const bigDataApi = {
+  getSellerTopProducts: (sellerId: string, limit = 10) =>
+    api
+      .get<SellerTopProductDto[]>(`/v1/sellers/${sellerId}/analytics/top-products`, { params: { limit } })
+      .then((r) => r.data),
+  getCategoryTrends: () =>
+    api.get<CategoryTrendDto[]>('/v1/admin/dashboard/category-trends').then((r) => r.data),
+  getMyInsights: () =>
+    api.get<UserInsightsDto>('/v1/users/me/insights').then((r) => r.data),
+};

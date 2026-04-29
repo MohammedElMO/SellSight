@@ -7,6 +7,7 @@ import { AnimCounter } from '@/components/ui/anim-counter';
 import { Pill } from '@/components/ui/pill';
 import { MagButton } from '@/components/ui/mag-button';
 import { useAllOrders } from '@/lib/hooks';
+import { CategoryTrendsWidget } from '@/components/bigdata/category-trends-widget';
 import { formatPrice, formatDate } from '@/lib/utils';
 import {
   TrendingUp, Package, Users,
@@ -121,6 +122,12 @@ export default function AdminDashboardPage() {
             </div>
           </Reveal>
         </div>
+
+        <Reveal delay={480}>
+          <div className="mt-5">
+            <CategoryTrendsWidget />
+          </div>
+        </Reveal>
       </div>
     </PageLayout>
   );
