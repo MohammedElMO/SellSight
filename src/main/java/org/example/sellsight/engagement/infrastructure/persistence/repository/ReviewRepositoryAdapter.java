@@ -3,8 +3,7 @@ package org.example.sellsight.engagement.infrastructure.persistence.repository;
 import org.example.sellsight.engagement.domain.model.Review;
 import org.example.sellsight.engagement.domain.model.ReviewId;
 import org.example.sellsight.engagement.domain.repository.ReviewRepository;
-import org.example.sellsight.engagement.infrastructure.persistence.entity.ReviewImageJpaEntity;
-import org.example.sellsight.engagement.infrastructure.persistence.entity.ReviewJpaEntity;
+import org.example.sellsight.engagement.infrastructure.persistence.mapper.ReviewPersistenceMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,32 +13,31 @@ import java.util.Optional;
 public class ReviewRepositoryAdapter implements ReviewRepository {
 
     private final ReviewJpaRepository jpa;
+    private final ReviewPersistenceMapper mapper;
 
-    public ReviewRepositoryAdapter(ReviewJpaRepository jpa) {
+    public ReviewRepositoryAdapter(ReviewJpaRepository jpa, ReviewPersistenceMapper mapper) {
         this.jpa = jpa;
+        this.mapper = mapper;
     }
 
     @Override
     public Review save(Review review) {
-        var entity = toJpa(review);
-        var saved = jpa.save(entity);
-        return toDomain(saved);
+        return mapper.toDomain(jpa.save(mapper.toJpa(review)));
     }
 
     @Override
     public Optional<Review> findById(ReviewId id) {
-        return jpa.findById(id.value()).map(this::toDomain);
+        return jpa.findById(id.value()).map(mapper::toDomain);
     }
 
     @Override
     public List<Review> findByProductId(String productId) {
-        return jpa.findByProductIdOrderByCreatedAtDesc(productId).stream()
-                .map(this::toDomain).toList();
+        return jpa.findByProductIdOrderByCreatedAtDesc(productId).stream().map(mapper::toDomain).toList();
     }
 
     @Override
     public Optional<Review> findByProductIdAndCustomerId(String productId, String customerId) {
-        return jpa.findByProductIdAndCustomerId(productId, customerId).map(this::toDomain);
+        return jpa.findByProductIdAndCustomerId(productId, customerId).map(mapper::toDomain);
     }
 
     @Override
@@ -50,37 +48,5 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
     @Override
     public void deleteById(ReviewId id) {
         jpa.deleteById(id.value());
-    }
-
-    // ── Mapping ─────────────────────────────────────────────
-
-    private ReviewJpaEntity toJpa(Review r) {
-        var e = new ReviewJpaEntity();
-        e.setId(r.getId().value());
-        e.setProductId(r.getProductId());
-        e.setCustomerId(r.getCustomerId());
-        e.setRating(r.getRating());
-        e.setTitle(r.getTitle());
-        e.setBody(r.getBody());
-        e.setVerifiedPurchase(r.isVerifiedPurchase());
-        e.setHelpfulCount(r.getHelpfulCount());
-        e.setCreatedAt(r.getCreatedAt());
-        e.setUpdatedAt(r.getUpdatedAt());
-        return e;
-    }
-
-    private Review toDomain(ReviewJpaEntity e) {
-        return new Review(
-                ReviewId.of(e.getId()),
-                e.getProductId(),
-                e.getCustomerId(),
-                e.getRating(),
-                e.getTitle(),
-                e.getBody(),
-                e.isVerifiedPurchase(),
-                e.getHelpfulCount(),
-                e.getCreatedAt(),
-                e.getUpdatedAt()
-        );
     }
 }

@@ -13,36 +13,32 @@ import java.util.Optional;
 public class OrderRepositoryAdapter implements OrderRepository {
 
     private final OrderJpaRepository jpaRepository;
+    private final OrderPersistenceMapper mapper;
 
-    public OrderRepositoryAdapter(OrderJpaRepository jpaRepository) {
+    public OrderRepositoryAdapter(OrderJpaRepository jpaRepository, OrderPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
     }
 
     @Override
     public Order save(Order order) {
-        var entity = OrderPersistenceMapper.toJpa(order);
-        var saved = jpaRepository.save(entity);
-        return OrderPersistenceMapper.toDomain(saved);
+        return mapper.toDomain(jpaRepository.save(mapper.toJpa(order)));
     }
 
     @Override
     public Optional<Order> findById(OrderId id) {
-        return jpaRepository.findById(id.getValue())
-                .map(OrderPersistenceMapper::toDomain);
+        return jpaRepository.findById(id.getValue()).map(mapper::toDomain);
     }
 
     @Override
     public List<Order> findByCustomerId(String customerId) {
         return jpaRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
-                .map(OrderPersistenceMapper::toDomain)
-                .toList();
+                .map(mapper::toDomain).toList();
     }
 
     @Override
     public List<Order> findAll() {
-        return jpaRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(OrderPersistenceMapper::toDomain)
-                .toList();
+        return jpaRepository.findAllByOrderByCreatedAtDesc().stream().map(mapper::toDomain).toList();
     }
 
     @Override

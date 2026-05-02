@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.sellsight.shared.email.EmailMessage;
 import org.example.sellsight.shared.email.EmailSender;
+import org.example.sellsight.shared.email.EmailTemplates;
 import org.example.sellsight.user.domain.model.User;
 import org.example.sellsight.user.infrastructure.persistence.entity.EmailVerificationTokenJpaEntity;
 import org.example.sellsight.user.infrastructure.persistence.repository.EmailVerificationTokenJpaRepository;
@@ -50,9 +51,22 @@ public class SendVerificationEmailUseCase {
         String body = "Hi " + user.getFirstName() + ",\n\n"
                 + "Please confirm your email by visiting:\n" + link + "\n\n"
                 + "This link expires in " + (ttlMinutes / 60) + " hours.\n\n"
-                + "— SellSight";
+                + "- SellSight";
 
-        emailSender.send(EmailMessage.plain(user.getEmail().getValue(),
-                "Verify your SellSight email", body));
+        String html = EmailTemplates.action(
+                "Confirm your email to finish setting up SellSight.",
+                "Account security",
+                "Verify your email",
+                EmailTemplates.paragraph("Hi " + EmailTemplates.escape(user.getFirstName()) + ",")
+                        + EmailTemplates.paragraph("Confirm this email address so we can protect your account and send order updates to the right place."),
+                "Verify email",
+                link,
+                EmailTemplates.muted("This secure link expires in " + ttlMinutes + " minutes. If you did not create a SellSight account, you can ignore this email.")
+        );
+
+        emailSender.send(EmailMessage.html(user.getEmail().getValue(),
+                "Verify your SellSight email", body, html));
+        log.info("Verification email dispatched to={} userId={}",
+                user.getEmail().getValue(), user.getId().getValue());
     }
 }

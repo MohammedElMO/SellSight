@@ -4,51 +4,34 @@ import org.example.sellsight.product.domain.model.Money;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.infrastructure.persistence.entity.ProductJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-/**
- * Maps between domain Product and JPA ProductJpaEntity.
- */
-public final class ProductPersistenceMapper {
+@Mapper(componentModel = "spring")
+public interface ProductPersistenceMapper {
 
-    private ProductPersistenceMapper() {}
+    @Mapping(target = "id", expression = "java(product.getId().getValue())")
+    @Mapping(target = "price", expression = "java(product.getPrice().getAmount())")
+    @Mapping(target = "ratingAvg", expression = "java(java.math.BigDecimal.valueOf(product.getRatingAvg()))")
+    ProductJpaEntity toJpa(Product product);
 
-    public static Product toDomain(ProductJpaEntity entity) {
-        double ratingAvg = entity.getRatingAvg() != null
-                ? entity.getRatingAvg().doubleValue() : 0.0;
+    default Product toDomain(ProductJpaEntity e) {
+        double ratingAvg = e.getRatingAvg() != null ? e.getRatingAvg().doubleValue() : 0.0;
         return new Product(
-                ProductId.from(entity.getId()),
-                entity.getName(),
-                entity.getDescription(),
-                new Money(entity.getPrice()),
-                entity.getCategory(),
-                entity.getSellerId(),
-                entity.getImageUrl(),
-                entity.getBrand(),
+                ProductId.from(e.getId()),
+                e.getName(),
+                e.getDescription(),
+                new Money(e.getPrice()),
+                e.getCategory(),
+                e.getSellerId(),
+                e.getImageUrl(),
+                e.getBrand(),
                 ratingAvg,
-                entity.getRatingCount(),
-                entity.getSoldCount(),
-                entity.isActive(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
-    }
-
-    public static ProductJpaEntity toJpa(Product product) {
-        return new ProductJpaEntity(
-                product.getId().getValue(),
-                product.getName(),
-                product.getDescription(),
-                product.getPrice().getAmount(),
-                product.getCategory(),
-                product.getSellerId(),
-                product.getImageUrl(),
-                product.getBrand(),
-                java.math.BigDecimal.valueOf(product.getRatingAvg()),
-                product.getRatingCount(),
-                product.getSoldCount(),
-                product.isActive(),
-                product.getCreatedAt(),
-                product.getUpdatedAt()
+                e.getRatingCount(),
+                e.getSoldCount(),
+                e.isActive(),
+                e.getCreatedAt(),
+                e.getUpdatedAt()
         );
     }
 }

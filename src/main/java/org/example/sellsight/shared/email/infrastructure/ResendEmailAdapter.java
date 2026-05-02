@@ -47,12 +47,28 @@ public class ResendEmailAdapter implements EmailSender {
     @Retry(name = "outbound-http")
     @CircuitBreaker(name = "outbound-http", fallbackMethod = "sendFallback")
     public void send(EmailMessage message) {
+        log.info("Sending email via Resend to={} subject=\"{}\" attachments={}",
+                message.to(), message.subject(), message.attachments().size());
+
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("from", fromAddress);
         body.put("to", message.to());
         body.put("subject", message.subject());
         body.put("text", message.text());
         if (message.html() != null) body.put("html", message.html());
+        if (!message.attachments().isEmpty()) {
+            body.put("attachments", message.attachments().stream()
+                    .map(a -> {
+                        Map<String, Object> item = new LinkedHashMap<>();
+                        item.put("filename", a.filename());
+                        item.put("content", a.contentBase64());
+                        if (a.contentType() != null && !a.contentType().isBlank()) {
+                            item.put("content_type", a.contentType());
+                        }
+                        return item;
+                    })
+                    .toList());
+        }
 
         String json;
         try {
@@ -66,6 +82,7 @@ public class ResendEmailAdapter implements EmailSender {
                 .timeout(Duration.ofSeconds(10))
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")
+                .header("User-Agent", "SellSight/1.0")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
@@ -74,12 +91,15 @@ public class ResendEmailAdapter implements EmailSender {
             if (response.statusCode() >= 400) {
                 log.error("Resend API error {}: {}", response.statusCode(), response.body());
             } else {
-                log.debug("Email sent to {} via Resend (status {})", message.to(), response.statusCode());
+                log.info("Resend email accepted to={} subject=\"{}\" status={} response={}",
+                        message.to(), message.subject(), response.statusCode(), response.body());
             }
-        } catch (InterruptedException | IOException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Email send interrupted for {}", message.to());
             throw new RuntimeException("Email send interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Email send I/O failure", e);
         }
         // IOException propagates to let @Retry handle transient network failures
     }

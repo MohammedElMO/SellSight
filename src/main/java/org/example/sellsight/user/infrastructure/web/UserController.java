@@ -10,11 +10,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.sellsight.shared.exception.ErrorResponse;
+import org.example.sellsight.user.application.dto.AuthResponse;
+import org.example.sellsight.user.application.dto.CreateAdminRequest;
 import org.example.sellsight.user.application.dto.SellerApplicationDto;
 import org.example.sellsight.user.application.dto.UpdateProfileRequest;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.user.application.usecase.ApproveSeller;
+import org.example.sellsight.user.application.usecase.CreateAdminUseCase;
 import org.example.sellsight.user.application.usecase.DeleteAccountUseCase;
 import org.example.sellsight.user.application.usecase.DeleteAvatarUseCase;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
@@ -53,6 +56,7 @@ public class UserController {
     private final UploadAvatarUseCase uploadAvatarUseCase;
     private final DeleteAvatarUseCase deleteAvatarUseCase;
     private final RecentlyViewedUseCase recentlyViewedUseCase;
+    private final CreateAdminUseCase createAdminUseCase;
 
     public UserController(GetUserProfileUseCase getUserProfileUseCase,
                           UpdateUserProfileUseCase updateUserProfileUseCase,
@@ -63,7 +67,8 @@ public class UserController {
                           RejectSeller rejectSeller,
                           UploadAvatarUseCase uploadAvatarUseCase,
                           DeleteAvatarUseCase deleteAvatarUseCase,
-                          RecentlyViewedUseCase recentlyViewedUseCase) {
+                          RecentlyViewedUseCase recentlyViewedUseCase,
+                          CreateAdminUseCase createAdminUseCase) {
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.updateUserProfileUseCase = updateUserProfileUseCase;
         this.deleteAccountUseCase = deleteAccountUseCase;
@@ -74,6 +79,7 @@ public class UserController {
         this.uploadAvatarUseCase = uploadAvatarUseCase;
         this.deleteAvatarUseCase = deleteAvatarUseCase;
         this.recentlyViewedUseCase = recentlyViewedUseCase;
+        this.createAdminUseCase = createAdminUseCase;
     }
 
     @Operation(
@@ -246,5 +252,21 @@ public class UserController {
     public ResponseEntity<Void> rejectSeller(@PathVariable String id) {
         rejectSeller.execute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(operationId = "createAdmin", summary = "Create an admin account (ADMIN only)",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Admin account created",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "409", description = "Email already in use",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Requires ADMIN role",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/admins")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AuthResponse> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        return ResponseEntity.status(201).body(createAdminUseCase.execute(request));
     }
 }

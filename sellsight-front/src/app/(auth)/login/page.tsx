@@ -198,6 +198,15 @@ export default function LoginPage() {
                 {errors.password && <p className="text-xs text-[var(--danger)]">{errors.password.message}</p>}
               </div>
 
+              <div className="flex justify-end -mt-1">
+                <Link
+                  href="/forgot-password"
+                  className="text-[13px] font-medium text-[var(--accent-text)] hover:underline transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
               <MagButton
                 type="submit"
                 variant="primary"

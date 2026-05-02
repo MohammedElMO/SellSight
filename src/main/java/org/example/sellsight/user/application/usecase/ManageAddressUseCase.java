@@ -2,6 +2,7 @@ package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.user.application.dto.AddressDto;
+import org.example.sellsight.user.application.mapper.AddressDtoMapper;
 import org.example.sellsight.user.domain.model.Address;
 import org.example.sellsight.user.domain.repository.AddressRepository;
 import org.springframework.stereotype.Component;
@@ -10,22 +11,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Address CRUD operations.
- */
 @Slf4j
 @Component
 public class ManageAddressUseCase {
 
     private final AddressRepository addressRepository;
+    private final AddressDtoMapper addressDtoMapper;
 
-    public ManageAddressUseCase(AddressRepository addressRepository) {
+    public ManageAddressUseCase(AddressRepository addressRepository, AddressDtoMapper addressDtoMapper) {
         this.addressRepository = addressRepository;
+        this.addressDtoMapper = addressDtoMapper;
     }
 
     public List<AddressDto> getAll(String userId) {
         return addressRepository.findByUserId(userId).stream()
-                .map(this::toDto).toList();
+                .map(addressDtoMapper::toDto).toList();
     }
 
     public AddressDto create(String userId, AddressDto dto) {
@@ -44,7 +44,7 @@ public class ManageAddressUseCase {
             addressRepository.clearDefaultBilling(userId);
         }
 
-        return toDto(addressRepository.save(address));
+        return addressDtoMapper.toDto(addressRepository.save(address));
     }
 
     public AddressDto update(String userId, String addressId, AddressDto dto) {
@@ -67,7 +67,7 @@ public class ManageAddressUseCase {
             address.setAsDefaultBilling();
         }
 
-        return toDto(addressRepository.save(address));
+        return addressDtoMapper.toDto(addressRepository.save(address));
     }
 
     public void delete(String userId, String addressId) {
@@ -77,14 +77,5 @@ public class ManageAddressUseCase {
             throw new IllegalStateException("Access denied");
         }
         addressRepository.deleteById(UUID.fromString(addressId));
-    }
-
-    private AddressDto toDto(Address a) {
-        return new AddressDto(
-                a.getId().toString(), a.getFirstName(), a.getLastName(),
-                a.getLabel(), a.getStreet(), a.getCity(), a.getState(),
-                a.getZip(), a.getCountry(), a.getPhone(),
-                a.isDefaultShipping(), a.isDefaultBilling()
-        );
     }
 }

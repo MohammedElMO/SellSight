@@ -2,7 +2,7 @@ package org.example.sellsight.user.infrastructure.persistence.repository;
 
 import org.example.sellsight.user.domain.model.Address;
 import org.example.sellsight.user.domain.repository.AddressRepository;
-import org.example.sellsight.user.infrastructure.persistence.entity.AddressJpaEntity;
+import org.example.sellsight.user.infrastructure.persistence.mapper.AddressPersistenceMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,25 +13,26 @@ import java.util.UUID;
 public class AddressRepositoryAdapter implements AddressRepository {
 
     private final AddressJpaRepository jpa;
+    private final AddressPersistenceMapper mapper;
 
-    public AddressRepositoryAdapter(AddressJpaRepository jpa) {
+    public AddressRepositoryAdapter(AddressJpaRepository jpa, AddressPersistenceMapper mapper) {
         this.jpa = jpa;
+        this.mapper = mapper;
     }
 
     @Override
     public Address save(Address a) {
-        return toDomain(jpa.save(toJpa(a)));
+        return mapper.toDomain(jpa.save(mapper.toJpa(a)));
     }
 
     @Override
     public Optional<Address> findById(UUID id) {
-        return jpa.findById(id).map(this::toDomain);
+        return jpa.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public List<Address> findByUserId(String userId) {
-        return jpa.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                .map(this::toDomain).toList();
+        return jpa.findByUserIdOrderByCreatedAtDesc(userId).stream().map(mapper::toDomain).toList();
     }
 
     @Override
@@ -47,35 +48,5 @@ public class AddressRepositoryAdapter implements AddressRepository {
     @Override
     public void clearDefaultBilling(String userId) {
         jpa.clearDefaultBilling(userId);
-    }
-
-    private AddressJpaEntity toJpa(Address a) {
-        var e = new AddressJpaEntity();
-        e.setId(a.getId());
-        e.setUserId(a.getUserId());
-        e.setLabel(a.getLabel());
-        e.setFirstName(a.getFirstName());
-        e.setLastName(a.getLastName());
-        e.setStreet(a.getStreet());
-        e.setCity(a.getCity());
-        e.setState(a.getState());
-        e.setZip(a.getZip());
-        e.setCountry(a.getCountry());
-        e.setPhone(a.getPhone());
-        e.setDefaultShipping(a.isDefaultShipping());
-        e.setDefaultBilling(a.isDefaultBilling());
-        e.setCreatedAt(a.getCreatedAt());
-        e.setUpdatedAt(a.getUpdatedAt());
-        return e;
-    }
-
-    private Address toDomain(AddressJpaEntity e) {
-        return new Address(
-                e.getId(), e.getUserId(), e.getLabel(),
-                e.getFirstName(), e.getLastName(), e.getStreet(),
-                e.getCity(), e.getState(), e.getZip(), e.getCountry(),
-                e.getPhone(), e.isDefaultShipping(), e.isDefaultBilling(),
-                e.getCreatedAt(), e.getUpdatedAt()
-        );
     }
 }

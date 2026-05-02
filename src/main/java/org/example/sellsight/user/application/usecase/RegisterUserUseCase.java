@@ -53,8 +53,13 @@ public class RegisterUserUseCase {
         Role role = Role.CUSTOMER;
         if (request.role() != null && !request.role().isBlank()) {
             try {
-                role = Role.valueOf(request.role().toUpperCase());
+                Role parsed = Role.valueOf(request.role().toUpperCase());
+                if (parsed == Role.ADMIN) {
+                    throw new IllegalArgumentException("Self-registration as ADMIN is not permitted");
+                }
+                role = parsed;
             } catch (IllegalArgumentException e) {
+                if (e.getMessage() != null && e.getMessage().contains("ADMIN")) throw e;
                 role = Role.CUSTOMER;
             }
         }

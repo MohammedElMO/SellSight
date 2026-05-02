@@ -5,6 +5,7 @@ import org.example.sellsight.inventory.domain.model.InventoryItem;
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.application.dto.ProductPageDto;
+import org.example.sellsight.product.application.mapper.ProductDtoMapper;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductSlice;
 import org.example.sellsight.product.domain.port.EmbeddingPort;
@@ -27,13 +28,16 @@ public class SearchProductsUseCase {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final EmbeddingPort embeddingPort;
+    private final ProductDtoMapper productDtoMapper;
 
     public SearchProductsUseCase(ProductRepository productRepository,
-                                  InventoryRepository inventoryRepository,
-                                  EmbeddingPort embeddingPort) {
+                                 InventoryRepository inventoryRepository,
+                                 EmbeddingPort embeddingPort,
+                                 ProductDtoMapper productDtoMapper) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.embeddingPort = embeddingPort;
+        this.productDtoMapper = productDtoMapper;
     }
 
     @Transactional(readOnly = true)
@@ -63,12 +67,6 @@ public class SearchProductsUseCase {
     }
 
     private ProductDto toDto(Product p, Map<String, Integer> stockMap) {
-        return new ProductDto(
-                p.getId().getValue(), p.getName(), p.getDescription(),
-                p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
-                p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
-                p.isActive(), p.getCreatedAt(), p.getUpdatedAt(),
-                stockMap.getOrDefault(p.getId().getValue(), 0)
-        );
+        return productDtoMapper.toDto(p, stockMap.getOrDefault(p.getId().getValue(), 0));
     }
 }

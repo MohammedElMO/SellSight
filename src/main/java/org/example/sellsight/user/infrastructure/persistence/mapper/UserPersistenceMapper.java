@@ -2,56 +2,37 @@ package org.example.sellsight.user.infrastructure.persistence.mapper;
 
 import org.example.sellsight.user.domain.model.*;
 import org.example.sellsight.user.infrastructure.persistence.entity.UserJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-/**
- * Maps between domain User and JPA UserJpaEntity.
- */
-public final class UserPersistenceMapper {
+@Mapper(componentModel = "spring")
+public interface UserPersistenceMapper {
 
-    private UserPersistenceMapper() {}
+    @Mapping(target = "id", expression = "java(user.getId().getValue())")
+    @Mapping(target = "email", expression = "java(user.getEmail().getValue())")
+    @Mapping(target = "password", expression = "java(user.getPassword() != null ? user.getPassword().getHashedValue() : null)")
+    UserJpaEntity toJpa(User user);
 
-    public static User toDomain(UserJpaEntity entity) {
-        Password password = entity.getPassword() != null
-                ? new Password(entity.getPassword())
-                : null;
-
+    default User toDomain(UserJpaEntity e) {
+        Password password = e.getPassword() != null ? new Password(e.getPassword()) : null;
         User user = new User(
-                UserId.from(entity.getId()),
-                entity.getFirstName(),
-                entity.getLastName(),
-                new Email(entity.getEmail()),
+                UserId.from(e.getId()),
+                e.getFirstName(),
+                e.getLastName(),
+                new Email(e.getEmail()),
                 password,
-                entity.getRole(),
-                entity.getCreatedAt(),
-                entity.isVirtual(),
-                entity.getAuthProvider() != null ? entity.getAuthProvider() : AuthProvider.LOCAL,
-                entity.getProviderId(),
-                entity.isEmailVerified(),
-                entity.getDeletedAt(),
-                entity.getSellerStatus()
+                e.getRole(),
+                e.getCreatedAt(),
+                e.isVirtual(),
+                e.getAuthProvider() != null ? e.getAuthProvider() : AuthProvider.LOCAL,
+                e.getProviderId(),
+                e.isEmailVerified(),
+                e.getDeletedAt(),
+                e.getSellerStatus()
         );
-        if (entity.getAvatarUrl() != null) {
-            user.changeAvatar(entity.getAvatarUrl());
+        if (e.getAvatarUrl() != null) {
+            user.changeAvatar(e.getAvatarUrl());
         }
         return user;
-    }
-
-    public static UserJpaEntity toJpa(User user) {
-        return new UserJpaEntity(
-                user.getId().getValue(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail().getValue(),
-                user.getPassword() != null ? user.getPassword().getHashedValue() : null,
-                user.getRole(),
-                user.getCreatedAt(),
-                user.isVirtual(),
-                user.getAuthProvider(),
-                user.getProviderId(),
-                user.isEmailVerified(),
-                user.getDeletedAt(),
-                user.getSellerStatus(),
-                user.getAvatarUrl()
-        );
     }
 }

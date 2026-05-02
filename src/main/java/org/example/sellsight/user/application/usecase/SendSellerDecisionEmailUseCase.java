@@ -1,13 +1,16 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.shared.email.EmailMessage;
 import org.example.sellsight.shared.email.EmailSender;
+import org.example.sellsight.shared.email.EmailTemplates;
 import org.example.sellsight.user.domain.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class SendSellerDecisionEmailUseCase {
 
@@ -25,21 +28,20 @@ public class SendSellerDecisionEmailUseCase {
                 + "You can now sign in and start selling.\n\n"
                 + "- SellSight";
 
-        String html = """
-                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
-                  <p>Hi %s,</p>
-                  <p>Great news. Your seller account has been approved.</p>
-                  <p>
-                    <a href="%s" style="display:inline-block;padding:12px 18px;background:#0f766e;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">
-                      Open SellSight
-                    </a>
-                  </p>
-                  <p>You can now sign in and start selling.</p>
-                  <p style="color:#6b7280">- SellSight</p>
-                </div>
-                """.formatted(user.getFirstName(), appLink);
+        String html = EmailTemplates.action(
+                "Your SellSight seller account is approved.",
+                "Seller approval",
+                "You are ready to sell",
+                EmailTemplates.paragraph("Hi " + EmailTemplates.escape(user.getFirstName()) + ",")
+                        + EmailTemplates.paragraph("Your seller account has been approved. You can now sign in, list products, and start managing your storefront."),
+                "Open SellSight",
+                appLink,
+                EmailTemplates.muted("Thanks for helping make SellSight a better marketplace.")
+        );
 
         emailSender.send(new EmailMessage(user.getEmail().getValue(), subject, text, html));
+        log.info("Seller approval email dispatched to={} userId={}",
+                user.getEmail().getValue(), user.getId().getValue());
     }
 
     public void sendRejected(User user) {
@@ -51,21 +53,20 @@ public class SendSellerDecisionEmailUseCase {
                 + "You are welcome to submit a new application.\n\n"
                 + "- SellSight";
 
-        String html = """
-                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
-                  <p>Hi %s,</p>
-                  <p>Your seller application was not approved this time.</p>
-                  <p>
-                    <a href="%s" style="display:inline-block;padding:12px 18px;background:#b45309;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600">
-                      Apply Again
-                    </a>
-                  </p>
-                  <p>You are welcome to submit a new application.</p>
-                  <p style="color:#6b7280">- SellSight</p>
-                </div>
-                """.formatted(user.getFirstName(), applyAgainLink);
+        String html = EmailTemplates.action(
+                "An update on your SellSight seller application.",
+                "Application update",
+                "Seller application update",
+                EmailTemplates.paragraph("Hi " + EmailTemplates.escape(user.getFirstName()) + ",")
+                        + EmailTemplates.paragraph("Your seller application was not approved this time. You are welcome to review your details and submit a new application."),
+                "Apply again",
+                applyAgainLink,
+                EmailTemplates.muted("Thanks for your interest in selling on SellSight.")
+        );
 
         emailSender.send(new EmailMessage(user.getEmail().getValue(), subject, text, html));
+        log.info("Seller rejection email dispatched to={} userId={}",
+                user.getEmail().getValue(), user.getId().getValue());
     }
 
     private String appUrl(String path) {

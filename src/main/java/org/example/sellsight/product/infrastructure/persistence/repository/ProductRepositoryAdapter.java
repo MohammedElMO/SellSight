@@ -66,23 +66,26 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
     private final ProductJpaRepository jpaRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final ProductPersistenceMapper mapper;
 
-    public ProductRepositoryAdapter(ProductJpaRepository jpaRepository, JdbcTemplate jdbcTemplate) {
+    public ProductRepositoryAdapter(ProductJpaRepository jpaRepository, JdbcTemplate jdbcTemplate,
+                                    ProductPersistenceMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.mapper = mapper;
     }
 
     @Override
     public Product save(Product product) {
-        var entity = ProductPersistenceMapper.toJpa(product);
+        var entity = mapper.toJpa(product);
         var saved = jpaRepository.save(entity);
-        return ProductPersistenceMapper.toDomain(saved);
+        return mapper.toDomain(saved);
     }
 
     @Override
     public Optional<Product> findById(ProductId id) {
         return jpaRepository.findById(id.getValue())
-                .map(ProductPersistenceMapper::toDomain);
+                .map(mapper::toDomain);
     }
 
     @Override
@@ -122,20 +125,20 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public List<Product> findActiveFirst(int size) {
         return jpaRepository.findActiveFirst(size).stream()
-                .map(ProductPersistenceMapper::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<Product> findActiveBefore(String lastId, int size) {
         return jpaRepository.findActiveBefore(lastId, size).stream()
-                .map(ProductPersistenceMapper::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
     private ProductSlice toProductSlice(Page<ProductJpaEntity> page) {
         List<Product> items = page.getContent().stream()
-                .map(ProductPersistenceMapper::toDomain)
+                .map(mapper::toDomain)
                 .toList();
         return new ProductSlice(items, page.hasNext(), page.getTotalElements());
     }

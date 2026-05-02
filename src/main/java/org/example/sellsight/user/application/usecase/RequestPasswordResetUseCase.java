@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.example.sellsight.shared.email.EmailMessage;
 import org.example.sellsight.shared.email.EmailSender;
+import org.example.sellsight.shared.email.EmailTemplates;
 import org.example.sellsight.shared.events.EventPublisher;
 import org.example.sellsight.user.application.event.PasswordResetRequested;
 import org.example.sellsight.user.domain.model.Email;
@@ -66,10 +67,23 @@ public class RequestPasswordResetUseCase {
                 + "Reset your password using this link (valid for " + ttlMinutes + " minutes):\n"
                 + link + "\n\n"
                 + "If you didn't request this, you can safely ignore this email.\n\n"
-                + "— SellSight";
+                + "- SellSight";
 
-        emailSender.send(EmailMessage.plain(user.getEmail().getValue(),
-                "Reset your SellSight password", body));
+        String html = EmailTemplates.action(
+                "Use this secure link to reset your SellSight password.",
+                "Security request",
+                "Reset your password",
+                EmailTemplates.paragraph("Hi " + EmailTemplates.escape(user.getFirstName()) + ",")
+                        + EmailTemplates.paragraph("We received a request to reset your SellSight password. Use the button below to choose a new one."),
+                "Reset password",
+                link,
+                EmailTemplates.muted("This link is valid for " + ttlMinutes + " minutes. If you did not request this, you can safely ignore the email.")
+        );
+
+        emailSender.send(EmailMessage.html(user.getEmail().getValue(),
+                "Reset your SellSight password", body, html));
+        log.info("Password reset email dispatched to={} userId={}",
+                user.getEmail().getValue(), user.getId().getValue());
 
         eventPublisher.publish(userEventsTopic,
                 new PasswordResetRequested(user.getId().getValue(), user.getEmail().getValue()));

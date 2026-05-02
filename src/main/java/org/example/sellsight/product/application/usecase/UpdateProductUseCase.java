@@ -3,6 +3,7 @@ package org.example.sellsight.product.application.usecase;
 import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.application.dto.UpdateProductRequest;
+import org.example.sellsight.product.application.mapper.ProductDtoMapper;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.product.domain.model.Money;
@@ -27,11 +28,14 @@ public class UpdateProductUseCase {
 
     private final ProductRepository productRepository;
     private final ProductEmbeddingService embeddingService;
+    private final ProductDtoMapper productDtoMapper;
 
     public UpdateProductUseCase(ProductRepository productRepository,
-                                 ProductEmbeddingService embeddingService) {
+                                ProductEmbeddingService embeddingService,
+                                ProductDtoMapper productDtoMapper) {
         this.productRepository = productRepository;
         this.embeddingService = embeddingService;
+        this.productDtoMapper = productDtoMapper;
     }
 
     @Transactional
@@ -69,15 +73,6 @@ public class UpdateProductUseCase {
                 embeddingService.updateEmbeddingAsync(savedId, savedName, savedDescription, savedCategory);
             }
         });
-        return toDto(saved);
-    }
-
-    private ProductDto toDto(Product p) {
-        return new ProductDto(
-                p.getId().getValue(), p.getName(), p.getDescription(),
-                p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
-                p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
-                p.isActive(), p.getCreatedAt(), p.getUpdatedAt(), 0
-        );
+        return productDtoMapper.toDto(saved, 0);
     }
 }

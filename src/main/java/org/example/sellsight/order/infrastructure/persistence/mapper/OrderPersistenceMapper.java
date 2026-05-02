@@ -5,22 +5,19 @@ import org.example.sellsight.order.domain.model.OrderId;
 import org.example.sellsight.order.domain.model.OrderItem;
 import org.example.sellsight.order.infrastructure.persistence.entity.OrderItemJpaEntity;
 import org.example.sellsight.order.infrastructure.persistence.entity.OrderJpaEntity;
+import org.mapstruct.Mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Maps between domain Order and JPA OrderJpaEntity.
- */
-public final class OrderPersistenceMapper {
+@Mapper(componentModel = "spring")
+public interface OrderPersistenceMapper {
 
-    private OrderPersistenceMapper() {}
-
-    public static Order toDomain(OrderJpaEntity entity) {
+    default Order toDomain(OrderJpaEntity entity) {
         List<OrderItem> items = entity.getItems().stream()
                 .map(i -> new OrderItem(i.getProductId(), i.getProductName(),
                         i.getQuantity(), i.getUnitPrice()))
                 .toList();
-
         return new Order(
                 OrderId.from(entity.getId()),
                 entity.getCustomerId(),
@@ -31,7 +28,7 @@ public final class OrderPersistenceMapper {
         );
     }
 
-    public static OrderJpaEntity toJpa(Order order) {
+    default OrderJpaEntity toJpa(Order order) {
         OrderJpaEntity entity = new OrderJpaEntity();
         entity.setId(order.getId().getValue());
         entity.setCustomerId(order.getCustomerId());
@@ -51,7 +48,7 @@ public final class OrderPersistenceMapper {
                 })
                 .toList();
 
-        entity.setItems(new java.util.ArrayList<>(itemEntities));
+        entity.setItems(new ArrayList<>(itemEntities));
         return entity;
     }
 }

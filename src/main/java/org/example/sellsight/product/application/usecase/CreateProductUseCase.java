@@ -7,6 +7,7 @@ import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.product.application.dto.CreateProductRequest;
 import org.example.sellsight.product.application.dto.ProductDto;
 import org.example.sellsight.product.domain.model.Money;
+import org.example.sellsight.product.application.mapper.ProductDtoMapper;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
@@ -29,13 +30,16 @@ public class CreateProductUseCase {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductEmbeddingService embeddingService;
+    private final ProductDtoMapper productDtoMapper;
 
     public CreateProductUseCase(ProductRepository productRepository,
                                 InventoryRepository inventoryRepository,
-                                ProductEmbeddingService embeddingService) {
+                                ProductEmbeddingService embeddingService,
+                                ProductDtoMapper productDtoMapper) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.embeddingService = embeddingService;
+        this.productDtoMapper = productDtoMapper;
     }
 
     @Transactional
@@ -74,15 +78,6 @@ public class CreateProductUseCase {
             }
         });
 
-        return toDto(saved);
-    }
-
-    private ProductDto toDto(Product p) {
-        return new ProductDto(
-                p.getId().getValue(), p.getName(), p.getDescription(),
-                p.getPrice().getAmount(), p.getCategory(), p.getSellerId(),
-                p.getImageUrl(), p.getBrand(), p.getRatingAvg(), p.getRatingCount(), p.getSoldCount(),
-                p.isActive(), p.getCreatedAt(), p.getUpdatedAt(), 0
-        );
+        return productDtoMapper.toDto(saved, 0);
     }
 }
