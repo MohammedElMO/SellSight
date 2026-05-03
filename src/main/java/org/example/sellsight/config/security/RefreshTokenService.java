@@ -11,13 +11,20 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Service for generating, hashing, and managing refresh token cookies.
+ * Service for generating, hashing, and managing auth cookies.
+ * Three cookies are issued on every successful auth:
+ *  - refresh_token: HttpOnly, path=/api/auth, 30-day lifetime
+ *  - app_token:     HttpOnly, path=/, 15-min lifetime (access JWT — never readable by JS)
+ *  - app_session:   non-HttpOnly, path=/, 30-day lifetime (role|emailVerified|sellerStatus for Next.js routing only)
  */
 @Service
 public class RefreshTokenService {
 
     @Value("${refresh-token.expiration:2592000000}")
     private long refreshExpirationMs;
+
+    @Value("${jwt.expiration:900000}")
+    private long accessExpirationMs;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -43,10 +50,7 @@ public class RefreshTokenService {
         }
     }
 
-    /**
-     * Build an HttpOnly, SameSite=Lax refresh token cookie.
-     * Path is /api/auth so it's only sent to auth endpoints.
-     */
+    /** HttpOnly refresh token cookie — scoped to /api/auth only. */
     public ResponseCookie buildCookie(String rawToken, boolean secure) {
         return ResponseCookie.from("refresh_token", rawToken)
                 .httpOnly(true)
@@ -57,9 +61,6 @@ public class RefreshTokenService {
                 .build();
     }
 
-    /**
-     * Build a cookie that clears the refresh token (maxAge=0).
-     */
     public ResponseCookie clearCookie() {
         return ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
@@ -69,9 +70,51 @@ public class RefreshTokenService {
                 .build();
     }
 
+    /** HttpOnly access JWT cookie — sent on every request. Never readable by browser JS. */
+    public ResponseCookie buildAccessCookie(String accessToken, boolean secure) {
+        return ResponseCookie.from("app_token", accessToken)
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofMillis(accessExpirationMs))
+                .build();
+    }
+
+    public ResponseCookie clearAccessCookie() {
+        return ResponseCookie.from("app_token", "")
+                .httpOnly(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+    }
+
     /**
-     * Calculate the expiry instant for a new refresh token.
+     * Non-HttpOnly routing cookie for Next.js edge middleware.
+     * Contains role|emailVerified|sellerStatus — no secrets.
+     * Lifetime matches refresh token so navigations work between access-token renewals.
      */
+    public ResponseCookie buildSessionCookie(String role, boolean emailVerified, String sellerStatus, boolean secure) {
+        String value = role + "|" + emailVerified + "|" + (sellerStatus != null ? sellerStatus : "");
+        return ResponseCookie.from("app_session", value)
+                .httpOnly(false)
+                .secure(secure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofMillis(refreshExpirationMs))
+                .build();
+    }
+
+    public ResponseCookie clearSessionCookie() {
+        return ResponseCookie.from("app_session", "")
+                .httpOnly(false)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+    }
+
     public Instant getExpiresAt() {
         return Instant.now().plusMillis(refreshExpirationMs);
     }

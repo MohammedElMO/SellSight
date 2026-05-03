@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Payload is decoded without signature verification — used only for routing.
-// Spring Boot verifies the signature on every API call.
-interface JwtPayload {
-  sub?: string;
-  role?: string;
-  exp?: number;
-  emailVerified?: boolean;
-  sellerStatus?: string;
+// app_session cookie format: "ROLE|emailVerified|sellerStatus"
+// Set by the backend on every auth response — contains only routing metadata, no secrets.
+// The actual JWT lives in the HttpOnly app_token cookie and is never readable here.
+interface SessionPayload {
+  role: string;
+  emailVerified: boolean;
+  sellerStatus: string | null;
 }
 
-function parseJwt(token: string): JwtPayload | null {
+function parseSession(value: string): SessionPayload | null {
   try {
-    const [, payload] = token.split('.');
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64)) as JwtPayload;
+    const parts = value.split('|');
+    if (parts.length < 2 || !parts[0]) return null;
+    const [role, emailVerifiedStr, sellerStatus] = parts;
+    return {
+      role,
+      emailVerified: emailVerifiedStr === 'true',
+      sellerStatus: sellerStatus || null,
+    };
   } catch {
     return null;
   }
@@ -29,13 +33,11 @@ const ROLE_HOME: Record<string, string> = {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const token   = request.cookies.get('app_token')?.value ?? null;
-  const payload = token ? parseJwt(token) : null;
-
-  const isExpired     = payload?.exp ? payload.exp < Math.floor(Date.now() / 1000) : false;
-  const role          = (!isExpired && payload?.role) ? payload.role : null;
-  const emailVerified = (!isExpired && payload?.emailVerified) ?? false;
-  const sellerStatus  = (!isExpired && payload?.sellerStatus) ? payload.sellerStatus : null;
+  const sessionStr    = request.cookies.get('app_session')?.value ?? null;
+  const session       = sessionStr ? parseSession(sessionStr) : null;
+  const role          = session?.role ?? null;
+  const emailVerified = session?.emailVerified ?? false;
+  const sellerStatus  = session?.sellerStatus ?? null;
   const authed        = !!role;
   const roleHome      = role ? (ROLE_HOME[role] ?? '/') : '/login';
 

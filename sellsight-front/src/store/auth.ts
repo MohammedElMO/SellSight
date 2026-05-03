@@ -1,30 +1,25 @@
 import { create } from 'zustand';
 import type { AuthResponse, Role } from '@shared/types';
 
-// ── Cookie helpers (client-side only) ────────────────────────
-// The `app_token` cookie is read by the Next.js middleware for
-// server-side route protection. localStorage remains the source
-// of truth for the Zustand store / axios interceptor.
+// Safe user metadata — no tokens. Stored in localStorage for hydration across page loads.
+interface UserMeta {
+  email: string;
+  role: Role;
+  firstName: string;
+  lastName: string;
+  emailVerified: boolean;
+  sellerStatus: string | null;
+}
 
-function setAuthCookie(token: string) {
-  try {
-    const [, payload] = token.split('.');
-    const { exp } = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-    const maxAge = exp ? exp - Math.floor(Date.now() / 1000) : 60 * 60 * 24 * 7;
-    document.cookie = `app_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  } catch {
-    document.cookie = `app_token=${token}; path=/; SameSite=Lax`;
+// Clears the non-HttpOnly routing cookie so proxy.ts stops treating user as authenticated.
+// The HttpOnly app_token and refresh_token cookies can only be cleared by the backend.
+export function clearSessionCookie() {
+  if (typeof document !== 'undefined') {
+    document.cookie = 'app_session=; path=/; max-age=0; SameSite=Lax';
   }
 }
 
-export function clearAuthCookie() {
-  document.cookie = 'app_token=; path=/; max-age=0; SameSite=Lax';
-}
-
-// ─────────────────────────────────────────────────────────────
-
 interface AuthState {
-  token: string | null;
   email: string | null;
   role: Role | null;
   firstName: string | null;
@@ -39,7 +34,6 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
   email: null,
   role: null,
   firstName: null,
@@ -49,27 +43,22 @@ export const useAuthStore = create<AuthState>((set) => ({
   sellerStatus: null,
 
   login: (data: AuthResponse) => {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('auth', JSON.stringify(data));
-    setAuthCookie(data.token);
-    set({
-      token: data.token,
+    const meta: UserMeta = {
       email: data.email,
       role: data.role,
       firstName: data.firstName,
       lastName: data.lastName,
-      isAuthenticated: true,
       emailVerified: data.emailVerified,
       sellerStatus: data.sellerStatus ?? null,
-    });
+    };
+    localStorage.setItem('user', JSON.stringify(meta));
+    set({ ...meta, isAuthenticated: true });
   },
 
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('auth');
-    clearAuthCookie();
+    localStorage.removeItem('user');
+    clearSessionCookie();
     set({
-      token: null,
       email: null,
       role: null,
       firstName: null,
@@ -82,28 +71,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   hydrate: () => {
     if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem('auth');
+    // Remove stale pre-migration keys
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth');
+    const stored = localStorage.getItem('user');
     if (stored) {
       try {
-        const data: AuthResponse = JSON.parse(stored);
-        // Backfill cookie for sessions created before middleware was added
-        if (!document.cookie.includes('app_token=')) {
-          setAuthCookie(data.token);
-        }
-        set({
-          token: data.token,
-          email: data.email,
-          role: data.role,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          isAuthenticated: true,
-          emailVerified: data.emailVerified ?? false,
-          sellerStatus: data.sellerStatus ?? null,
-        });
+        const meta: UserMeta = JSON.parse(stored);
+        set({ ...meta, isAuthenticated: true });
       } catch {
-        localStorage.removeItem('auth');
-        localStorage.removeItem('token');
-        clearAuthCookie();
+        localStorage.removeItem('user');
       }
     }
   },

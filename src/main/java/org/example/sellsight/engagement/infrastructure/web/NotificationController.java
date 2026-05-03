@@ -8,6 +8,8 @@ import org.example.sellsight.engagement.application.dto.NotificationDto;
 import org.example.sellsight.engagement.application.usecase.GetNotificationsUseCase;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -88,12 +90,27 @@ public class NotificationController {
 
     @Operation(operationId = "streamNotifications", summary = "SSE stream for real-time notifications")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@RequestParam String token) {
+    public SseEmitter stream(HttpServletRequest request) {
+        // Browser sends app_token HttpOnly cookie automatically with EventSource(url, {withCredentials:true})
+        String token = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("app_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        final String resolvedToken = token;
         SseEmitter emitter = new SseEmitter(60_000L);
         var executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             try {
-                String email = jwtService.extractEmail(token);
+                if (resolvedToken == null) {
+                    emitter.completeWithError(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
+                    return;
+                }
+                String email = jwtService.extractEmail(resolvedToken);
                 UserDto user = getUserProfileUseCase.execute(email);
                 long unread = notificationsUseCase.countUnread(user.id());
                 emitter.send(SseEmitter.event()

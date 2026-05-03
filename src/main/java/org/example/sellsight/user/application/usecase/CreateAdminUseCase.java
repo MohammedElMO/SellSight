@@ -1,7 +1,6 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.sellsight.config.security.JwtService;
 import org.example.sellsight.user.application.dto.AuthResponse;
 import org.example.sellsight.user.application.dto.CreateAdminRequest;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
@@ -19,14 +18,10 @@ public class CreateAdminUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
 
-    public CreateAdminUseCase(UserRepository userRepository,
-                              PasswordEncoder passwordEncoder,
-                              JwtService jwtService) {
+    public CreateAdminUseCase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -49,10 +44,9 @@ public class CreateAdminUseCase {
         User saved = userRepository.save(admin);
         log.info("Admin account created: id={} email={}", saved.getId().getValue(), saved.getEmail().getValue());
 
-        String token = jwtService.generateToken(
-                saved.getEmail().getValue(), saved.getRole().name(), true, null);
+        // No token in response — admin must log in separately to get session cookies
         return new AuthResponse(
-                token, saved.getEmail().getValue(), saved.getRole().name(),
+                null, saved.getEmail().getValue(), saved.getRole().name(),
                 saved.getFirstName(), saved.getLastName(), true, null);
     }
 }

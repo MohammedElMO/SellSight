@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore, clearAuthCookie } from '@/store/auth';
+import { useAuthStore, clearSessionCookie } from '@/store/auth';
 import { authApi } from '@/lib/services';
 
 const queryClient = new QueryClient({
@@ -36,14 +36,12 @@ function AuthStatusGuard({ children }: { children: React.ReactNode }) {
 
     authApi.checkAccountStatus(email).then(({ status }) => {
       if (status === 'DISABLED') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('auth');
-        clearAuthCookie();
+        localStorage.removeItem('user');
+        clearSessionCookie();
         router.replace(`/account-suspended?email=${encodeURIComponent(email)}`);
       } else if (status === 'DELETED') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('auth');
-        clearAuthCookie();
+        localStorage.removeItem('user');
+        clearSessionCookie();
         router.replace(`/account-deleted?email=${encodeURIComponent(email)}`);
       } else {
         setReady(true);

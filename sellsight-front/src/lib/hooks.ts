@@ -45,7 +45,7 @@ export function useUpdateProfile() {
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: ['profile'] });
       login({
-        token: localStorage.getItem('token') ?? '',
+        token: null,
         email: updated.email,
         role: updated.role,
         firstName: updated.firstName,

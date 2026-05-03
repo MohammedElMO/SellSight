@@ -6,15 +6,15 @@ import { useAuthStore } from '@/store/auth';
 
 export function useNotificationSSE() {
   const { isAuthenticated, role } = useAuthStore();
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const queryClient = useQueryClient();
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || role !== 'CUSTOMER' || !token) return;
+    if (!isAuthenticated || role !== 'CUSTOMER') return;
 
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/notifications/stream?token=${token}`;
-    const es = new EventSource(url);
+    // withCredentials sends the HttpOnly app_token cookie automatically
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/notifications/stream`;
+    const es = new EventSource(url, { withCredentials: true });
     esRef.current = es;
 
     es.onmessage = () => {
@@ -30,5 +30,5 @@ export function useNotificationSSE() {
       es.close();
       esRef.current = null;
     };
-  }, [isAuthenticated, role, token, queryClient]);
+  }, [isAuthenticated, role, queryClient]);
 }

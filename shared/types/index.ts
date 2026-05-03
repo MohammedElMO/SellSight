@@ -27,7 +27,8 @@ export interface OAuthLoginRequest {
 }
 
 export interface AuthResponse {
-  token: string;
+  // token is null for browser cookie-based auth flows; non-null only for legacy API/Swagger endpoints
+  token: string | null;
   email: string;
   role: Role;
   firstName: string;

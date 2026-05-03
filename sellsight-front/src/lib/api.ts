@@ -1,30 +1,32 @@
 import axios from 'axios';
-import { clearAuthCookie } from '@/store/auth';
-import type { AuthResponse } from '@shared/types';
+import { clearSessionCookie } from '@/store/auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true, // send refresh cookie on all requests
+  // withCredentials sends the HttpOnly app_token and refresh_token cookies on every request
+  withCredentials: true,
 });
 
-// Attach JWT token to every request if available
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// No Authorization header injection — auth is cookie-based.
+// The HttpOnly app_token cookie is sent automatically by the browser.
 
 let isRefreshing = false;
-let refreshQueue: Array<(token: string | null) => void> = [];
+let refreshQueue: Array<(ok: boolean) => void> = [];
 
-function drainQueue(token: string | null) {
-  refreshQueue.forEach((cb) => cb(token));
+function drainQueue(ok: boolean) {
+  refreshQueue.forEach((cb) => cb(ok));
   refreshQueue = [];
+}
+
+function hardLogout() {
+  localStorage.removeItem('user');
+  clearSessionCookie(); // clear non-HttpOnly routing cookie so proxy redirects correctly
+  if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+    window.location.href = '/login';
+  }
 }
 
 api.interceptors.response.use(
@@ -35,17 +37,14 @@ api.interceptors.response.use(
     if (error.response?.status === 403 && typeof window !== 'undefined') {
       const code = (error.response?.data as { errorCode?: string })?.errorCode;
       if (code === 'ACCOUNT_DISABLED' || code === 'ACCOUNT_DELETED') {
-        const token = localStorage.getItem('token');
+        // Email comes from safe localStorage metadata — no JWT decoding needed
         let email = '';
         try {
-          if (token) {
-            const [, payload] = token.split('.');
-            email = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))).sub ?? '';
-          }
+          const stored = localStorage.getItem('user');
+          if (stored) email = JSON.parse(stored).email ?? '';
         } catch { /* ignore */ }
-        localStorage.removeItem('token');
-        localStorage.removeItem('auth');
-        clearAuthCookie();
+        localStorage.removeItem('user');
+        clearSessionCookie();
         const dest = code === 'ACCOUNT_DELETED' ? '/account-deleted' : '/account-suspended';
         window.location.href = email ? `${dest}?email=${encodeURIComponent(email)}` : dest;
         return Promise.reject(error);
@@ -58,13 +57,8 @@ api.interceptors.response.use(
 
     // If the failing request is the refresh itself → hard logout
     if (originalRequest.url?.includes('/auth/refresh')) {
-      drainQueue(null);
-      localStorage.removeItem('token');
-      localStorage.removeItem('auth');
-      clearAuthCookie();
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+      drainQueue(false);
+      hardLogout();
       return Promise.reject(error);
     }
 
@@ -72,9 +66,9 @@ api.interceptors.response.use(
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
-        refreshQueue.push((token) => {
-          if (!token) { reject(error); return; }
-          originalRequest.headers.Authorization = `Bearer ${token}`;
+        refreshQueue.push((ok) => {
+          if (!ok) { reject(error); return; }
+          // Backend has set a new app_token cookie — retry sends it automatically
           resolve(api(originalRequest));
         });
       });
@@ -82,36 +76,14 @@ api.interceptors.response.use(
 
     isRefreshing = true;
     try {
-      const fresh = await axios.post<AuthResponse>(
-        `${BASE_URL}/auth/refresh`,
-        {},
-        { withCredentials: true }
-      ).then((r) => r.data);
+      // Backend rotates refresh token and sets new app_token + app_session cookies
+      await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
 
-      localStorage.setItem('token', fresh.token);
-      localStorage.setItem('auth', JSON.stringify(fresh));
-
-      // Update the app_token cookie so middleware reflects fresh state
-      try {
-        const [, payload] = fresh.token.split('.');
-        const { exp } = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-        const maxAge = exp ? exp - Math.floor(Date.now() / 1000) : 900;
-        document.cookie = `app_token=${fresh.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
-      } catch {
-        document.cookie = `app_token=${fresh.token}; path=/; SameSite=Lax`;
-      }
-
-      drainQueue(fresh.token);
-      originalRequest.headers.Authorization = `Bearer ${fresh.token}`;
+      drainQueue(true);
       return api(originalRequest);
     } catch {
-      drainQueue(null);
-      localStorage.removeItem('token');
-      localStorage.removeItem('auth');
-      clearAuthCookie();
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+      drainQueue(false);
+      hardLogout();
       return Promise.reject(error);
     } finally {
       isRefreshing = false;

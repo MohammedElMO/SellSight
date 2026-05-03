@@ -38,7 +38,6 @@ public class AuthController {
     private final RefreshAccessTokenUseCase refreshAccessTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final LogoutAllDevicesUseCase logoutAllDevicesUseCase;
-    private final RefreshTokenUseCase refreshTokenUseCase;
     private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
 
@@ -53,7 +52,6 @@ public class AuthController {
                           RefreshAccessTokenUseCase refreshAccessTokenUseCase,
                           LogoutUseCase logoutUseCase,
                           LogoutAllDevicesUseCase logoutAllDevicesUseCase,
-                          RefreshTokenUseCase refreshTokenUseCase,
                           RefreshTokenService refreshTokenService,
                           UserRepository userRepository) {
         this.registerUserUseCase = registerUserUseCase;
@@ -67,7 +65,6 @@ public class AuthController {
         this.refreshAccessTokenUseCase = refreshAccessTokenUseCase;
         this.logoutUseCase = logoutUseCase;
         this.logoutAllDevicesUseCase = logoutAllDevicesUseCase;
-        this.refreshTokenUseCase = refreshTokenUseCase;
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
     }
@@ -167,6 +164,8 @@ public class AuthController {
         logoutUseCase.execute(rawToken);
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenService.clearCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.clearAccessCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.clearSessionCookie().toString())
                 .build();
     }
 
@@ -183,18 +182,9 @@ public class AuthController {
         }
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenService.clearCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.clearAccessCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.clearSessionCookie().toString())
                 .build();
-    }
-
-    /**
-     * Legacy endpoint — kept for backward compat.
-     * Requires valid Bearer JWT, re-issues access token from DB state.
-     */
-    @Operation(operationId = "refreshToken", summary = "Re-issue JWT with current user state from DB (legacy)")
-    @PostMapping("/refresh-token")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<AuthResponse> refreshToken(@AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(refreshTokenUseCase.execute(principal.getUsername()));
     }
 
     // ── Helpers ───────────────────────────────────────────────
@@ -202,10 +192,21 @@ public class AuthController {
     private ResponseEntity<AuthResponse> buildAuthResponse(AuthBundle bundle, HttpServletRequest httpRequest) {
         boolean secure = "https".equalsIgnoreCase(httpRequest.getScheme())
                 || httpRequest.getServerName().endsWith(".sellsights.com");
-        String cookie = refreshTokenService.buildCookie(bundle.rawRefreshToken(), secure).toString();
+        AuthResponse auth = bundle.authResponse();
+
+        // Access JWT travels as HttpOnly cookie — strip it from the response body
+        // so JS cannot read it. Credentials are only accessible via cookies.
+        AuthResponse safeAuth = new AuthResponse(
+                null, auth.email(), auth.role(),
+                auth.firstName(), auth.lastName(),
+                auth.emailVerified(), auth.sellerStatus()
+        );
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie)
-                .body(bundle.authResponse());
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildCookie(bundle.rawRefreshToken(), secure).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildAccessCookie(auth.token(), secure).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildSessionCookie(auth.role(), auth.emailVerified(), auth.sellerStatus(), secure).toString())
+                .body(safeAuth);
     }
 
     private String extractIp(HttpServletRequest request) {
