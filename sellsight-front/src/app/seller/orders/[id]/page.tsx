@@ -1,17 +1,19 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useOptimistic, useTransition } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
 import { MagButton } from '@/components/ui/mag-button';
-import { useOrder, useUpdateOrderStatus, useOrderMessages, useSendMessage } from '@/lib/hooks';
+import { useOrder, useOrderMessages, useSendMessage } from '@/lib/hooks';
+import { orderApi } from '@/lib/services';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { ArrowLeft, Package, Check, MessageCircle, Send } from 'lucide-react';
 import Link from 'next/link';
-import type { OrderStatus } from '@shared/types';
+import type { OrderDto, OrderStatus } from '@shared/types';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 const STEPS = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'];
 
@@ -25,10 +27,17 @@ function statusVariant(s: string): 'accent' | 'success' | 'danger' | 'secondary'
 export default function SellerOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: order, isLoading } = useOrder(id);
-  const { mutate: updateStatus, isPending } = useUpdateOrderStatus();
   const { data: messages = [] } = useOrderMessages(id);
   const sendMessage = useSendMessage(id);
   const [msgInput, setMsgInput] = useState('');
+  const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
+
+  // Optimistic status — wraps the server status
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(
+    order?.status ?? 'PENDING',
+    (_current: string, newStatus: string) => newStatus
+  );
 
   if (isLoading) return (
     <PageLayout>
@@ -47,13 +56,26 @@ export default function SellerOrderDetailPage() {
     </PageLayout>
   );
 
-  const currentStep = STEPS.indexOf(order.status);
+  const currentStep = STEPS.indexOf(optimisticStatus);
 
   const handleAdvance = () => {
     const next = STEPS[currentStep + 1] as OrderStatus;
     if (!next) return;
-    updateStatus({ id: order.id, status: next }, {
-      onSuccess: () => toast.success(`Order marked as ${next.toLowerCase()}`),
+
+    startTransition(async () => {
+      // Optimistic: immediately advance the UI
+      setOptimisticStatus(next);
+
+      try {
+        await orderApi.updateStatus(order.id, next);
+        toast.success(`Order marked as ${next.toLowerCase()}`);
+        queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['order', id] });
+      } catch {
+        // Rollback: server data will replace optimistic on next refetch
+        toast.error('Failed to update order status');
+        queryClient.invalidateQueries({ queryKey: ['order', id] });
+      }
     });
   };
 
@@ -75,12 +97,12 @@ export default function SellerOrderDetailPage() {
             </h1>
             <p className="text-sm text-[var(--text-secondary)] mt-1">{formatDate(order.createdAt)}</p>
           </div>
-          <Pill variant={statusVariant(order.status)}>{order.status.toLowerCase()}</Pill>
+          <Pill variant={statusVariant(optimisticStatus)}>{optimisticStatus.toLowerCase()}</Pill>
         </div>
       </Reveal>
 
       {/* Progress tracker */}
-      {order.status !== 'CANCELLED' && (
+      {optimisticStatus !== 'CANCELLED' && (
         <Reveal delay={100}>
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-7 mb-5">
             <div className="flex items-center justify-between">
@@ -149,9 +171,9 @@ export default function SellerOrderDetailPage() {
               {formatPrice(order.total)}
             </p>
           </div>
-          {currentStep < STEPS.length - 1 && order.status !== 'CANCELLED' && (
+          {currentStep < STEPS.length - 1 && optimisticStatus !== 'CANCELLED' && (
             <MagButton variant="primary" onClick={handleAdvance} disabled={isPending}>
-              Mark as {STEPS[currentStep + 1]?.toLowerCase() ?? ''}
+              {isPending ? 'Updating…' : `Mark as ${STEPS[currentStep + 1]?.toLowerCase() ?? ''}`}
             </MagButton>
           )}
         </div>

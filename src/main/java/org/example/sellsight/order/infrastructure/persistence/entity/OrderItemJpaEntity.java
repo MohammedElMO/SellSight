@@ -29,6 +29,9 @@ public class OrderItemJpaEntity {
     @Column(nullable = false)
     private String productName;
 
+    @Column(name = "seller_id", nullable = false, length = 36)
+    private String sellerId;
+
     @Column(nullable = false)
     private int quantity;
 

@@ -46,12 +46,15 @@ function useNavLinks(): NavLink[] {
     ];
   if (role === 'SELLER')
     return [
-      { label: 'Dashboard',   href: '/seller/dashboard', icon: LayoutDashboard },
-      { label: 'My Products', href: '/seller/products',  icon: Package          },
+      { label: 'Dashboard',  href: '/seller/dashboard',  icon: LayoutDashboard },
+      { label: 'Products',   href: '/seller/products',   icon: Package         },
+      { label: 'Orders',     href: '/seller/orders',     icon: ClipboardList   },
+      { label: 'Inventory',  href: '/seller/inventory',  icon: Warehouse       },
     ];
   if (role === 'ADMIN')
     return [
       { label: 'Dashboard', href: '/admin/dashboard',        icon: LayoutDashboard },
+      { label: 'Orders',    href: '/admin/orders',           icon: ClipboardList   },
       { label: 'Products',  href: '/admin/products',         icon: Package         },
       { label: 'Inventory', href: '/admin/inventory',        icon: Warehouse       },
       { label: 'Users',     href: '/admin/users',            icon: Users           },

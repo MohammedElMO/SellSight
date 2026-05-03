@@ -40,6 +40,7 @@ public class OrderController {
     private final CreateOrderUseCase createOrderUseCase;
     private final GetOrderUseCase getOrderUseCase;
     private final GetUserOrdersUseCase getUserOrdersUseCase;
+    private final GetSellerOrdersUseCase getSellerOrdersUseCase;
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
     private final CreateRefundRequestUseCase createRefundRequestUseCase;
     private final ApproveRefundUseCase approveRefundUseCase;
@@ -48,6 +49,7 @@ public class OrderController {
     public OrderController(CreateOrderUseCase createOrderUseCase,
                             GetOrderUseCase getOrderUseCase,
                             GetUserOrdersUseCase getUserOrdersUseCase,
+                            GetSellerOrdersUseCase getSellerOrdersUseCase,
                             UpdateOrderStatusUseCase updateOrderStatusUseCase,
                             CreateRefundRequestUseCase createRefundRequestUseCase,
                             ApproveRefundUseCase approveRefundUseCase,
@@ -55,6 +57,7 @@ public class OrderController {
         this.createOrderUseCase = createOrderUseCase;
         this.getOrderUseCase = getOrderUseCase;
         this.getUserOrdersUseCase = getUserOrdersUseCase;
+        this.getSellerOrdersUseCase = getSellerOrdersUseCase;
         this.updateOrderStatusUseCase = updateOrderStatusUseCase;
         this.createRefundRequestUseCase = createRefundRequestUseCase;
         this.approveRefundUseCase = approveRefundUseCase;
@@ -142,11 +145,34 @@ public class OrderController {
     }
 
     @Operation(
+        operationId = "getSellerOrders",
+        summary     = "Get seller's orders",
+        description = "Returns all orders that contain at least one item belonging to the authenticated seller. "
+                    + "Items from other sellers are filtered out (data isolation). "
+                    + "Requires SELLER role.",
+        security    = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Seller-scoped order list",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = OrderDto.class)))),
+        @ApiResponse(responseCode = "403", description = "Requires SELLER role",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/seller")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<List<OrderDto>> getSellerOrders(Authentication authentication) {
+        UserDto user = getUserProfile(authentication);
+        return ResponseEntity.ok(getSellerOrdersUseCase.execute(user.id()));
+    }
+
+    @Operation(
         operationId = "updateOrderStatus",
         summary     = "Update order status",
         description = "Advances the order state machine. "
                     + "Valid transitions: PENDING→CONFIRMED, CONFIRMED→SHIPPED, SHIPPED→DELIVERED, "
                     + "PENDING/CONFIRMED/SHIPPED→CANCELLED. "
+                    + "Sellers can only update orders containing their products. "
+                    + "Admins can update any order (supervision override). "
                     + "Requires SELLER or ADMIN role.",
         security    = @SecurityRequirement(name = "bearerAuth")
     )
@@ -154,6 +180,8 @@ public class OrderController {
         @ApiResponse(responseCode = "200", description = "Status updated",
             content = @Content(schema = @Schema(implementation = OrderDto.class))),
         @ApiResponse(responseCode = "400", description = "Invalid state transition",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Ownership check failed",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
         @ApiResponse(responseCode = "404", description = "Order not found",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -167,9 +195,13 @@ public class OrderController {
                 description = "New status, e.g. `{\"status\": \"SHIPPED\"}`",
                 required = true
             )
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        UserDto user = getUserProfile(authentication);
+        String callerRole = authentication.getAuthorities().stream()
+                .findFirst().map(a -> a.getAuthority().replace("ROLE_", "")).orElse("");
         String status = body.get("status");
-        return ResponseEntity.ok(updateOrderStatusUseCase.execute(id, status));
+        return ResponseEntity.ok(updateOrderStatusUseCase.execute(id, status, user.id(), callerRole));
     }
 
     @Operation(operationId = "requestRefund", summary = "Request a refund for a delivered order",

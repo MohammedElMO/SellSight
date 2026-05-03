@@ -234,6 +234,15 @@ export function useAllOrders() {
   });
 }
 
+export function useSellerOrders() {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['seller-orders'],
+    queryFn: orderApi.getSellerOrders,
+    enabled: isAuthenticated && role === 'SELLER',
+  });
+}
+
 export function useCreateOrder() {
   const clearLocalCart = useCartStore((s) => s.clearCart);
   const queryClient = useQueryClient();
@@ -261,6 +270,7 @@ export function useUpdateOrderStatus() {
     onSuccess: () => {
       toast.success('Order status updated');
       queryClient.invalidateQueries({ queryKey: ['all-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
     },
     onError: () => toast.error('Failed to update order status'),
   });

@@ -6,6 +6,9 @@ import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.order.application.dto.*;
 import org.example.sellsight.order.domain.model.*;
 import org.example.sellsight.order.domain.repository.OrderRepository;
+import org.example.sellsight.product.domain.model.Product;
+import org.example.sellsight.product.domain.model.ProductId;
+import org.example.sellsight.product.domain.repository.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,11 +24,14 @@ public class CreateOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
+    private final ProductRepository productRepository;
 
     public CreateOrderUseCase(OrderRepository orderRepository,
-                               InventoryRepository inventoryRepository) {
+                               InventoryRepository inventoryRepository,
+                               ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
+        this.productRepository = productRepository;
     }
 
     @Transactional
@@ -50,9 +56,15 @@ public class CreateOrderUseCase {
         );
 
         for (OrderItemRequest itemReq : request.items()) {
+            // Resolve sellerId from the product
+            String sellerId = productRepository.findById(ProductId.from(itemReq.productId()))
+                    .map(Product::getSellerId)
+                    .orElse("UNKNOWN");
+
             order.addItem(new OrderItem(
                     itemReq.productId(),
                     itemReq.productName(),
+                    sellerId,
                     itemReq.quantity(),
                     itemReq.unitPrice()
             ));
@@ -66,7 +78,7 @@ public class CreateOrderUseCase {
     static OrderDto toDto(Order o) {
         List<OrderItemDto> itemDtos = o.getItems().stream()
                 .map(i -> new OrderItemDto(
-                        i.getProductId(), i.getProductName(),
+                        i.getProductId(), i.getProductName(), i.getSellerId(),
                         i.getQuantity(), i.getUnitPrice(), i.getSubtotal()))
                 .toList();
 

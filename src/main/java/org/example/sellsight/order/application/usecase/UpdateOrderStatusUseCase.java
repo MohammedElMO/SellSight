@@ -8,12 +8,14 @@ import org.example.sellsight.order.domain.model.Order;
 import org.example.sellsight.order.domain.model.OrderId;
 import org.example.sellsight.order.domain.model.OrderStatus;
 import org.example.sellsight.order.domain.repository.OrderRepository;
+import org.example.sellsight.shared.exception.ForbiddenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
  * Use case: Update an order's status (state machine transitions).
+ * Enforces ownership: sellers can only update orders that contain their products.
  */
 @Service
 public class UpdateOrderStatusUseCase {
@@ -32,9 +34,24 @@ public class UpdateOrderStatusUseCase {
         this.sendNotificationUseCase = sendNotificationUseCase;
     }
 
-    public OrderDto execute(String orderId, String newStatus) {
+    /**
+     * Updates order status with ownership enforcement.
+     * @param callerId   the authenticated user's ID
+     * @param callerRole the authenticated user's role (SELLER or ADMIN)
+     */
+    public OrderDto execute(String orderId, String newStatus, String callerId, String callerRole) {
         Order order = orderRepository.findById(OrderId.from(orderId))
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        // Ownership check: sellers can only update orders containing their items
+        if ("SELLER".equals(callerRole)) {
+            boolean ownsItem = order.getItems().stream()
+                    .anyMatch(item -> callerId.equals(item.getSellerId()));
+            if (!ownsItem) {
+                throw new ForbiddenException("You can only update orders containing your products");
+            }
+        }
+        // ADMIN can update any order (supervision override)
 
         OrderStatus target = OrderStatus.valueOf(newStatus.toUpperCase());
 

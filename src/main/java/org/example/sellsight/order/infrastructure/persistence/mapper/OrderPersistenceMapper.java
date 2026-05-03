@@ -16,7 +16,7 @@ public interface OrderPersistenceMapper {
     default Order toDomain(OrderJpaEntity entity) {
         List<OrderItem> items = entity.getItems().stream()
                 .map(i -> new OrderItem(i.getProductId(), i.getProductName(),
-                        i.getQuantity(), i.getUnitPrice()))
+                        i.getSellerId(), i.getQuantity(), i.getUnitPrice()))
                 .toList();
         return new Order(
                 OrderId.from(entity.getId()),
@@ -41,6 +41,7 @@ public interface OrderPersistenceMapper {
                     OrderItemJpaEntity ie = new OrderItemJpaEntity();
                     ie.setProductId(item.getProductId());
                     ie.setProductName(item.getProductName());
+                    ie.setSellerId(item.getSellerId());
                     ie.setQuantity(item.getQuantity());
                     ie.setUnitPrice(item.getUnitPrice());
                     ie.setOrder(entity);

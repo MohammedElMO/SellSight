@@ -133,6 +133,8 @@ export const orderApi = {
     api.get<OrderDto>(`/orders/${id}`).then((r) => r.data),
   getAll: () =>
     api.get<OrderDto[]>('/orders').then((r) => r.data),
+  getSellerOrders: () =>
+    api.get<OrderDto[]>('/orders/seller').then((r) => r.data),
   updateStatus: (id: string, status: string) =>
     api.put<OrderDto>(`/orders/${id}/status`, { status }).then((r) => r.data),
 };

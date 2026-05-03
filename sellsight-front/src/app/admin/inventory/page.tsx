@@ -158,10 +158,10 @@ export default function AdminInventoryPage() {
         <div className="mb-7 flex flex-col sm:flex-row sm:items-end gap-4">
           <div>
             <h1 className="font-display font-extrabold text-[28px] text-[var(--text-primary)] tracking-[-0.02em]">
-              Inventory
+              Inventory Overview
             </h1>
             <p className="text-sm text-[var(--text-secondary)] mt-1">
-              Search, monitor and bulk-update stock across all products
+              Platform-wide stock supervision · Admin override controls
             </p>
           </div>
 

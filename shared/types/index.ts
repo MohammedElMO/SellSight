@@ -211,6 +211,7 @@ export interface CreatePaymentIntentRequest {
 export interface OrderItemDto {
   productId: string;
   productName: string;
+  sellerId: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;

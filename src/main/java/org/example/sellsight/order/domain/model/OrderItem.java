@@ -10,12 +10,15 @@ public class OrderItem {
 
     private final String productId;
     private final String productName;
+    private final String sellerId;
     private final int quantity;
     private final BigDecimal unitPrice;
 
-    public OrderItem(String productId, String productName, int quantity, BigDecimal unitPrice) {
+    public OrderItem(String productId, String productName, String sellerId,
+                     int quantity, BigDecimal unitPrice) {
         this.productId = Objects.requireNonNull(productId, "Product ID cannot be null");
         this.productName = Objects.requireNonNull(productName, "Product name cannot be null");
+        this.sellerId = Objects.requireNonNull(sellerId, "Seller ID cannot be null");
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
         }
@@ -32,6 +35,7 @@ public class OrderItem {
 
     public String getProductId() { return productId; }
     public String getProductName() { return productName; }
+    public String getSellerId() { return sellerId; }
     public int getQuantity() { return quantity; }
     public BigDecimal getUnitPrice() { return unitPrice; }
 }

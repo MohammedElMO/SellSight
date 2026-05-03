@@ -92,17 +92,17 @@ public class InventoryController {
         operationId = "getLowStock",
         summary     = "List low-stock products",
         description = "Returns all inventory items where quantity is at or below the reorder threshold. "
-                    + "Requires ADMIN role.",
+                    + "Requires SELLER or ADMIN role.",
         security    = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Low-stock items listed",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = StockDto.class)))),
-        @ApiResponse(responseCode = "403", description = "Requires ADMIN role",
+        @ApiResponse(responseCode = "403", description = "Insufficient role",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/low-stock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<List<StockDto>> getLowStock() {
         return ResponseEntity.ok(getStockUseCase.getLowStock());
     }
@@ -110,7 +110,8 @@ public class InventoryController {
     @Operation(
         operationId = "batchUpdateStock",
         summary     = "Batch-update stock levels",
-        description = "Updates stock quantities for multiple products in one request. Requires ADMIN role.",
+        description = "Updates stock quantities for multiple products in one request. "
+                    + "Requires SELLER or ADMIN role.",
         security    = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -118,11 +119,11 @@ public class InventoryController {
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = StockDto.class)))),
         @ApiResponse(responseCode = "400", description = "Validation error",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "403", description = "Requires ADMIN role",
+        @ApiResponse(responseCode = "403", description = "Insufficient role",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/batch")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<List<StockDto>> batchUpdate(@Valid @RequestBody BatchUpdateStockRequest request) {
         List<StockDto> results = request.items().stream()
                 .map(item -> updateStockUseCase.execute(

@@ -38,7 +38,7 @@ export default function AdminOrdersPage() {
       <Reveal>
         <div className="mb-7">
           <h1 className="font-display font-extrabold text-[28px] text-[var(--text-primary)] tracking-[-0.02em]">All orders</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">{orders?.length ?? '—'} total orders</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Platform-wide order supervision · {orders?.length ?? '—'} total</p>
         </div>
       </Reveal>
 
@@ -94,7 +94,7 @@ export default function AdminOrdersPage() {
               <span>Total</span>
               <span>Status</span>
               <span>Date</span>
-              <span>Action</span>
+              <span>Admin Override</span>
             </div>
             {filtered
               .slice()

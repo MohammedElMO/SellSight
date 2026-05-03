@@ -42,6 +42,11 @@ public class OrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
+    public List<Order> findBySellerId(String sellerId) {
+        return jpaRepository.findByItemSellerId(sellerId).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     public boolean hasDeliveredOrderWithProduct(String customerId, String productId) {
         return jpaRepository.existsDeliveredOrderWithProduct(customerId, productId);
     }

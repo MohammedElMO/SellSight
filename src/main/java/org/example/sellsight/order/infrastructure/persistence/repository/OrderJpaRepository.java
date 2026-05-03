@@ -13,6 +13,9 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, String
     List<OrderJpaEntity> findByCustomerIdOrderByCreatedAtDesc(String customerId);
     List<OrderJpaEntity> findAllByOrderByCreatedAtDesc();
 
+    @Query("SELECT DISTINCT o FROM OrderJpaEntity o JOIN o.items i WHERE i.sellerId = :sellerId ORDER BY o.createdAt DESC")
+    List<OrderJpaEntity> findByItemSellerId(@Param("sellerId") String sellerId);
+
     @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END " +
            "FROM OrderJpaEntity o JOIN o.items i " +
            "WHERE o.customerId = :customerId AND i.productId = :productId AND o.status = 'DELIVERED'")

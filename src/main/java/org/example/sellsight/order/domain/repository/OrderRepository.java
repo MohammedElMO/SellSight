@@ -19,6 +19,9 @@ public interface OrderRepository {
 
     List<Order> findAll();
 
+    /** Find all orders that contain at least one item belonging to this seller. */
+    List<Order> findBySellerId(String sellerId);
+
     /** Check if a customer has a DELIVERED order containing the given product. */
     boolean hasDeliveredOrderWithProduct(String customerId, String productId);
 }
