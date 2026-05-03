@@ -9,9 +9,12 @@ import org.example.sellsight.order.domain.model.OrderId;
 import org.example.sellsight.order.domain.model.OrderStatus;
 import org.example.sellsight.order.domain.repository.OrderRepository;
 import org.example.sellsight.shared.exception.ForbiddenException;
+import org.example.sellsight.shared.realtime.RealtimePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * Use case: Update an order's status (state machine transitions).
@@ -25,13 +28,16 @@ public class UpdateOrderStatusUseCase {
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
     private final SendNotificationUseCase sendNotificationUseCase;
+    private final RealtimePublisher realtimePublisher;
 
     public UpdateOrderStatusUseCase(OrderRepository orderRepository,
                                      InventoryRepository inventoryRepository,
-                                     SendNotificationUseCase sendNotificationUseCase) {
+                                     SendNotificationUseCase sendNotificationUseCase,
+                                     RealtimePublisher realtimePublisher) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
         this.sendNotificationUseCase = sendNotificationUseCase;
+        this.realtimePublisher = realtimePublisher;
     }
 
     /**
@@ -101,6 +107,16 @@ public class UpdateOrderStatusUseCase {
             }
         }
 
-        return CreateOrderUseCase.toDto(saved);
+        OrderDto result = CreateOrderUseCase.toDto(saved);
+
+        // Push order-status-changed SSE event to the customer
+        try {
+            realtimePublisher.pushToUser(saved.getCustomerId(), "order-status-changed",
+                    Map.of("orderId", saved.getId().getValue(), "status", target.name()));
+        } catch (Exception e) {
+            log.debug("Realtime push skipped for order {}: {}", saved.getId().getValue(), e.getMessage());
+        }
+
+        return result;
     }
 }

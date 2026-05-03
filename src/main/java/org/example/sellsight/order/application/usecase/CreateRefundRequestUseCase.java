@@ -7,9 +7,11 @@ import org.example.sellsight.order.domain.model.OrderId;
 import org.example.sellsight.order.domain.repository.OrderRepository;
 import org.example.sellsight.order.infrastructure.persistence.entity.RefundRequestJpaEntity;
 import org.example.sellsight.order.infrastructure.persistence.repository.RefundRequestJpaRepository;
+import org.example.sellsight.shared.realtime.RealtimePublisher;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -18,15 +20,17 @@ public class CreateRefundRequestUseCase {
 
     private final OrderRepository orderRepository;
     private final RefundRequestJpaRepository refundRequestJpaRepository;
+    private final RealtimePublisher realtimePublisher;
 
     public CreateRefundRequestUseCase(OrderRepository orderRepository,
-                                       RefundRequestJpaRepository refundRequestJpaRepository) {
+                                       RefundRequestJpaRepository refundRequestJpaRepository,
+                                       RealtimePublisher realtimePublisher) {
         this.orderRepository = orderRepository;
         this.refundRequestJpaRepository = refundRequestJpaRepository;
+        this.realtimePublisher = realtimePublisher;
     }
 
     public RefundRequestDto execute(String orderId, String customerId, String reason) {
-        // Verify order exists and belongs to customer
         var order = orderRepository.findById(OrderId.from(orderId))
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
         if (!order.getCustomerId().equals(customerId)) {
@@ -41,7 +45,17 @@ public class CreateRefundRequestUseCase {
                 "PENDING", LocalDateTime.now(), null
         );
         var saved = refundRequestJpaRepository.save(entity);
-        return toDto(saved);
+        RefundRequestDto result = toDto(saved);
+
+        // Notify admins about new refund request
+        try {
+            realtimePublisher.pushToAdmins("refund-requested",
+                    Map.of("refundId", result.id(), "orderId", orderId, "customerId", customerId));
+        } catch (Exception e) {
+            log.debug("Admin SSE push skipped for refund-requested: {}", e.getMessage());
+        }
+
+        return result;
     }
 
     public RefundRequestDto getByOrderId(String orderId) {

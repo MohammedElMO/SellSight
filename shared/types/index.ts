@@ -468,6 +468,34 @@ export interface SendMessageRequest {
   body: string;
 }
 
+// ── Realtime Events ─────────────────────────────────────────
+
+export interface OrderStatusChangedEvent {
+  orderId: string;
+  status: string;
+}
+
+export interface NewOrderEvent {
+  orderId: string;
+  total: number;
+}
+
+export interface RefundEvent {
+  refundId: string;
+  orderId: string;
+}
+
+export type SseEventName =
+  | 'unread-count'
+  | 'notification'
+  | 'order-status-changed'
+  | 'new-order'
+  | 'new-message'
+  | 'refund-requested'
+  | 'refund-approved'
+  | 'refund-rejected'
+  | 'admin-event';
+
 // ── Shared ──────────────────────────────────────────────────
 
 export interface ErrorResponse {

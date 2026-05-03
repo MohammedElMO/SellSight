@@ -9,6 +9,7 @@ import org.example.sellsight.order.domain.repository.OrderRepository;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.example.sellsight.shared.realtime.RealtimePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CreateOrderUseCase {
@@ -25,18 +28,20 @@ public class CreateOrderUseCase {
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
+    private final RealtimePublisher realtimePublisher;
 
     public CreateOrderUseCase(OrderRepository orderRepository,
                                InventoryRepository inventoryRepository,
-                               ProductRepository productRepository) {
+                               ProductRepository productRepository,
+                               RealtimePublisher realtimePublisher) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
         this.productRepository = productRepository;
+        this.realtimePublisher = realtimePublisher;
     }
 
     @Transactional
     public OrderDto execute(CreateOrderRequest request, String customerId) {
-        // Validate stock availability before touching the DB
         for (OrderItemRequest itemReq : request.items()) {
             InventoryItem stock = inventoryRepository.findByProductId(itemReq.productId())
                     .orElseThrow(() -> new InsufficientStockException(itemReq.productId(), 0, itemReq.quantity()));
@@ -56,7 +61,6 @@ public class CreateOrderUseCase {
         );
 
         for (OrderItemRequest itemReq : request.items()) {
-            // Resolve sellerId from the product
             String sellerId = productRepository.findById(ProductId.from(itemReq.productId()))
                     .map(Product::getSellerId)
                     .orElse("UNKNOWN");
@@ -72,7 +76,22 @@ public class CreateOrderUseCase {
 
         Order saved = orderRepository.save(order);
         log.info("Order {} created with status PENDING — awaiting payment confirmation", saved.getId().getValue());
-        return toDto(saved);
+
+        // Notify each unique seller about the new order via SSE
+        OrderDto result = toDto(saved);
+        saved.getItems().stream()
+                .map(OrderItem::getSellerId)
+                .collect(Collectors.toSet())
+                .forEach(sellerId -> {
+                    try {
+                        realtimePublisher.pushToUser(sellerId, "new-order",
+                                Map.of("orderId", saved.getId().getValue(), "total", saved.getTotal()));
+                    } catch (Exception e) {
+                        log.debug("Realtime new-order push skipped for seller {}: {}", sellerId, e.getMessage());
+                    }
+                });
+
+        return result;
     }
 
     static OrderDto toDto(Order o) {

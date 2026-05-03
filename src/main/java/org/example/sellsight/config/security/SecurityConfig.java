@@ -61,8 +61,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/questions/product/**").permitAll()
                         // Public — behavioral events (fire-and-forget)
                         .requestMatchers("/api/v1/events").permitAll()
-                        // Public — SSE notifications stream (token validated in controller)
-                        .requestMatchers("/api/notifications/stream").permitAll()
+                        // WebSocket upgrade endpoint — auth enforced by WebSocketAuthChannelInterceptor on STOMP CONNECT
+                        .requestMatchers("/ws/**").permitAll()
                         // Public — Stripe webhook (verified by signature, must not require auth)
                         .requestMatchers("/api/payments/webhook").permitAll()
                         .anyRequest().authenticated()

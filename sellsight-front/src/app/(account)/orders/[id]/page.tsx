@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useOrder, useRequestRefund, useRefundStatus, useOrderMessages, useSendMessage } from '@/lib/hooks';
+import { useOrderMessagesSocket } from '@/hooks/useOrderMessagesSocket';
 import { OrderStatusBadge } from '@/components/order/order-status-badge';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
@@ -25,9 +26,21 @@ export default function OrderDetailPage() {
   const requestRefund = useRequestRefund(id);
   const { data: messages = [] } = useOrderMessages(id);
   const sendMessage = useSendMessage(id);
+  const { sendViaSocket } = useOrderMessagesSocket(id);
   const [refundReason, setRefundReason]     = useState('');
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [msgInput, setMsgInput] = useState('');
+
+  const handleSendMessage = () => {
+    const body = msgInput.trim();
+    if (!body) return;
+    // Try WS first; fall back to HTTP mutation
+    const sentViaWs = sendViaSocket(body);
+    if (!sentViaWs) {
+      sendMessage.mutate({ body });
+    }
+    setMsgInput('');
+  };
 
   const handleRefundSubmit = () => {
     if (refundReason.trim().length < 10) {
@@ -232,7 +245,7 @@ export default function OrderDetailPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey && msgInput.trim()) {
                     e.preventDefault();
-                    sendMessage.mutate({ body: msgInput.trim() }, { onSuccess: () => setMsgInput('') });
+                    handleSendMessage();
                   }
                 }}
                 placeholder="Ask the seller a question…"
@@ -242,7 +255,7 @@ export default function OrderDetailPage() {
                 size="sm"
                 variant="primary"
                 disabled={!msgInput.trim() || sendMessage.isPending}
-                onClick={() => sendMessage.mutate({ body: msgInput.trim() }, { onSuccess: () => setMsgInput('') })}
+                onClick={handleSendMessage}
               >
                 <Send className="h-3.5 w-3.5" />
               </MagButton>

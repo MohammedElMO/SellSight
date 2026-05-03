@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, clearSessionCookie } from '@/store/auth';
 import { authApi } from '@/lib/services';
+import { useNotificationsStream } from '@/hooks/useNotificationsStream';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,8 @@ const AUTH_EXEMPT = ['/login', '/register', '/pending-verification', '/verify-em
 
 function AuthStatusGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, email } = useAuthStore();
+  // Open SSE stream for all authenticated users (all roles)
+  useNotificationsStream();
   const router   = useRouter();
   const pathname = usePathname();
   const checked  = useRef(false);

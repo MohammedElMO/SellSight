@@ -7,6 +7,7 @@ import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
 import { MagButton } from '@/components/ui/mag-button';
 import { useOrder, useOrderMessages, useSendMessage } from '@/lib/hooks';
+import { useOrderMessagesSocket } from '@/hooks/useOrderMessagesSocket';
 import { orderApi } from '@/lib/services';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { ArrowLeft, Package, Check, MessageCircle, Send } from 'lucide-react';
@@ -29,7 +30,16 @@ export default function SellerOrderDetailPage() {
   const { data: order, isLoading } = useOrder(id);
   const { data: messages = [] } = useOrderMessages(id);
   const sendMessage = useSendMessage(id);
+  const { sendViaSocket } = useOrderMessagesSocket(id);
   const [msgInput, setMsgInput] = useState('');
+
+  const handleSendMessage = () => {
+    const body = msgInput.trim();
+    if (!body) return;
+    const sentViaWs = sendViaSocket(body);
+    if (!sentViaWs) sendMessage.mutate({ body });
+    setMsgInput('');
+  };
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
@@ -215,7 +225,7 @@ export default function SellerOrderDetailPage() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && msgInput.trim()) {
                   e.preventDefault();
-                  sendMessage.mutate({ body: msgInput.trim() }, { onSuccess: () => setMsgInput('') });
+                  handleSendMessage();
                 }
               }}
               placeholder="Reply to customer…"
@@ -225,7 +235,7 @@ export default function SellerOrderDetailPage() {
               size="sm"
               variant="primary"
               disabled={!msgInput.trim() || sendMessage.isPending}
-              onClick={() => sendMessage.mutate({ body: msgInput.trim() }, { onSuccess: () => setMsgInput('') })}
+              onClick={handleSendMessage}
             >
               <Send className="h-3.5 w-3.5" />
             </MagButton>

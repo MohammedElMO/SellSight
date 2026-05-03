@@ -3,7 +3,6 @@
 import { Bell } from 'lucide-react';
 import { useUnreadCount, useNotifications, useMarkAllNotificationsRead } from '@/lib/hooks';
 import { useAuthStore } from '@/store/auth';
-import { useNotificationSSE } from '@/hooks/useNotificationSSE';
 import { useState, useRef, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -14,8 +13,6 @@ export function NotificationBell() {
   const markAllRead = useMarkAllNotificationsRead();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  useNotificationSSE();
-
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {

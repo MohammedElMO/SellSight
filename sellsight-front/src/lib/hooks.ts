@@ -827,7 +827,9 @@ export function useOrderMessages(orderId: string) {
     queryKey: ['messages', orderId],
     queryFn: () => messageApi.getMessages(orderId),
     enabled: !!orderId,
-    refetchInterval: 10000,
+    // WS subscription + SSE fallback keep cache fresh in real-time.
+    // 60s poll is a safety net for missed events (page focus loss, reconnects).
+    refetchInterval: 60_000,
   });
 }
 

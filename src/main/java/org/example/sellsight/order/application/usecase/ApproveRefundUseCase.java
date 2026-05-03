@@ -10,11 +10,13 @@ import org.example.sellsight.order.application.dto.RefundRequestDto;
 import org.example.sellsight.order.infrastructure.persistence.entity.RefundRequestJpaEntity;
 import org.example.sellsight.order.infrastructure.persistence.repository.OrderJpaRepository;
 import org.example.sellsight.order.infrastructure.persistence.repository.RefundRequestJpaRepository;
+import org.example.sellsight.shared.realtime.RealtimePublisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -26,11 +28,14 @@ public class ApproveRefundUseCase {
 
     private final RefundRequestJpaRepository refundRepo;
     private final OrderJpaRepository orderRepo;
+    private final RealtimePublisher realtimePublisher;
 
     public ApproveRefundUseCase(RefundRequestJpaRepository refundRepo,
-                                OrderJpaRepository orderRepo) {
+                                OrderJpaRepository orderRepo,
+                                RealtimePublisher realtimePublisher) {
         this.refundRepo = refundRepo;
-        this.orderRepo  = orderRepo;
+        this.orderRepo = orderRepo;
+        this.realtimePublisher = realtimePublisher;
     }
 
     @PostConstruct
@@ -42,7 +47,6 @@ public class ApproveRefundUseCase {
         return refundRepo.findAll().stream().map(this::toDto).toList();
     }
 
-    /** Approve: issue Stripe refund and mark APPROVED. */
     public RefundRequestDto approve(String refundId) {
         var entity = findOrThrow(refundId);
         if (!"PENDING".equals(entity.getStatus())) {
@@ -70,10 +74,19 @@ public class ApproveRefundUseCase {
 
         entity.setStatus("APPROVED");
         entity.setResolvedAt(LocalDateTime.now());
-        return toDto(refundRepo.save(entity));
+        RefundRequestDto result = toDto(refundRepo.save(entity));
+
+        // Notify the customer that their refund was approved
+        try {
+            realtimePublisher.pushToUser(entity.getCustomerId(), "refund-approved",
+                    Map.of("refundId", refundId, "orderId", entity.getOrderId()));
+        } catch (Exception e) {
+            log.debug("SSE push skipped for refund-approved: {}", e.getMessage());
+        }
+
+        return result;
     }
 
-    /** Reject: no Stripe call, just update status. */
     public RefundRequestDto reject(String refundId) {
         var entity = findOrThrow(refundId);
         if (!"PENDING".equals(entity.getStatus())) {
@@ -81,7 +94,17 @@ public class ApproveRefundUseCase {
         }
         entity.setStatus("REJECTED");
         entity.setResolvedAt(LocalDateTime.now());
-        return toDto(refundRepo.save(entity));
+        RefundRequestDto result = toDto(refundRepo.save(entity));
+
+        // Notify the customer that their refund was rejected
+        try {
+            realtimePublisher.pushToUser(entity.getCustomerId(), "refund-rejected",
+                    Map.of("refundId", refundId, "orderId", entity.getOrderId()));
+        } catch (Exception e) {
+            log.debug("SSE push skipped for refund-rejected: {}", e.getMessage());
+        }
+
+        return result;
     }
 
     private RefundRequestJpaEntity findOrThrow(String id) {
