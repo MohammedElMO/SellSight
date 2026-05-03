@@ -48,6 +48,15 @@ function ResetPasswordInner() {
       await authApi.resetPassword(token, password);
       setIsSuccess(true);
       toast.success('Password successfully reset');
+
+      // Notify other tabs about password reset
+      try {
+        const ch = new BroadcastChannel('sellsight_auth');
+        ch.postMessage({ type: 'PASSWORD_RESET' });
+        ch.close();
+      } catch {
+        // ignore
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to reset password. The link may have expired.');
     } finally {

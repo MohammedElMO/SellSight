@@ -38,6 +38,21 @@ export interface AuthResponse {
 
 export type SellerStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+export interface SessionDto {
+  id: string;
+  userId: string;
+  userEmail?: string;
+  deviceInfo?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+  lastUsedAt?: string;
+  expiresAt: string;
+  revokedAt?: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+  tokenFamilyId?: string;
+}
+
 export interface SellerApplicationDto {
   id: string;
   email: string;
@@ -59,6 +74,41 @@ export interface UserDto {
   role: Role;
   createdAt: string; // ISO 8601
   avatarUrl?: string | null;
+}
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  createdAt: string;
+  avatarUrl?: string | null;
+  emailVerified: boolean;
+  sellerStatus?: string | null;
+  authProvider: string;
+  disabled: boolean;
+  deleted: boolean;
+  deletedAt?: string | null;
+  activeSessionCount: number;
+}
+
+export interface AdminUserPageDto {
+  users: AdminUserDto[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+}
+
+export interface ChangeRoleRequest {
+  role: Role;
+}
+
+export interface LandingDto {
+  popular: ProductDto[];
+  newArrivals: ProductDto[];
+  trending: ProductDto[];
 }
 
 export interface UpdateProfileRequest {
@@ -422,4 +472,9 @@ export interface ErrorResponse {
   status: number;
   message: string;
   timestamp: string;
+  errorCode?: string;
+}
+
+export interface AccountStatusResponse {
+  status: 'ACTIVE' | 'DISABLED' | 'DELETED';
 }

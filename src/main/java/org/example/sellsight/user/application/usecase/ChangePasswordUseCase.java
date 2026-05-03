@@ -8,6 +8,7 @@ import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
 import org.example.sellsight.user.domain.model.Email;
 import org.example.sellsight.user.domain.model.Password;
 import org.example.sellsight.user.domain.model.User;
+import org.example.sellsight.user.domain.repository.RefreshTokenRepository;
 import org.example.sellsight.user.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ public class ChangePasswordUseCase {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${app.kafka.topics.user-events:user-events}")
     private String userEventsTopic;
@@ -41,6 +43,9 @@ public class ChangePasswordUseCase {
 
         user.changePassword(new Password(passwordEncoder.encode(newPassword)));
         userRepository.save(user);
+
+        // Revoke all refresh tokens so other devices are logged out after password change
+        refreshTokenRepository.revokeAllByUserId(user.getId().getValue());
 
         eventPublisher.publish(userEventsTopic,
                 new PasswordChanged(user.getId().getValue(), user.getEmail().getValue()));

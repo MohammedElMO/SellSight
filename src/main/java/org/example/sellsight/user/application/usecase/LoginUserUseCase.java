@@ -1,9 +1,11 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.sellsight.config.security.JwtService;
-import org.example.sellsight.user.application.dto.AuthResponse;
+import org.example.sellsight.config.security.TokenPairHelper;
+import org.example.sellsight.user.application.dto.AuthBundle;
 import org.example.sellsight.user.application.dto.LoginRequest;
+import org.example.sellsight.user.domain.exception.AccountDeletedException;
+import org.example.sellsight.user.domain.exception.AccountDisabledException;
 import org.example.sellsight.user.domain.exception.EmailNotVerifiedException;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
 import org.example.sellsight.user.domain.exception.SellerApprovalRequiredException;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 
 /**
- * Use case: Authenticate a user and return a JWT.
+ * Use case: Authenticate a user and return a JWT + refresh token.
  */
 @Slf4j
 @Service
@@ -27,20 +29,20 @@ public class LoginUserUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final TokenPairHelper tokenPairHelper;
 
     @Value("${app.verification.bypass-emails:}")
     private String bypassEmailsRaw;
 
     public LoginUserUseCase(UserRepository userRepository,
                              PasswordEncoder passwordEncoder,
-                             JwtService jwtService) {
+                             TokenPairHelper tokenPairHelper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+        this.tokenPairHelper = tokenPairHelper;
     }
 
-    public AuthResponse execute(LoginRequest request) {
+    public AuthBundle execute(LoginRequest request, String ipAddress, String userAgent) {
         log.info("Login attempt for email={}", request.email());
         Email email = new Email(request.email());
 
@@ -50,11 +52,21 @@ public class LoginUserUseCase {
                     return new InvalidCredentialsException();
                 });
 
+        if (user.isDeleted()) {
+            log.warn("Login blocked — account deleted: {}", request.email());
+            throw new AccountDeletedException();
+        }
+
         // OAuth users cannot sign in with a password
         if (user.getAuthProvider() != AuthProvider.LOCAL) {
             log.warn("Login rejected — OAuth account tried password login: {} provider={}", request.email(), user.getAuthProvider());
             throw new InvalidCredentialsException(
                     "This account uses " + user.getAuthProvider().name() + " sign-in. Please use that method instead.");
+        }
+
+        if (user.isDisabled()) {
+            log.warn("Login blocked — account disabled: {}", request.email());
+            throw new AccountDisabledException();
         }
 
         // Verify password
@@ -80,17 +92,13 @@ public class LoginUserUseCase {
         }
 
         log.info("Login successful for email={} role={}", user.getEmail().getValue(), user.getRole());
-        String sellerStatusStr = sellerStatus != null ? sellerStatus.name() : null;
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), user.isEmailVerified() || whitelisted, sellerStatusStr);
 
-        return new AuthResponse(
-                token,
-                user.getEmail().getValue(),
-                user.getRole().name(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.isEmailVerified() || whitelisted,
-                sellerStatusStr
-        );
+        // If whitelisted but not yet marked verified in DB, temporarily treat as verified
+        // The token should reflect whitelisted state
+        if (whitelisted && !user.isEmailVerified()) {
+            user.markEmailVerified();
+        }
+
+        return tokenPairHelper.issue(user, ipAddress, userAgent);
     }
 }

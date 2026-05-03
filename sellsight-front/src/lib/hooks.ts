@@ -832,6 +832,133 @@ export function useSendMessage(orderId: string) {
   });
 }
 
+export function useAdminUserList(params: {
+  search?: string; role?: string; status?: string;
+  page?: number; size?: number; sort?: string;
+}) {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['admin-users-v2', params],
+    queryFn: () => adminApi.listUsers(params),
+    enabled: isAuthenticated && role === 'ADMIN',
+  });
+}
+
+export function useAdminUserDetail(userId: string | null) {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['admin-user-detail', userId],
+    queryFn: () => adminApi.getUser(userId!),
+    enabled: isAuthenticated && role === 'ADMIN' && userId != null,
+  });
+}
+
+export function useDisableUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.disableUser(userId),
+    onSuccess: () => {
+      toast.success('User disabled');
+      queryClient.invalidateQueries({ queryKey: ['admin-users-v2'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to disable user')),
+  });
+}
+
+export function useEnableUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.enableUser(userId),
+    onSuccess: () => {
+      toast.success('User enabled');
+      queryClient.invalidateQueries({ queryKey: ['admin-users-v2'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to enable user')),
+  });
+}
+
+export function useChangeUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: string }) =>
+      adminApi.changeUserRole(userId, { role: role as import('@shared/types').Role }),
+    onSuccess: () => {
+      toast.success('Role updated');
+      queryClient.invalidateQueries({ queryKey: ['admin-users-v2'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to change role')),
+  });
+}
+
+export function useAdminDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.deleteUser(userId),
+    onSuccess: () => {
+      toast.success('User deleted');
+      queryClient.invalidateQueries({ queryKey: ['admin-users-v2'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to delete user')),
+  });
+}
+
+export function useRestoreUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.restoreUser(userId),
+    onSuccess: () => {
+      toast.success('Account restored');
+      queryClient.invalidateQueries({ queryKey: ['admin-users-v2'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to restore account')),
+  });
+}
+
+export function useAdminRevokeUserSessions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => adminApi.revokeUserSessions(userId),
+    onSuccess: () => {
+      toast.success('All sessions revoked');
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to revoke sessions')),
+  });
+}
+
+export function useAdminSessions() {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['admin-sessions'],
+    queryFn: () => adminApi.listAllSessions(),
+    enabled: isAuthenticated && role === 'ADMIN',
+  });
+}
+
+export function useAdminRevokeSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => adminApi.revokeSession(sessionId),
+    onSuccess: () => {
+      toast.success('Session revoked');
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to revoke session')),
+  });
+}
+
+export function useAdminRevokeFamilySessions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (familyId: string) => adminApi.revokeFamilySessions(familyId),
+    onSuccess: () => {
+      toast.success('Token family revoked');
+      queryClient.invalidateQueries({ queryKey: ['admin-sessions'] });
+    },
+    onError: (err: unknown) => toast.error(apiError(err, 'Failed to revoke family')),
+  });
+}
+
 // ── Utils ────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react';

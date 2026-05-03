@@ -38,6 +38,11 @@ import type {
   SellerApplicationDto,
   MessageDto,
   SendMessageRequest,
+  SessionDto,
+  AdminUserDto,
+  AdminUserPageDto,
+  ChangeRoleRequest,
+  LandingDto,
 } from '@shared/types';
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -62,9 +67,23 @@ export const authApi = {
   verifyEmail: (token: string) =>
     api.post<AuthResponse>('/auth/verify-email', { token }).then((r) => r.data),
   refreshToken: () =>
-    api.post<AuthResponse>('/auth/refresh-token').then((r) => r.data),
+    api.post<AuthResponse>('/auth/refresh').then((r) => r.data),
+  refresh: () =>
+    api.post<AuthResponse>('/auth/refresh').then((r) => r.data),
+  logout: () =>
+    api.post<void>('/auth/logout'),
+  logoutAll: () =>
+    api.post<void>('/auth/logout-all'),
+  getSessions: () =>
+    api.get<SessionDto[]>('/users/me/sessions').then((r) => r.data),
+  revokeSession: (id: string) =>
+    api.post<void>(`/users/me/sessions/${id}/revoke`),
+  revokeAllSessions: () =>
+    api.post<void>('/users/me/sessions/revoke-all'),
   resendVerification: (email: string) =>
     api.post<void>('/auth/resend-verification', { email }),
+  checkAccountStatus: (email: string) =>
+    api.get<import('@shared/types').AccountStatusResponse>('/auth/account-status', { params: { email } }).then(r => r.data),
   deleteAccount: () =>
     api.delete<void>('/users/me'),
   uploadAvatar: (file: File) => {
@@ -99,6 +118,8 @@ export const productApi = {
     api.put<ProductDto>(`/products/${id}`, req).then((r) => r.data),
   delete: (id: string) =>
     api.delete<void>(`/products/${id}`),
+  getLanding: () =>
+    api.get<LandingDto>('/products/landing').then((r) => r.data),
 };
 
 // ── Orders ───────────────────────────────────────────────────
@@ -277,8 +298,45 @@ export const paymentApi = {
 // ── Admin ─────────────────────────────────────────────────────
 
 export const adminApi = {
+  // legacy — kept for existing hooks that haven't migrated yet
   getUsers: () =>
     api.get<UserDto[]>('/users').then((r) => r.data),
+
+  // ── User management ──────────────────────────────────────
+  listUsers: (params?: {
+    search?: string; role?: string; status?: string;
+    page?: number; size?: number; sort?: string;
+  }) =>
+    api.get<AdminUserPageDto>('/admin/users', { params }).then((r) => r.data),
+  getUser: (userId: string) =>
+    api.get<AdminUserDto>(`/admin/users/${userId}`).then((r) => r.data),
+  disableUser: (userId: string) =>
+    api.post<void>(`/admin/users/${userId}/disable`),
+  enableUser: (userId: string) =>
+    api.post<void>(`/admin/users/${userId}/enable`),
+  changeUserRole: (userId: string, req: ChangeRoleRequest) =>
+    api.patch<AdminUserDto>(`/admin/users/${userId}/role`, req).then((r) => r.data),
+  deleteUser: (userId: string) =>
+    api.delete<void>(`/admin/users/${userId}`),
+  restoreUser: (userId: string) =>
+    api.post<void>(`/admin/users/${userId}/restore`),
+  revokeUserSessions: (userId: string) =>
+    api.post<void>(`/admin/users/${userId}/sessions/revoke-all`),
+
+  // ── Session management ───────────────────────────────────
+  listAllSessions: () =>
+    api.get<SessionDto[]>('/admin/sessions').then((r) => r.data),
+  listUserSessions: (userId: string) =>
+    api.get<SessionDto[]>(`/admin/sessions/user/${userId}`).then((r) => r.data),
+  getSession: (sessionId: string) =>
+    api.get<SessionDto>(`/admin/sessions/${sessionId}`).then((r) => r.data),
+  revokeSession: (sessionId: string) =>
+    api.post<void>(`/admin/sessions/${sessionId}/revoke`),
+  revokeAllSessionsForUser: (userId: string) =>
+    api.post<void>(`/admin/sessions/user/${userId}/revoke-all`),
+  revokeFamilySessions: (familyId: string) =>
+    api.post<void>(`/admin/sessions/families/${familyId}/revoke`),
+
   getCoupons: () =>
     api.get<AdminCouponDto[]>('/coupons').then((r) => r.data),
   createCoupon: (req: CreateCouponRequest) =>

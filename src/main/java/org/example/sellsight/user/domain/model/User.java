@@ -26,6 +26,7 @@ public class User {
     private LocalDateTime deletedAt;    // soft delete marker (GDPR)
     private SellerStatus sellerStatus;  // null for non-SELLER roles
     private String avatarUrl;           // Cloudinary secure_url, nullable
+    private boolean disabled;           // admin-initiated suspension
 
     /** Convenience ctor for local (email+password) CUSTOMER users. */
     public User(UserId id, String firstName, String lastName,
@@ -83,6 +84,11 @@ public class User {
 
     public void changeRole(Role newRole) {
         this.role = Objects.requireNonNull(newRole, "New role cannot be null");
+        if (newRole != Role.SELLER) {
+            this.sellerStatus = null;
+        } else if (this.sellerStatus == null) {
+            this.sellerStatus = SellerStatus.PENDING;
+        }
     }
 
     public void changePassword(Password newPassword) {
@@ -95,6 +101,10 @@ public class User {
 
     public void softDelete(LocalDateTime at) {
         this.deletedAt = Objects.requireNonNull(at, "Deletion timestamp cannot be null");
+    }
+
+    public void restore() {
+        this.deletedAt = null;
     }
 
     public boolean isDeleted() {
@@ -111,6 +121,18 @@ public class User {
 
     public void rejectAsSeller() {
         this.sellerStatus = SellerStatus.REJECTED;
+    }
+
+    public void disable() {
+        this.disabled = true;
+    }
+
+    public void enable() {
+        this.disabled = false;
+    }
+
+    public boolean isDisabled() {
+        return this.disabled;
     }
 
     public void changeAvatar(String url) {
@@ -162,4 +184,5 @@ public class User {
     public LocalDateTime getDeletedAt() { return deletedAt; }
     public SellerStatus getSellerStatus() { return sellerStatus; }
     public String getAvatarUrl() { return avatarUrl; }
+    public boolean getDisabled() { return disabled; }
 }

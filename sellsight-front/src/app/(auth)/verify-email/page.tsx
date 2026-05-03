@@ -30,17 +30,29 @@ function VerifyEmailInner() {
         login(authData);
         setRole(authData.role);
         setStatus('success');
-        setTimeout(() => {
-          if (authData.role === 'ADMIN') {
-            router.push('/admin/dashboard');
-          } else if (authData.role === 'SELLER' && authData.sellerStatus === 'PENDING') {
-            router.push('/seller/pending-approval');
-          } else if (authData.role === 'SELLER') {
-            router.push('/seller/dashboard');
-          } else {
-            router.push('/products');
-          }
-        }, 2000);
+
+        // Notify other tabs (e.g., pending-verification waiting)
+        try {
+          const ch = new BroadcastChannel('sellsight_auth');
+          ch.postMessage({ type: 'EMAIL_VERIFIED', data: authData });
+          ch.close();
+        } catch {
+          // BroadcastChannel not supported in all environments
+        }
+
+        // Try to close if opened externally (from email client)
+        const tryClose = () => {
+          window.close();
+          // If window.close() didn't work, redirect after delay
+          setTimeout(() => {
+            if (authData.role === 'ADMIN') router.push('/admin/dashboard');
+            else if (authData.role === 'SELLER' && authData.sellerStatus === 'PENDING') router.push('/seller/pending-approval');
+            else if (authData.role === 'SELLER') router.push('/seller/dashboard');
+            else router.push('/products');
+          }, 500);
+        };
+
+        setTimeout(tryClose, 1500); // show success state briefly
       })
       .catch((err: unknown) => {
         setStatus('error');

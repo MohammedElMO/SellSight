@@ -8,6 +8,7 @@ import org.example.sellsight.user.domain.exception.InvalidTokenException;
 import org.example.sellsight.user.domain.model.Password;
 import org.example.sellsight.user.domain.model.User;
 import org.example.sellsight.user.domain.model.UserId;
+import org.example.sellsight.user.domain.repository.RefreshTokenRepository;
 import org.example.sellsight.user.domain.repository.UserRepository;
 import org.example.sellsight.user.infrastructure.persistence.entity.PasswordResetTokenJpaEntity;
 import org.example.sellsight.user.infrastructure.persistence.repository.PasswordResetTokenJpaRepository;
@@ -28,6 +29,7 @@ public class ResetPasswordUseCase {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${app.kafka.topics.user-events:user-events}")
     private String userEventsTopic;
@@ -56,6 +58,9 @@ public class ResetPasswordUseCase {
 
         entity.setUsedAt(LocalDateTime.now());
         tokenRepo.save(entity);
+
+        // Revoke all refresh tokens so all existing sessions are invalidated after password reset
+        refreshTokenRepository.revokeAllByUserId(user.getId().getValue());
 
         eventPublisher.publish(userEventsTopic,
                 new PasswordChanged(user.getId().getValue(), user.getEmail().getValue()));

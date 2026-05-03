@@ -3,6 +3,8 @@ package org.example.sellsight.user.infrastructure.persistence.repository;
 import org.example.sellsight.user.domain.model.*;
 import org.example.sellsight.user.domain.repository.UserRepository;
 import org.example.sellsight.user.infrastructure.persistence.mapper.UserPersistenceMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -53,5 +55,11 @@ public class UserRepositoryAdapter implements UserRepository {
     public List<User> findPendingSellers() {
         return jpaRepository.findAllByRoleAndSellerStatus(Role.SELLER, SellerStatus.PENDING)
                 .stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public Page<User> findAllForAdmin(String search, Role role, String status, Pageable pageable) {
+        return jpaRepository.findAll(UserSpec.forAdmin(search, role, status), pageable)
+                .map(mapper::toDomain);
     }
 }

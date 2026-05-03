@@ -74,21 +74,17 @@ export default function HomePage() {
   const { data: cart } = useCart();
   const cartItems = cart?.items ?? [];
 
-  const { data: popular, isLoading: loadingPopular } = useQuery({
-    queryKey: ['products', 'popular-grid'],
-    queryFn:  () => productApi.getAll(0, 30),
-    staleTime: 5 * 60 * 1000,
+  const { data: landing, isLoading: loadingLanding } = useQuery({
+    queryKey: ['products', 'landing'],
+    queryFn:  () => productApi.getLanding(),
+    staleTime: 2 * 60 * 1000,
   });
-  const { data: newArrivals, isLoading: loadingNew } = useQuery({
-    queryKey: ['products', 'newest'],
-    queryFn:  () => productApi.getAll(0, 8, { sort: 'createdAt,desc' }),
-    staleTime: 5 * 60 * 1000,
-  });
-  const { data: trendingProducts, isLoading: loadingTrending } = useQuery({
-    queryKey: ['products', 'trending'],
-    queryFn:  () => productApi.getAll(0, 8, { sort: 'best_selling' }),
-    staleTime: 5 * 60 * 1000,
-  });
+  const popular         = landing?.popular;
+  const newArrivals     = landing?.newArrivals;
+  const trendingProducts = landing?.trending;
+  const loadingPopular  = loadingLanding;
+  const loadingNew      = loadingLanding;
+  const loadingTrending = loadingLanding;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
@@ -131,28 +127,28 @@ export default function HomePage() {
 
       {/* ── Instagram-style product grid ── */}
       <section className="max-w-[1200px] mx-auto w-full px-2 sm:px-4 py-6">
-        <InstaGrid products={popular?.products} isLoading={loadingPopular} />
+        <InstaGrid products={popular} isLoading={loadingPopular} />
       </section>
 
       {/* ── New arrivals rail ── */}
-      {newArrivals?.products && newArrivals.products.length > 0 && (
+      {newArrivals && newArrivals.length > 0 && (
         <div className="max-w-[1200px] mx-auto w-full px-5 sm:px-10 pb-8">
           <ProductRail
             title="New Arrivals"
             description="Fresh items just added by our sellers"
-            products={newArrivals.products}
+            products={newArrivals}
             isLoading={loadingNew}
           />
         </div>
       )}
 
       {/* ── Trending rail ── */}
-      {trendingProducts?.products && trendingProducts.products.length > 0 && (
+      {trendingProducts && trendingProducts.length > 0 && (
         <div className="max-w-[1200px] mx-auto w-full px-5 sm:px-10 pb-8">
           <ProductRail
             title="Trending Now"
             description="Top-selling products this week"
-            products={trendingProducts.products}
+            products={trendingProducts}
             isLoading={loadingTrending}
           />
         </div>

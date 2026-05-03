@@ -1,9 +1,9 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.sellsight.config.security.JwtService;
+import org.example.sellsight.config.security.TokenPairHelper;
 import org.example.sellsight.shared.events.EventPublisher;
-import org.example.sellsight.user.application.dto.AuthResponse;
+import org.example.sellsight.user.application.dto.AuthBundle;
 import org.example.sellsight.user.application.dto.RegisterRequest;
 import org.example.sellsight.user.application.event.UserRegistered;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
@@ -23,7 +23,7 @@ public class RegisterUserUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final TokenPairHelper tokenPairHelper;
     private final SendVerificationEmailUseCase sendVerificationEmail;
     private final EventPublisher eventPublisher;
     private final String userEventsTopic;
@@ -33,20 +33,20 @@ public class RegisterUserUseCase {
 
     public RegisterUserUseCase(UserRepository userRepository,
                                PasswordEncoder passwordEncoder,
-                               JwtService jwtService,
+                               TokenPairHelper tokenPairHelper,
                                SendVerificationEmailUseCase sendVerificationEmail,
                                EventPublisher eventPublisher,
                                @Value("${app.kafka.topics.user-events:user-events}") String userEventsTopic) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+        this.tokenPairHelper = tokenPairHelper;
         this.sendVerificationEmail = sendVerificationEmail;
         this.eventPublisher = eventPublisher;
         this.userEventsTopic = userEventsTopic;
     }
 
     @Transactional
-    public AuthResponse execute(RegisterRequest request) {
+    public AuthBundle execute(RegisterRequest request, String ipAddress, String userAgent) {
         log.info("Register attempt for email={} role={}", request.email(), request.role());
         Email email = new Email(request.email());
 
@@ -95,18 +95,7 @@ public class RegisterUserUseCase {
                 sendVerificationEmail.execute(user);
             }
 
-            String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
-            String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), user.isEmailVerified() || whitelisted, sellerStatusStr);
-
-            return new AuthResponse(
-                    token,
-                    user.getEmail().getValue(),
-                    user.getRole().name(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.isEmailVerified() || whitelisted,
-                    sellerStatusStr
-            );
+            return tokenPairHelper.issue(user, ipAddress, userAgent);
         }
 
         String hashedPassword = passwordEncoder.encode(request.password());
@@ -140,17 +129,6 @@ public class RegisterUserUseCase {
         eventPublisher.publish(userEventsTopic,
                 new UserRegistered(user.getId().getValue(), user.getEmail().getValue(), user.getRole().name()));
 
-        String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), whitelisted, sellerStatusStr);
-
-        return new AuthResponse(
-                token,
-                user.getEmail().getValue(),
-                user.getRole().name(),
-                user.getFirstName(),
-                user.getLastName(),
-                whitelisted,
-                sellerStatusStr
-        );
+        return tokenPairHelper.issue(user, ipAddress, userAgent);
     }
 }

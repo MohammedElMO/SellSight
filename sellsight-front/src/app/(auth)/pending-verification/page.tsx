@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { authApi } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { Reveal } from '@/components/ui/reveal';
@@ -9,17 +9,41 @@ import { MagButton } from '@/components/ui/mag-button';
 import { MailOpen, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import type { AuthResponse } from '@shared/types';
 
 const RESEND_COOLDOWN = 60;
 
 function PendingVerificationInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const emailFromQuery = searchParams.get('email');
   const emailFromStore = useAuthStore((s) => s.email);
+  const login = useAuthStore((s) => s.login);
   const email = emailFromQuery ?? emailFromStore ?? '';
 
   const [cooldown, setCooldown] = useState(0);
   const [sending, setSending]   = useState(false);
+
+  // Listen for email verification from another tab (e.g., email client opened verify link)
+  useEffect(() => {
+    let ch: BroadcastChannel | null = null;
+    try {
+      ch = new BroadcastChannel('sellsight_auth');
+      ch.onmessage = (e: MessageEvent<{ type: string; data: AuthResponse }>) => {
+        if (e.data?.type === 'EMAIL_VERIFIED') {
+          login(e.data.data);
+          const { role, sellerStatus } = e.data.data;
+          if (role === 'ADMIN') router.push('/admin/dashboard');
+          else if (role === 'SELLER' && sellerStatus === 'PENDING') router.push('/seller/pending-approval');
+          else if (role === 'SELLER') router.push('/seller/dashboard');
+          else router.push('/products');
+        }
+      };
+    } catch {
+      // BroadcastChannel not supported in all environments
+    }
+    return () => { try { ch?.close(); } catch { /* ignore */ } };
+  }, [login, router]);
 
   useEffect(() => {
     if (cooldown <= 0) return;

@@ -116,7 +116,11 @@ app:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:c2VsbHNpZ2h0LXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC1zaWduaW5nLTI1Ni1iaXRz}
-  expiration: ${JWT_EXPIRATION:86400000}
+  expiration: ${JWT_EXPIRATION:900000}
+
+# Refresh Token Configuration
+refresh-token:
+  expiration: ${REFRESH_TOKEN_EXPIRATION:2592000000}
 
 # OAuth2 providers
 oauth:

@@ -20,6 +20,8 @@ import {
   Warehouse,
   Tag,
   Store,
+  Users,
+  ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn, initials } from '@/lib/utils';
@@ -52,6 +54,8 @@ function useNavLinks(): NavLink[] {
       { label: 'Dashboard', href: '/admin/dashboard',        icon: LayoutDashboard },
       { label: 'Products',  href: '/admin/products',         icon: Package         },
       { label: 'Inventory', href: '/admin/inventory',        icon: Warehouse       },
+      { label: 'Users',     href: '/admin/users',            icon: Users           },
+      { label: 'Sessions',  href: '/admin/sessions',         icon: ShieldCheck     },
       { label: 'Coupons',   href: '/admin/coupons',          icon: Tag             },
       { label: 'Sellers',   href: '/admin/sellers/pending',  icon: Store           },
     ];

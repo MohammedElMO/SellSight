@@ -2,9 +2,9 @@ package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import org.example.sellsight.config.security.JwtService;
+import org.example.sellsight.config.security.TokenPairHelper;
 import org.example.sellsight.shared.events.EventPublisher;
-import org.example.sellsight.user.application.dto.AuthResponse;
+import org.example.sellsight.user.application.dto.AuthBundle;
 import org.example.sellsight.user.application.event.EmailVerified;
 import org.example.sellsight.user.domain.exception.InvalidTokenException;
 import org.example.sellsight.user.domain.model.User;
@@ -27,13 +27,13 @@ public class VerifyEmailUseCase {
     private final EmailVerificationTokenJpaRepository tokenRepo;
     private final UserRepository userRepository;
     private final EventPublisher eventPublisher;
-    private final JwtService jwtService;
+    private final TokenPairHelper tokenPairHelper;
 
     @Value("${app.kafka.topics.user-events:user-events}")
     private String userEventsTopic;
 
     @Transactional
-    public AuthResponse execute(String rawToken) {
+    public AuthBundle execute(String rawToken, String ipAddress, String userAgent) {
         UUID token;
         try {
             token = UUID.fromString(rawToken);
@@ -60,16 +60,6 @@ public class VerifyEmailUseCase {
         eventPublisher.publish(userEventsTopic,
                 new EmailVerified(user.getId().getValue(), user.getEmail().getValue()));
 
-        String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
-        String jwtToken = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true, sellerStatusStr);
-        return new AuthResponse(
-                jwtToken,
-                user.getEmail().getValue(),
-                user.getRole().name(),
-                user.getFirstName(),
-                user.getLastName(),
-                true,
-                sellerStatusStr
-        );
+        return tokenPairHelper.issue(user, ipAddress, userAgent);
     }
 }

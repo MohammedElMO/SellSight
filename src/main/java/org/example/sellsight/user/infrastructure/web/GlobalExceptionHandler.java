@@ -6,6 +6,8 @@ import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.product.domain.exception.ProductNotFoundException;
 import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessException;
 import org.example.sellsight.shared.exception.ErrorResponse;
+import org.example.sellsight.user.domain.exception.AccountDeletedException;
+import org.example.sellsight.user.domain.exception.AccountDisabledException;
 import org.example.sellsight.user.domain.exception.EmailNotVerifiedException;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
 import org.example.sellsight.user.domain.exception.SellerApprovalRequiredException;
@@ -17,6 +19,7 @@ import org.example.sellsight.user.infrastructure.oauth.OAuthException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -29,11 +32,32 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, "Access denied"));
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(409, ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountDisabledException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDisabled(AccountDisabledException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage(), "ACCOUNT_DISABLED"));
+    }
+
+    @ExceptionHandler(AccountDeletedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDeleted(AccountDeletedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage(), "ACCOUNT_DELETED"));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

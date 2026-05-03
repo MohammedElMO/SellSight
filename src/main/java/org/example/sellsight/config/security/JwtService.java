@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * JWT utility service — generates and validates tokens using HMAC-SHA256.
@@ -28,6 +29,7 @@ public class JwtService {
 
     public String generateToken(String email, String role, boolean emailVerified, String sellerStatus) {
         var builder = Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .claim("role", role)
                 .claim("emailVerified", emailVerified)

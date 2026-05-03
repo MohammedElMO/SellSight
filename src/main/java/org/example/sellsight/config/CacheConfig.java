@@ -25,6 +25,9 @@ public class CacheConfig {
         // Filtered/sorted listing pages — was missing, causing uncached scans on every request
         cm.registerCustomCache("product-filter-listings",
                 Caffeine.newBuilder().maximumSize(1000).expireAfterWrite(2, TimeUnit.MINUTES).build());
+        // Landing page bundle — single cached entry, TTL matches shortest dependency (trending=2min)
+        cm.registerCustomCache("product-landing",
+                Caffeine.newBuilder().maximumSize(1).expireAfterWrite(2, TimeUnit.MINUTES).build());
         return cm;
     }
 }

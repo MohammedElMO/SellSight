@@ -33,6 +33,9 @@ public interface UserPersistenceMapper {
         if (e.getAvatarUrl() != null) {
             user.changeAvatar(e.getAvatarUrl());
         }
+        if (e.isDisabled()) {
+            user.disable();
+        }
         return user;
     }
 }

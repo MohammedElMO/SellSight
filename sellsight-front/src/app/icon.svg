@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <style>
+    /* Using your specific CSS theme colors */
+    .node-left { fill: #8B46FF; opacity: 0.85; }
+    .node-right { fill: #F05638; opacity: 0.85; }
+    .pupil { fill: #2D2A32; }
+  </style>
+  
+  <!-- Overlapping Data Nodes -->
+  <circle cx="200" cy="256" r="140" class="node-left" />
+  <circle cx="312" cy="256" r="140" class="node-right" />
+  
+  <!-- The Insight/Focus Core -->
+  <circle cx="256" cy="256" r="40" class="pupil" />
+</svg>

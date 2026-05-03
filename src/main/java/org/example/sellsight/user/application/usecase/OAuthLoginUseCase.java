@@ -1,8 +1,8 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.sellsight.config.security.JwtService;
-import org.example.sellsight.user.application.dto.AuthResponse;
+import org.example.sellsight.config.security.TokenPairHelper;
+import org.example.sellsight.user.application.dto.AuthBundle;
 import org.example.sellsight.user.application.dto.OAuthLoginRequest;
 import org.example.sellsight.user.domain.model.*;
 import org.example.sellsight.user.domain.repository.UserRepository;
@@ -33,22 +33,22 @@ import java.util.Optional;
 public class OAuthLoginUseCase {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService;
+    private final TokenPairHelper tokenPairHelper;
     private final GoogleOAuthProvider googleProvider;
     private final SlackOAuthProvider slackProvider;
 
     public OAuthLoginUseCase(UserRepository userRepository,
-                             JwtService jwtService,
+                             TokenPairHelper tokenPairHelper,
                              GoogleOAuthProvider googleProvider,
                              SlackOAuthProvider slackProvider) {
         this.userRepository = userRepository;
-        this.jwtService = jwtService;
+        this.tokenPairHelper = tokenPairHelper;
         this.googleProvider = googleProvider;
         this.slackProvider = slackProvider;
     }
 
     @Transactional
-    public AuthResponse execute(OAuthLoginRequest request) {
+    public AuthBundle execute(OAuthLoginRequest request, String ipAddress, String userAgent) {
         AuthProvider provider = AuthProvider.valueOf(request.provider().toUpperCase());
 
         OAuthUserInfo userInfo = switch (provider) {
@@ -93,17 +93,6 @@ public class OAuthLoginUseCase {
             }
         }
 
-        String sellerStatusStr = user.getSellerStatus() != null ? user.getSellerStatus().name() : null;
-        String token = jwtService.generateToken(user.getEmail().getValue(), user.getRole().name(), true, sellerStatusStr);
-
-        return new AuthResponse(
-                token,
-                user.getEmail().getValue(),
-                user.getRole().name(),
-                user.getFirstName(),
-                user.getLastName(),
-                true,
-                sellerStatusStr
-        );
+        return tokenPairHelper.issue(user, ipAddress, userAgent);
     }
 }

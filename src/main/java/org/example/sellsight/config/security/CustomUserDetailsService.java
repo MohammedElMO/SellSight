@@ -30,10 +30,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         String password = user.getPassword() != null ? user.getPassword().getHashedValue() : "";
 
-        return new org.springframework.security.core.userdetails.User(
+        return new AppUserDetails(
                 user.getEmail().getValue(),
                 password,
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
+                user.isDisabled(),
+                user.isDeleted()
         );
     }
 }

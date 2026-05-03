@@ -66,4 +66,7 @@ public class UserJpaEntity {
 
     @Column(name = "avatar_url", length = 512)
     private String avatarUrl;
+
+    @Column(nullable = false)
+    private boolean disabled = false;
 }

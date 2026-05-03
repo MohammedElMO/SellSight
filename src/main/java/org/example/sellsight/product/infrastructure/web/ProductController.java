@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.sellsight.product.application.dto.*;
 import org.example.sellsight.product.application.usecase.*;
+import org.example.sellsight.product.application.dto.LandingDto;
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
@@ -37,6 +38,7 @@ public class ProductController {
     private final GetProductByIdUseCase getProductByIdUseCase;
     private final GetUserProfileUseCase getUserProfileUseCase;
     private final AutocompleteProductsUseCase autocompleteProductsUseCase;
+    private final GetLandingUseCase getLandingUseCase;
 
     public ProductController(CreateProductUseCase createProductUseCase,
                               UpdateProductUseCase updateProductUseCase,
@@ -45,7 +47,8 @@ public class ProductController {
                               SearchProductsUseCase searchProductsUseCase,
                               GetProductByIdUseCase getProductByIdUseCase,
                               GetUserProfileUseCase getUserProfileUseCase,
-                              AutocompleteProductsUseCase autocompleteProductsUseCase) {
+                              AutocompleteProductsUseCase autocompleteProductsUseCase,
+                              GetLandingUseCase getLandingUseCase) {
         this.createProductUseCase = createProductUseCase;
         this.updateProductUseCase = updateProductUseCase;
         this.deleteProductUseCase = deleteProductUseCase;
@@ -54,9 +57,20 @@ public class ProductController {
         this.getProductByIdUseCase = getProductByIdUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.autocompleteProductsUseCase = autocompleteProductsUseCase;
+        this.getLandingUseCase = getLandingUseCase;
     }
 
     // ── Public read endpoints ────────────────────────────────
+
+    @Operation(
+        operationId = "getLanding",
+        summary     = "Landing page data",
+        description = "Returns popular, new arrivals, and trending products in a single request. Cached."
+    )
+    @GetMapping("/landing")
+    public ResponseEntity<LandingDto> getLanding() {
+        return ResponseEntity.ok(getLandingUseCase.execute());
+    }
 
     @Operation(
         operationId = "getProducts",

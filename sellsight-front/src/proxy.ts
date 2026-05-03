@@ -43,12 +43,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(path, request.url));
   }
 
-  // Always pass through — OAuth exchange, verification, and seller-pending screens
+  // Always pass through — OAuth exchange, verification, seller-pending, and account-status screens
   if (
     pathname.startsWith('/oauth/callback') ||
     pathname === '/pending-verification' ||
     pathname === '/verify-email' ||
-    pathname === '/seller/pending-approval'
+    pathname === '/seller/pending-approval' ||
+    pathname === '/account-suspended' ||
+    pathname === '/account-deleted'
   ) {
     return NextResponse.next();
   }
@@ -104,5 +106,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|icon.svg).*)'],
 };

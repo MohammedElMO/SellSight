@@ -1,6 +1,8 @@
 package org.example.sellsight.user.domain.repository;
 
 import org.example.sellsight.user.domain.model.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +26,6 @@ public interface UserRepository {
     List<User> findAll();
 
     List<User> findPendingSellers();
+
+    Page<User> findAllForAdmin(String search, Role role, String status, Pageable pageable);
 }

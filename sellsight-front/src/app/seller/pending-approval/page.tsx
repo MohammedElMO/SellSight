@@ -6,7 +6,7 @@ import { Reveal } from '@/components/ui/reveal';
 import { Clock, LogOut, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authApi } from '@/lib/services';
 
 const POLL_INTERVAL_MS = 30_000;
@@ -15,21 +15,23 @@ export default function SellerPendingApprovalPage() {
   const { firstName, login, logout } = useAuthStore();
   const router = useRouter();
   const [status, setStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const poll = async () => {
+      if (cancelled) return;
       try {
-        const fresh = await authApi.refreshToken();
+        const fresh = await authApi.refresh();
         const newStatus = fresh.sellerStatus as 'PENDING' | 'APPROVED' | 'REJECTED' | null;
 
         if (newStatus === 'APPROVED') {
-          clearInterval(intervalRef.current!);
+          if (cancelled) return;
           login(fresh);
           toast.success('Your seller account has been approved!');
           router.replace('/seller/dashboard');
         } else if (newStatus === 'REJECTED') {
-          clearInterval(intervalRef.current!);
+          if (cancelled) return;
           login(fresh);
           setStatus('REJECTED');
         }
@@ -38,11 +40,20 @@ export default function SellerPendingApprovalPage() {
       }
     };
 
-    intervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
-    return () => clearInterval(intervalRef.current!);
+    poll(); // immediate check on mount
+    const id = setInterval(poll, POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [login, router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore — clear local state regardless
+    }
     logout();
     toast.success('Signed out');
     router.push('/');
