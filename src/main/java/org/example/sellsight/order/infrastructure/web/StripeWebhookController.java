@@ -11,6 +11,7 @@ import org.example.sellsight.engagement.application.usecase.SendNotificationUseC
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
 import org.example.sellsight.loyalty.application.usecase.GetLoyaltyAccountUseCase;
 import org.example.sellsight.order.application.dto.OrderDto;
+import org.example.sellsight.order.application.usecase.SendOrderReceiptEmailUseCase;
 import org.example.sellsight.order.application.usecase.UpdateOrderStatusUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +35,18 @@ public class StripeWebhookController {
     private final InventoryRepository inventoryRepository;
     private final GetLoyaltyAccountUseCase getLoyaltyAccountUseCase;
     private final SendNotificationUseCase sendNotificationUseCase;
+    private final SendOrderReceiptEmailUseCase sendOrderReceiptEmailUseCase;
 
     public StripeWebhookController(UpdateOrderStatusUseCase updateOrderStatusUseCase,
                                     InventoryRepository inventoryRepository,
                                     GetLoyaltyAccountUseCase getLoyaltyAccountUseCase,
-                                    SendNotificationUseCase sendNotificationUseCase) {
+                                    SendNotificationUseCase sendNotificationUseCase,
+                                    SendOrderReceiptEmailUseCase sendOrderReceiptEmailUseCase) {
         this.updateOrderStatusUseCase = updateOrderStatusUseCase;
         this.inventoryRepository = inventoryRepository;
         this.getLoyaltyAccountUseCase = getLoyaltyAccountUseCase;
         this.sendNotificationUseCase = sendNotificationUseCase;
+        this.sendOrderReceiptEmailUseCase = sendOrderReceiptEmailUseCase;
     }
 
     @Operation(summary = "Stripe webhook receiver", description = "Handles payment_intent.succeeded and payment_intent.payment_failed events")
@@ -91,7 +95,7 @@ public class StripeWebhookController {
         log.info("Fulfilling order {} after payment_intent.succeeded (PI={})", orderId, intent.getId());
 
         try {
-            OrderDto order = updateOrderStatusUseCase.execute(orderId, "CONFIRMED");
+            OrderDto order = updateOrderStatusUseCase.execute(orderId, "CONFIRMED", "SYSTEM", "ADMIN");
 
             for (var item : order.items()) {
                 try {
@@ -123,6 +127,17 @@ public class StripeWebhookController {
                 log.warn("Order confirmation notification skipped for order {}: {}", orderId, e.getMessage());
             }
 
+            try {
+                sendOrderReceiptEmailUseCase.send(
+                        order,
+                        intent.getId(),
+                        paidAmountCents(intent),
+                        shippingAmountCents(intent)
+                );
+            } catch (Exception e) {
+                log.warn("Receipt email skipped for order {}: {}", orderId, e.getMessage());
+            }
+
         } catch (Exception e) {
             log.error("Failed to fulfill order {} from webhook: {}", orderId, e.getMessage(), e);
         }
@@ -145,11 +160,38 @@ public class StripeWebhookController {
 
         if (orderId != null && !orderId.isBlank()) {
             try {
-                updateOrderStatusUseCase.execute(orderId, "CANCELLED");
+                updateOrderStatusUseCase.execute(orderId, "CANCELLED", "SYSTEM", "ADMIN");
                 log.info("Order {} cancelled due to payment failure", orderId);
             } catch (Exception e) {
                 log.warn("Failed to cancel order {} after payment failure: {}", orderId, e.getMessage());
             }
         }
+    }
+
+    private long paidAmountCents(PaymentIntent intent) {
+        if (intent.getAmountReceived() != null && intent.getAmountReceived() > 0) {
+            return intent.getAmountReceived();
+        }
+        return intent.getAmount() == null ? 0L : intent.getAmount();
+    }
+
+    private long shippingAmountCents(PaymentIntent intent) {
+        String byCents = intent.getMetadata().get("shipping_amount_cents");
+        if (byCents != null && !byCents.isBlank()) {
+            try {
+                return Long.parseLong(byCents.trim());
+            } catch (NumberFormatException ignored) {
+                return 0L;
+            }
+        }
+        String byDollars = intent.getMetadata().get("shipping_amount");
+        if (byDollars != null && !byDollars.isBlank()) {
+            try {
+                return Math.round(Double.parseDouble(byDollars.trim()) * 100.0);
+            } catch (NumberFormatException ignored) {
+                return 0L;
+            }
+        }
+        return 0L;
     }
 }

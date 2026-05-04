@@ -13,7 +13,7 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
 import { toast } from 'sonner';
-import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest, CreateCouponRequest, SendMessageRequest } from '@shared/types';
+import type { CreateOrderRequest, CreateReviewRequest, AddressDto, CreateRefundRequest, UpdateProfileRequest, CreateCouponRequest, SendMessageRequest, WishlistDto, NotificationDto } from '@shared/types';
 import type { ProductFormValues, CreateProductFormValues } from '@/lib/schemas';
 
 // ── Internal helper ──────────────────────────────────────────
@@ -340,11 +340,39 @@ export function useAddToWishlist() {
   return useMutation({
     mutationFn: ({ wishlistId, productId }: { wishlistId: string; productId: string }) =>
       wishlistApi.addItem(wishlistId, productId),
+    onMutate: async ({ wishlistId, productId }) => {
+      await queryClient.cancelQueries({ queryKey: ['wishlists'] });
+      const previous = queryClient.getQueryData<WishlistDto[]>(['wishlists']);
+      queryClient.setQueryData<WishlistDto[]>(['wishlists'], (old = []) =>
+        old.map((wl) =>
+          wl.id === wishlistId
+            ? {
+                ...wl,
+                items: [
+                  ...wl.items,
+                  {
+                    id: Date.now(),
+                    productId,
+                    productName: '',
+                    productImageUrl: '',
+                    productPrice: 0,
+                    addedAt: new Date().toISOString(),
+                  },
+                ],
+              }
+            : wl,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['wishlists'], ctx?.previous);
+      toast.error('Failed to add to wishlist');
+    },
     onSuccess: () => {
       toast.success('Added to wishlist!');
       queryClient.invalidateQueries({ queryKey: ['wishlists'] });
     },
-    onError: () => toast.error('Failed to add to wishlist'),
   });
 }
 
@@ -354,11 +382,26 @@ export function useRemoveFromWishlist() {
   return useMutation({
     mutationFn: ({ wishlistId, productId }: { wishlistId: string; productId: string }) =>
       wishlistApi.removeItem(wishlistId, productId),
+    onMutate: async ({ wishlistId, productId }) => {
+      await queryClient.cancelQueries({ queryKey: ['wishlists'] });
+      const previous = queryClient.getQueryData<WishlistDto[]>(['wishlists']);
+      queryClient.setQueryData<WishlistDto[]>(['wishlists'], (old = []) =>
+        old.map((wl) =>
+          wl.id === wishlistId
+            ? { ...wl, items: wl.items.filter((i) => i.productId !== productId) }
+            : wl,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(['wishlists'], ctx?.previous);
+      toast.error('Failed to remove from wishlist');
+    },
     onSuccess: () => {
       toast.success('Removed from wishlist');
       queryClient.invalidateQueries({ queryKey: ['wishlists'] });
     },
-    onError: () => toast.error('Failed to remove from wishlist'),
   });
 }
 
@@ -436,7 +479,21 @@ export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => notificationApi.markRead(id),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      const previousNotifs = queryClient.getQueryData<NotificationDto[]>(['notifications']);
+      const previousCount = queryClient.getQueryData<number>(['unread-count']);
+      queryClient.setQueryData<NotificationDto[]>(['notifications'], (old = []) =>
+        old.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      );
+      queryClient.setQueryData<number>(['unread-count'], (old = 0) => Math.max(0, old - 1));
+      return { previousNotifs, previousCount };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previousNotifs) queryClient.setQueryData(['notifications'], ctx.previousNotifs);
+      if (ctx?.previousCount !== undefined) queryClient.setQueryData(['unread-count'], ctx.previousCount);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['unread-count'] });
     },

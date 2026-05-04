@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useOrder, useRequestRefund, useRefundStatus, useOrderMessages, useSendMessage } from '@/lib/hooks';
@@ -11,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { useCartStore } from '@/store/cart';
-import { Package, ChevronRight, ArrowLeft, RotateCcw, Check, MessageCircle, Send } from 'lucide-react';
+import { Package, ChevronRight, ArrowLeft, RotateCcw, Check, MessageCircle, Send, Download } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import type { ProductDto } from '@shared/types';
@@ -65,7 +66,25 @@ export default function OrderDetailPage() {
     });
     toast.success('Items added to cart!');
     router.push('/cart');
+  };
 
+  const handleDownloadReceipt = async (orderData: typeof order) => {
+    if (!orderData) return;
+    try {
+      const { pdf } = await import('@react-pdf/renderer');
+      const { ReceiptDocument } = await import('@/components/order/receipt-pdf');
+      const blob = await pdf(<ReceiptDocument order={orderData} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SellSight-Receipt-${orderData.id.slice(0, 8).toUpperCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('Could not generate receipt');
+    }
   };
 
   if (isLoading) {
@@ -125,8 +144,8 @@ export default function OrderDetailPage() {
                 <MagButton size="sm" variant="secondary" onClick={handleReorder}>
                   <RotateCcw className="h-3.5 w-3.5" /> Reorder
                 </MagButton>
-                <MagButton size="sm" variant="ghost" onClick={() => toast.info('Invoice generation coming soon')}>
-                  Download Invoice
+                <MagButton size="sm" variant="ghost" onClick={() => handleDownloadReceipt(order)}>
+                  <Download className="h-3.5 w-3.5" /> Download Receipt
                 </MagButton>
                 {order.status === 'DELIVERED' && !refund && (
                   <MagButton size="sm" variant="danger" onClick={() => setShowRefundModal(true)}>

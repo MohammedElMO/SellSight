@@ -13,9 +13,15 @@ export type SseEventHandlers = {
   onError?: (err: Event) => void;
 };
 
+/**
+ * Create an SSE connection with reconnect support.
+ * @param namedEvents - list of named event types to subscribe to (server sends `event: <name>` lines).
+ *                      Default (onmessage) only fires for unnamed events; named events need addEventListener.
+ */
 export function createSseConnection(
   path: string,
   handlers: SseEventHandlers,
+  namedEvents: string[] = [],
 ): () => void {
   let es: EventSource | null = null;
   let retryCount = 0;
@@ -33,8 +39,13 @@ export function createSseConnection(
       handlers.onOpen?.();
     };
 
-    // Default message (no event name)
+    // Unnamed events (no `event:` line in stream)
     es.onmessage = (e) => handlers.onEvent?.('message', e.data);
+
+    // Named events — onmessage does NOT fire for these; must use addEventListener
+    namedEvents.forEach((name) => {
+      es!.addEventListener(name, (e: MessageEvent) => handlers.onEvent?.(name, e.data));
+    });
 
     es.onerror = (err) => {
       handlers.onError?.(err);
@@ -52,7 +63,6 @@ export function createSseConnection(
 
   connect();
 
-  // Return cleanup function
   return () => {
     destroyed = true;
     if (retryTimer) clearTimeout(retryTimer);

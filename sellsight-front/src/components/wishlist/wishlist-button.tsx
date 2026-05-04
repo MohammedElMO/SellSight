@@ -4,13 +4,15 @@ import { Heart, X, Plus, Star } from 'lucide-react';
 import { useWishlists, useAddToWishlist, useRemoveFromWishlist, useCreateWishlist } from '@/lib/hooks';
 import { useAuthStore } from '@/store/auth';
 import { cn } from '@/lib/utils';
-import { useMemo, useState } from 'react';
+import { useOptimistic, startTransition, useMemo, useState } from 'react';
 import { WishlistDto } from '@shared/types';
 
 interface WishlistButtonProps {
   productId: string;
   className?: string;
 }
+
+type InWishlistState = { wishlistId: string; wishlistName: string } | null;
 
 export function WishlistButton({ productId, className }: WishlistButtonProps) {
   const { isAuthenticated, role } = useAuthStore();
@@ -22,7 +24,7 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
   const [newName, setNewName] = useState('');
   const [creatingNew, setCreatingNew] = useState(false);
 
-  const inWishlist = useMemo(() => {
+  const serverInWishlist = useMemo<InWishlistState>(() => {
     if (!wishlists) return null;
     for (const wl of wishlists) {
       const item = wl.items.find((i) => i.productId === productId);
@@ -36,23 +38,40 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
     [wishlists],
   );
 
+  // React 19 useOptimistic — shows instant toggle while mutation is in flight
+  const [optimisticInWishlist, setOptimisticInWishlist] = useOptimistic<InWishlistState>(serverInWishlist);
+
   if (!isAuthenticated || role !== 'CUSTOMER') return null;
 
-  const handleClick = async () => {
-    if (inWishlist) {
-      removeMutation.mutate({ wishlistId: inWishlist.wishlistId, productId });
+  const handleClick = () => {
+    if (optimisticInWishlist) {
+      startTransition(async () => {
+        setOptimisticInWishlist(null);
+        await removeMutation.mutateAsync({
+          wishlistId: optimisticInWishlist.wishlistId,
+          productId,
+        });
+      });
       return;
     }
 
     if (!wishlists || wishlists.length === 0) {
       createMutation.mutate('My Wishlist', {
-        onSuccess: (wl) => addMutation.mutate({ wishlistId: wl.id, productId }),
+        onSuccess: (wl) => {
+          startTransition(async () => {
+            setOptimisticInWishlist({ wishlistId: wl.id, wishlistName: wl.name });
+            await addMutation.mutateAsync({ wishlistId: wl.id, productId });
+          });
+        },
       });
       return;
     }
 
     if (defaultWishlist) {
-      addMutation.mutate({ wishlistId: defaultWishlist.id, productId });
+      startTransition(async () => {
+        setOptimisticInWishlist({ wishlistId: defaultWishlist.id, wishlistName: defaultWishlist.name });
+        await addMutation.mutateAsync({ wishlistId: defaultWishlist.id, productId });
+      });
       return;
     }
 
@@ -60,20 +79,24 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
   };
 
   const pickWishlist = (wl: WishlistDto) => {
-    addMutation.mutate(
-      { wishlistId: wl.id, productId },
-      { onSuccess: () => setShowPicker(false) },
-    );
+    startTransition(async () => {
+      setOptimisticInWishlist({ wishlistId: wl.id, wishlistName: wl.name });
+      await addMutation.mutateAsync({ wishlistId: wl.id, productId });
+      setShowPicker(false);
+    });
   };
 
   const handleCreateAndAdd = () => {
     if (!newName.trim()) return;
     createMutation.mutate(newName.trim(), {
       onSuccess: (wl) => {
-        addMutation.mutate({ wishlistId: wl.id, productId });
-        setShowPicker(false);
-        setNewName('');
-        setCreatingNew(false);
+        startTransition(async () => {
+          setOptimisticInWishlist({ wishlistId: wl.id, wishlistName: wl.name });
+          await addMutation.mutateAsync({ wishlistId: wl.id, productId });
+          setShowPicker(false);
+          setNewName('');
+          setCreatingNew(false);
+        });
       },
     });
   };
@@ -85,17 +108,17 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
       <button
         onClick={handleClick}
         disabled={loading}
-        title={inWishlist ? `Remove from "${inWishlist.wishlistName}"` : 'Add to wishlist'}
+        title={optimisticInWishlist ? `Remove from "${optimisticInWishlist.wishlistName}"` : 'Add to wishlist'}
         className={cn(
           'inline-flex items-center justify-center h-10 w-10 rounded-full border transition-all duration-200',
-          inWishlist
+          optimisticInWishlist
             ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100'
             : 'bg-white border-[#e5e4e0] text-[#999] hover:border-[#999] hover:text-rose-500',
           loading && 'opacity-50 pointer-events-none',
           className,
         )}
       >
-        <Heart size={18} className={cn(inWishlist && 'fill-current')} />
+        <Heart size={18} className={cn(optimisticInWishlist && 'fill-current')} />
       </button>
 
       {showPicker && (

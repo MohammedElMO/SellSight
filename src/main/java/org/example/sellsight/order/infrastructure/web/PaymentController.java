@@ -4,27 +4,33 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.order.application.dto.CreatePaymentIntentRequest;
 import org.example.sellsight.order.application.dto.OrderDto;
 import org.example.sellsight.order.application.dto.PaymentIntentResponse;
 import org.example.sellsight.order.application.usecase.CreatePaymentIntentUseCase;
+import org.example.sellsight.order.application.usecase.SendOrderReceiptEmailUseCase;
 import org.example.sellsight.order.application.usecase.UpdateOrderStatusUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Payments", description = "Payment operations mapped via Stripe")
+@Slf4j
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
 
     private final CreatePaymentIntentUseCase createPaymentIntentUseCase;
     private final UpdateOrderStatusUseCase updateOrderStatusUseCase;
+    private final SendOrderReceiptEmailUseCase sendOrderReceiptEmailUseCase;
 
     public PaymentController(CreatePaymentIntentUseCase createPaymentIntentUseCase,
-                             UpdateOrderStatusUseCase updateOrderStatusUseCase) {
+                             UpdateOrderStatusUseCase updateOrderStatusUseCase,
+                             SendOrderReceiptEmailUseCase sendOrderReceiptEmailUseCase) {
         this.createPaymentIntentUseCase = createPaymentIntentUseCase;
         this.updateOrderStatusUseCase = updateOrderStatusUseCase;
+        this.sendOrderReceiptEmailUseCase = sendOrderReceiptEmailUseCase;
     }
 
     @Operation(summary = "Create Stripe payment intent", description = "Generates a Stripe client secret", security = @SecurityRequirement(name = "bearerAuth"))
@@ -38,6 +44,12 @@ public class PaymentController {
     @PostMapping("/confirm-free/{orderId}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<OrderDto> confirmFree(@PathVariable String orderId) {
-        return ResponseEntity.ok(updateOrderStatusUseCase.execute(orderId, "CONFIRMED"));
+        OrderDto order = updateOrderStatusUseCase.execute(orderId, "CONFIRMED", "SYSTEM", "ADMIN");
+        try {
+            sendOrderReceiptEmailUseCase.send(order, "free-order", 0L, 0L);
+        } catch (Exception e) {
+            log.warn("Receipt email skipped for free order {}: {}", orderId, e.getMessage());
+        }
+        return ResponseEntity.ok(order);
     }
 }
