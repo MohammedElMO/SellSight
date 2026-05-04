@@ -82,7 +82,8 @@ export function Navbar() {
     setMobileOpen(false);
   };
 
-  const showCart    = role === 'CUSTOMER' || !isAuthenticated;
+  const showCart       = role === 'CUSTOMER' || !isAuthenticated;
+  const showSearchBar  = role !== 'ADMIN' && role !== 'SELLER';
   const userInitials = initials(firstName, lastName);
 
   return (
@@ -134,10 +135,12 @@ export function Navbar() {
             })}
           </div>
 
-          {/* ── Search ── */}
-          <div className="hidden lg:flex flex-1 max-w-lg mx-4">
-            <ProductSearchAutocomplete />
-          </div>
+          {/* ── Search (customer / guest only — admin/seller have dedicated search UIs) ── */}
+          {showSearchBar && (
+            <div className="hidden lg:flex flex-1 max-w-lg mx-4">
+              <ProductSearchAutocomplete />
+            </div>
+          )}
 
           {/* ── Right actions ── */}
           <div className="ml-auto flex items-center gap-1">

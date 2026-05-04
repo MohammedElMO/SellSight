@@ -5,6 +5,7 @@ import org.example.sellsight.cart.application.dto.CartDto;
 import org.example.sellsight.cart.domain.model.Cart;
 import org.example.sellsight.cart.domain.repository.CartRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -18,6 +19,7 @@ public class AddToCartUseCase {
         this.getCartUseCase = getCartUseCase;
     }
 
+    @Transactional
     public CartDto execute(String userId, String productId, int quantity) {
         Cart cart = cartRepository.findByUserId(userId)
                 .orElse(Cart.empty(userId));

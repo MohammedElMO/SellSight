@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 @Component
 public class ProductRepositoryAdapter implements ProductRepository {
 
+    // FTS filter uses GIN index (fast). Vector similarity is computed only on FTS
+    // matches for re-ranking — avoids the full-table vector range scan that bypasses HNSW.
     private static final String HYBRID_SEARCH_SQL = """
             WITH q AS (
                 SELECT CAST(? AS vector) AS vec,
@@ -39,29 +41,19 @@ public class ProductRepositoryAdapter implements ProductRepository {
             FROM products p
             CROSS JOIN q
             WHERE p.active = true
-              AND (
-                (p.embedding IS NOT NULL AND (p.embedding <=> q.vec) < 0.7)
-                OR (p.search_vector @@ q.ts)
-              )
+              AND p.search_vector @@ q.ts
             ORDER BY
               COALESCE(CASE WHEN p.embedding IS NOT NULL THEN 1.0 - (p.embedding <=> q.vec) ELSE 0.0 END, 0.0) * 0.7
               + COALESCE(ts_rank(p.search_vector, q.ts), 0.0) * 0.3 DESC
             LIMIT ? OFFSET ?
             """;
 
+    // COUNT uses GIN index via FTS filter — no vector scan needed.
     private static final String HYBRID_COUNT_SQL = """
-            WITH q AS (
-                SELECT CAST(? AS vector) AS vec,
-                       websearch_to_tsquery('english', ?) AS ts
-            )
             SELECT COUNT(*)
             FROM products p
-            CROSS JOIN q
             WHERE p.active = true
-              AND (
-                (p.embedding IS NOT NULL AND (p.embedding <=> q.vec) < 0.7)
-                OR (p.search_vector @@ q.ts)
-              )
+              AND p.search_vector @@ websearch_to_tsquery('english', ?)
             """;
 
     private final ProductJpaRepository jpaRepository;
@@ -180,7 +172,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
         Long total = jdbcTemplate.queryForObject(
             HYBRID_COUNT_SQL,
             Long.class,
-            vectorStr, ftsQuery
+            ftsQuery
         );
         long totalElements = total != null ? total : 0L;
         boolean hasMore = (long) (page + 1) * size < totalElements;

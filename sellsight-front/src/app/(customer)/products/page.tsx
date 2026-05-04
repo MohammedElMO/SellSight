@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Package } from 'lucide-react';
 import { useProducts, useSearchProducts, useDebounce } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -32,17 +32,25 @@ function buildApiFilters(f: ProductFilterState): Record<string, string> | undefi
 }
 
 export default function ProductsPage() {
-  const [page, setPage]         = useState(0);
-  const [filters, setFilters]   = useState<ProductFilterState>(DEFAULT_FILTERS);
-  const [drawerOpen, setDrawer] = useState(false);
+  const [page, setPage]             = useState(0);
+  const [searchPage, setSearchPage] = useState(0);
+  const [filters, setFilters]       = useState<ProductFilterState>(DEFAULT_FILTERS);
+  const [drawerOpen, setDrawer]     = useState(false);
 
   const debouncedSearch = useDebounce(filters.search, 300);
   const isSearching     = debouncedSearch.length >= 2;
 
+  // Reset search page whenever query changes
+  const prevSearch = useRef(debouncedSearch);
+  if (prevSearch.current !== debouncedSearch) {
+    prevSearch.current = debouncedSearch;
+    if (searchPage !== 0) setSearchPage(0);
+  }
+
   const apiFilters = buildApiFilters(filters);
 
   const { data: browseData,  isLoading: browseLoading } = useProducts(page, PAGE_SIZE, apiFilters);
-  const { data: searchData,  isLoading: searchLoading } = useSearchProducts(debouncedSearch, 0, PAGE_SIZE);
+  const { data: searchData,  isLoading: searchLoading } = useSearchProducts(debouncedSearch, searchPage, PAGE_SIZE);
 
   const isLoading     = isSearching ? searchLoading : browseLoading;
   const products      = isSearching ? (searchData?.products ?? []) : (browseData?.products ?? []);
@@ -52,11 +60,13 @@ export default function ProductsPage() {
   const updateFilters = (next: Partial<ProductFilterState>) => {
     setFilters((prev) => ({ ...prev, ...next }));
     setPage(0);
+    setSearchPage(0);
   };
 
   const clearAll = () => {
     setFilters(DEFAULT_FILTERS);
     setPage(0);
+    setSearchPage(0);
   };
 
   const activeFilterCount = countActiveFilters(filters);
@@ -113,9 +123,16 @@ export default function ProductsPage() {
         <>
           <ProductGrid products={products} featureFirst={!isSearching && page === 0} />
 
-          {!isSearching && totalPages > 1 && (
+          {totalPages > 1 && (
             <div className="flex justify-center mt-14">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination
+                page={isSearching ? searchPage : page}
+                totalPages={totalPages}
+                onPageChange={(p) => {
+                  if (isSearching) { setSearchPage(p); } else { setPage(p); }
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             </div>
           )}
         </>

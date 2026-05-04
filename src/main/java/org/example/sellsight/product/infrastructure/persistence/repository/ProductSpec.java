@@ -40,12 +40,15 @@ final class ProductSpec {
             }
 
             if (inStock != null && inStock) {
-                var subquery = query.subquery(Integer.class);
-                var invRoot = subquery.from(org.example.sellsight.inventory.infrastructure.persistence.entity.InventoryJpaEntity.class);
-                subquery.select(invRoot.get("quantity"));
-                subquery.where(cb.equal(invRoot.get("productId"), root.get("id")));
-                
-                predicates.add(cb.greaterThan(subquery, 0));
+                // EXISTS short-circuits on first match — faster than scalar subquery.
+                var sub = query.subquery(Integer.class);
+                var invRoot = sub.from(org.example.sellsight.inventory.infrastructure.persistence.entity.InventoryJpaEntity.class);
+                sub.select(cb.literal(1));
+                sub.where(
+                    cb.equal(invRoot.get("productId"), root.get("id")),
+                    cb.greaterThan(invRoot.<Integer>get("quantity"), 0)
+                );
+                predicates.add(cb.exists(sub));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

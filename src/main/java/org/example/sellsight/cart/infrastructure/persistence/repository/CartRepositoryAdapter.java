@@ -30,16 +30,10 @@ public class CartRepositoryAdapter implements CartRepository {
     @Override
     @Transactional
     public Cart save(Cart cart) {
+        cartJpaRepository.insertIfAbsent(
+                UUID.fromString(cart.getId()), cart.getUserId(), cart.getCreatedAt());
         CartJpaEntity entity = cartJpaRepository.findByUserId(cart.getUserId())
-                .orElseGet(() -> {
-                    CartJpaEntity e = new CartJpaEntity(
-                            UUID.fromString(cart.getId()),
-                            cart.getUserId(),
-                            cart.getCreatedAt(),
-                            null
-                    );
-                    return e;
-                });
+                .orElseThrow(() -> new IllegalStateException("Cart missing after upsert"));
 
         entity.setUpdatedAt(LocalDateTime.now());
 

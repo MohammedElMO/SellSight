@@ -15,10 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
@@ -28,8 +25,6 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class SendOrderReceiptEmailUseCase {
-
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy 'at' HH:mm 'UTC'");
 
     private final EmailSender emailSender;
     private final UserRepository userRepository;
@@ -54,19 +49,19 @@ public class SendOrderReceiptEmailUseCase {
         String orderShort = order.id().length() >= 8 ? order.id().substring(0, 8).toUpperCase() : order.id();
         String orderLink  = appUrl("/orders/" + order.id());
 
-        String attachHtml = receiptHtml(user, order, itemSubtotal, shipping, discount, paidTotal, paymentIntentId, paymentMethod);
-        String emailHtml  = emailHtml(user, orderShort, order.status(), order.items(), itemSubtotal, shipping, discount, paidTotal, paymentMethod, orderLink);
-        String plainText  = plainText(user, order, itemSubtotal, shipping, discount, paidTotal, paymentIntentId, paymentMethod, orderLink);
+        String emailHtml = emailHtml(user, orderShort, order.status(), order.items(), itemSubtotal, shipping, discount, paidTotal, paymentMethod, orderLink);
+        String plainText = plainText(user, order, itemSubtotal, shipping, discount, paidTotal, paymentIntentId, paymentMethod, orderLink);
 
-        String attachName   = "SellSight-Receipt-" + orderShort + ".html";
-        String attachBase64 = Base64.getEncoder().encodeToString(attachHtml.getBytes(StandardCharsets.UTF_8));
+        byte[] pdfBytes     = ReceiptPdfGenerator.generate(user, order, itemSubtotal, shipping, discount, paidTotal, paymentIntentId, paymentMethod);
+        String attachName   = "SellSight-Receipt-" + orderShort + ".pdf";
+        String attachBase64 = Base64.getEncoder().encodeToString(pdfBytes);
 
         EmailMessage message = new EmailMessage(
                 user.getEmail().getValue(),
                 "Your SellSight receipt — order #" + orderShort,
                 plainText,
                 emailHtml,
-                List.of(new EmailMessage.Attachment(attachName, attachBase64, "text/html"))
+                List.of(new EmailMessage.Attachment(attachName, attachBase64, "application/pdf"))
         );
 
         log.info("Sending receipt email orderId={} to={} paidTotal={}", order.id(), user.getEmail().getValue(), fmt(paidTotal));
@@ -157,85 +152,8 @@ public class SendOrderReceiptEmailUseCase {
                         + EmailTemplates.paragraph("We'll notify you when your order ships. Check the order page any time for live status updates."),
                 "View my order",
                 orderLink,
-                EmailTemplates.muted("A downloadable HTML receipt is attached to this email.")
+                EmailTemplates.muted("A PDF receipt is attached to this email.")
         );
-    }
-
-    // ─── Receipt attachment (print-quality HTML) ──────────────────────────────
-
-    private String receiptHtml(User user,
-                               OrderDto order,
-                               BigDecimal subtotal,
-                               BigDecimal shipping,
-                               BigDecimal discount,
-                               BigDecimal paidTotal,
-                               String paymentIntentId,
-                               String paymentMethod) {
-        StringBuilder rows = new StringBuilder();
-        for (OrderItemDto item : order.items()) {
-            rows.append("""
-                    <tr>
-                      <td>%s</td>
-                      <td style="text-align:right">%d</td>
-                      <td style="text-align:right">%s</td>
-                      <td style="text-align:right;font-weight:700">%s</td>
-                    </tr>
-                    """.formatted(
-                    EmailTemplates.escape(item.productName()),
-                    item.quantity(),
-                    fmt(item.unitPrice()),
-                    fmt(item.subtotal())
-            ));
-        }
-
-        String piRow = (paymentIntentId == null || paymentIntentId.isBlank() || paymentIntentId.equals("free-order"))
-                ? ""
-                : "<div class=\"meta-item\"><strong>Payment ref:</strong> " + EmailTemplates.escape(paymentIntentId) + "</div>";
-
-        String body = """
-                <div class="hdr">
-                  <h1>SellSight Receipt</h1>
-                  <p>Issued %s</p>
-                </div>
-                <div class="body">
-                  <div class="meta">
-                    <div class="meta-item"><strong>Customer:</strong> %s %s</div>
-                    <div class="meta-item"><strong>Order ID:</strong> %s</div>
-                    <div class="meta-item"><strong>Status:</strong> <span class="badge">%s</span></div>
-                    <div class="meta-item"><strong>Payment:</strong> %s</div>
-                    %s
-                  </div>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Item</th>
-                        <th style="text-align:right">Qty</th>
-                        <th style="text-align:right">Unit price</th>
-                        <th style="text-align:right">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody>%s</tbody>
-                  </table>
-                  <table class="totals">
-                    <tr><td class="label">Items subtotal</td><td style="text-align:right">%s</td></tr>
-                    <tr><td class="label">Shipping</td><td style="text-align:right">%s</td></tr>
-                    <tr><td class="label">Discounts</td><td style="text-align:right">-%s</td></tr>
-                    <tr class="grand"><td>Total paid</td><td style="text-align:right">%s</td></tr>
-                  </table>
-                </div>
-                """.formatted(
-                DATE_FMT.format(LocalDateTime.now()),
-                EmailTemplates.escape(user.getFirstName()),
-                EmailTemplates.escape(user.getLastName()),
-                EmailTemplates.escape(order.id()),
-                EmailTemplates.escape(order.status()),
-                EmailTemplates.escape(paymentMethod),
-                piRow,
-                rows,
-                fmt(subtotal), fmt(shipping), fmt(discount), fmt(paidTotal)
-        );
-
-        return EmailTemplates.receiptShell("SellSight Receipt — Order #" + order.id().substring(0, 8).toUpperCase(), body);
     }
 
     // ─── Plain text fallback ──────────────────────────────────────────────────

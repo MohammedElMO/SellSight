@@ -3,7 +3,6 @@ package org.example.sellsight.order.infrastructure.web;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
-import com.stripe.model.StripeObject;
 import com.stripe.net.Webhook;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 
 @Tag(name = "Payments", description = "Payment operations mapped via Stripe")
 @RestController
@@ -79,12 +77,13 @@ public class StripeWebhookController {
     }
 
     private void handlePaymentSucceeded(Event event) {
-        Optional<StripeObject> obj = event.getDataObjectDeserializer().getObject();
-        if (obj.isEmpty()) {
-            log.error("payment_intent.succeeded: could not deserialize PaymentIntent from event {}", event.getId());
+        PaymentIntent intent;
+        try {
+            intent = (PaymentIntent) event.getDataObjectDeserializer().deserializeUnsafe();
+        } catch (Exception e) {
+            log.error("payment_intent.succeeded: could not deserialize PaymentIntent from event {}: {}", event.getId(), e.getMessage());
             return;
         }
-        PaymentIntent intent = (PaymentIntent) obj.get();
         String orderId = intent.getMetadata().get("order_id");
 
         if (orderId == null || orderId.isBlank()) {
@@ -144,12 +143,13 @@ public class StripeWebhookController {
     }
 
     private void handlePaymentFailed(Event event) {
-        Optional<StripeObject> obj = event.getDataObjectDeserializer().getObject();
-        if (obj.isEmpty()) {
-            log.error("payment_intent.payment_failed: could not deserialize PaymentIntent from event {}", event.getId());
+        PaymentIntent intent;
+        try {
+            intent = (PaymentIntent) event.getDataObjectDeserializer().deserializeUnsafe();
+        } catch (Exception e) {
+            log.error("payment_intent.payment_failed: could not deserialize PaymentIntent from event {}: {}", event.getId(), e.getMessage());
             return;
         }
-        PaymentIntent intent = (PaymentIntent) obj.get();
         String orderId = intent.getMetadata().get("order_id");
         String errorMsg = intent.getLastPaymentError() != null
                 ? intent.getLastPaymentError().getMessage()

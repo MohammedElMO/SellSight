@@ -23,6 +23,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
 import java.util.stream.Collectors;
 
@@ -166,6 +167,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(400, message));
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public ResponseEntity<Void> handleDisconnectedClient(AsyncRequestNotUsableException ex) {
+        // Client closed the SSE connection before the server finished writing — expected noise, not an error.
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                .debug("SSE client disconnected: {}", ex.getMessage());
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(Exception.class)

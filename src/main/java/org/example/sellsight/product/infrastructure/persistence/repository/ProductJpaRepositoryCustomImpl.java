@@ -28,20 +28,30 @@ class ProductJpaRepositoryCustomImpl implements ProductJpaRepositoryCustom {
     @PersistenceContext
     private EntityManager em;
 
+    // Exact counts up to this threshold, then report the cap value.
+    // Prevents full-table COUNT(*) scans on large result sets — DB stops early at LIMIT.
+    private static final int COUNT_CAP = 10_000;
+
     @Override
     public Page<ProductJpaEntity> findAllSliced(Specification<ProductJpaEntity> spec, Pageable pageable) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
-        // Count query
-        CriteriaQuery<Long> countCq = cb.createQuery(Long.class);
+        // Bounded count: select only IDs, capped at COUNT_CAP+1.
+        // PostgreSQL stops scanning after COUNT_CAP+1 matches — far cheaper than COUNT(*) on 500k rows.
+        CriteriaQuery<String> countCq = cb.createQuery(String.class);
         Root<ProductJpaEntity> countRoot = countCq.from(ProductJpaEntity.class);
-        countCq.select(cb.count(countRoot));
+        countCq.select(countRoot.get("id"));
         if (spec != null) {
             countCq.where(spec.toPredicate(countRoot, countCq, cb));
         }
-        long total = em.createQuery(countCq).getSingleResult();
+        TypedQuery<String> countQuery = em.createQuery(countCq);
+        countQuery.setMaxResults(COUNT_CAP + 1);
+        countQuery.setHint("org.hibernate.readOnly", true);
+        int idCount = countQuery.getResultList().size();
+        long total = idCount <= COUNT_CAP ? idCount : COUNT_CAP + 1L;
 
-        // Data query — project only columns needed for listing (skip description)
+        // Data query — project only columns needed for listing (skip description).
+        // Fetch size+1 so we can verify hasMore independently of the bounded count.
         CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
         Root<ProductJpaEntity> root = cq.from(ProductJpaEntity.class);
         cq.multiselect(
@@ -76,16 +86,27 @@ class ProductJpaRepositoryCustomImpl implements ProductJpaRepositoryCustom {
 
         TypedQuery<Object[]> query = em.createQuery(cq);
         query.setFirstResult((int) pageable.getOffset());
-        query.setMaxResults(pageable.getPageSize());
+        query.setMaxResults(pageable.getPageSize() + 1);
         query.setHint("org.hibernate.fetchSize", JDBC_FETCH_SIZE);
         query.setHint("org.hibernate.readOnly", true);
 
         List<Object[]> rows = query.getResultList();
-        List<ProductJpaEntity> results = new ArrayList<>(rows.size());
-        for (Object[] r : rows) {
+        boolean hasMore = rows.size() > pageable.getPageSize();
+        List<Object[]> pageRows = hasMore ? rows.subList(0, pageable.getPageSize()) : rows;
+
+        // If data shows more rows than bounded count reported (count hit the cap),
+        // ensure total is large enough that PageImpl.hasNext() stays correct.
+        long effectiveTotal = total;
+        if (hasMore) {
+            long minTotal = pageable.getOffset() + pageable.getPageSize() + 1;
+            if (effectiveTotal < minTotal) effectiveTotal = minTotal;
+        }
+
+        List<ProductJpaEntity> results = new ArrayList<>(pageRows.size());
+        for (Object[] r : pageRows) {
             results.add(fromRow(r));
         }
-        return new PageImpl<>(results, pageable, total);
+        return new PageImpl<>(results, pageable, effectiveTotal);
     }
 
     private static ProductJpaEntity fromRow(Object[] r) {

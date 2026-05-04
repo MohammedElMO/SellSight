@@ -144,7 +144,12 @@ export default function OrderDetailPage() {
                 <MagButton size="sm" variant="secondary" onClick={handleReorder}>
                   <RotateCcw className="h-3.5 w-3.5" /> Reorder
                 </MagButton>
-                <MagButton size="sm" variant="ghost" onClick={() => handleDownloadReceipt(order)}>
+                <MagButton
+                  size="sm"
+                  variant="secondary"
+                  style={{ color: 'var(--accent)', borderColor: 'rgba(124,58,237,0.3)' }}
+                  onClick={() => handleDownloadReceipt(order)}
+                >
                   <Download className="h-3.5 w-3.5" /> Download Receipt
                 </MagButton>
                 {order.status === 'DELIVERED' && !refund && (

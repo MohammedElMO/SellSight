@@ -84,14 +84,15 @@ public class SseEmitterRegistry {
         for (SseEmitter emitter : list) {
             try {
                 emitter.send(event);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 dead.add(emitter);
+                log.debug("Removed dead SSE emitter for user {} — {}", userId, e.getMessage());
             }
         }
 
         dead.forEach(e -> {
             list.remove(e);
-            log.debug("Removed dead SSE emitter for user {}", userId);
+            try { e.complete(); } catch (Exception ignored) {}
         });
     }
 
@@ -103,12 +104,16 @@ public class SseEmitterRegistry {
         for (SseEmitter emitter : list) {
             try {
                 emitter.send(event);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 dead.add(emitter);
+                log.debug("Removed dead SSE emitter for role {} — {}", role, e.getMessage());
             }
         }
 
-        dead.forEach(e -> list.remove(e));
+        dead.forEach(e -> {
+            list.remove(e);
+            try { e.complete(); } catch (Exception ignored) {}
+        });
     }
 
     /** Send a heartbeat comment to every connected emitter to keep proxies from closing idle connections. */
