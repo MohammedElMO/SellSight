@@ -55,7 +55,7 @@ public class SendOrderReceiptEmailUseCase {
         String orderLink  = appUrl("/orders/" + order.id());
 
         String attachHtml = receiptHtml(user, order, itemSubtotal, shipping, discount, paidTotal, paymentIntentId, paymentMethod);
-        String emailHtml  = emailHtml(user, orderShort, order.status(), itemSubtotal, shipping, discount, paidTotal, paymentMethod, orderLink);
+        String emailHtml  = emailHtml(user, orderShort, order.status(), order.items(), itemSubtotal, shipping, discount, paidTotal, paymentMethod, orderLink);
         String plainText  = plainText(user, order, itemSubtotal, shipping, discount, paidTotal, paymentIntentId, paymentMethod, orderLink);
 
         String attachName   = "SellSight-Receipt-" + orderShort + ".html";
@@ -78,32 +78,66 @@ public class SendOrderReceiptEmailUseCase {
     private String emailHtml(User user,
                              String orderShort,
                              String status,
+                             List<OrderItemDto> items,
                              BigDecimal subtotal,
                              BigDecimal shipping,
                              BigDecimal discount,
                              BigDecimal paidTotal,
                              String paymentMethod,
                              String orderLink) {
-        String summaryTable = """
-                <div style="margin:6px 0 24px;border-radius:18px;background:#f0fdf9;border:1px solid #d1fae5;overflow:hidden">
+        // Items table
+        StringBuilder itemRows = new StringBuilder();
+        for (OrderItemDto item : items) {
+            itemRows.append("""
+                    <tr>
+                      <td style="padding:12px 16px;font-size:14px;color:#1a1829;font-weight:500;border-bottom:1px solid #f3f1ed">%s</td>
+                      <td style="padding:12px 16px;text-align:center;font-size:14px;color:#6b6880;border-bottom:1px solid #f3f1ed">%d</td>
+                      <td style="padding:12px 16px;text-align:right;font-size:14px;color:#6b6880;border-bottom:1px solid #f3f1ed">%s</td>
+                      <td style="padding:12px 16px;text-align:right;font-size:14px;font-weight:700;color:#1a1829;border-bottom:1px solid #f3f1ed">%s</td>
+                    </tr>
+                    """.formatted(
+                    EmailTemplates.escape(item.productName()),
+                    item.quantity(),
+                    fmt(item.unitPrice()),
+                    fmt(item.subtotal())
+            ));
+        }
+
+        String itemsSection = """
+                <div style="margin:6px 0 20px;border-radius:16px;overflow:hidden;border:1px solid #ede9fe">
                   <table role="presentation" width="100%%" cellpadding="0" cellspacing="0">
-                    <tr style="background:linear-gradient(135deg,#0b3d36,#0f766e)">
+                    <tr style="background:#f5f3ff">
+                      <td style="padding:10px 16px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7c3aed;border-bottom:2px solid #ede9fe">Item</td>
+                      <td style="padding:10px 16px;text-align:center;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7c3aed;border-bottom:2px solid #ede9fe">Qty</td>
+                      <td style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7c3aed;border-bottom:2px solid #ede9fe">Unit&nbsp;price</td>
+                      <td style="padding:10px 16px;text-align:right;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7c3aed;border-bottom:2px solid #ede9fe">Subtotal</td>
+                    </tr>
+                    %s
+                  </table>
+                </div>
+                """.formatted(itemRows);
+
+        // Order summary table
+        String summaryTable = """
+                <div style="margin:0 0 24px;border-radius:18px;background:#faf9f6;border:1px solid #ede9fe;overflow:hidden">
+                  <table role="presentation" width="100%%" cellpadding="0" cellspacing="0">
+                    <tr style="background:linear-gradient(135deg,#3b0764,#7c3aed)">
                       <td style="padding:14px 20px;color:rgba(255,255,255,.7);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Order</td>
                       <td style="padding:14px 20px;text-align:right;color:rgba(255,255,255,.7);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Status</td>
                     </tr>
                     <tr style="background:#fff">
-                      <td style="padding:14px 20px;font-size:22px;font-weight:900;color:#0f1a18;font-family:monospace">#%s</td>
+                      <td style="padding:14px 20px;font-size:22px;font-weight:900;color:#1a1829;font-family:monospace">#%s</td>
                       <td style="padding:14px 20px;text-align:right">
                         <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:#d1fae5;color:#065f46;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em">%s</span>
                       </td>
                     </tr>
-                    <tr><td colspan="2" style="height:1px;background:#d1fae5"></td></tr>
-                    <tr style="background:#fff"><td style="padding:10px 20px;color:#6b7280;font-size:13px">Payment method</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#0f1a18;font-size:13px">%s</td></tr>
-                    <tr style="background:#f8fffe"><td style="padding:10px 20px;color:#6b7280;font-size:13px">Items subtotal</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#0f1a18;font-size:13px">%s</td></tr>
-                    <tr style="background:#fff"><td style="padding:10px 20px;color:#6b7280;font-size:13px">Shipping</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#0f1a18;font-size:13px">%s</td></tr>
-                    <tr style="background:#f8fffe"><td style="padding:10px 20px;color:#6b7280;font-size:13px">Discounts</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#0f1a18;font-size:13px">-%s</td></tr>
-                    <tr><td colspan="2" style="height:1px;background:#d1fae5"></td></tr>
-                    <tr style="background:#f0fdf9"><td style="padding:14px 20px;font-size:17px;font-weight:900;color:#065f46">Total paid</td><td style="padding:14px 20px;text-align:right;font-size:22px;font-weight:900;color:#0f766e">%s</td></tr>
+                    <tr><td colspan="2" style="height:1px;background:#ede9fe"></td></tr>
+                    <tr style="background:#fff"><td style="padding:10px 20px;color:#6b6880;font-size:13px">Payment method</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#1a1829;font-size:13px">%s</td></tr>
+                    <tr style="background:#faf9f6"><td style="padding:10px 20px;color:#6b6880;font-size:13px">Items subtotal</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#1a1829;font-size:13px">%s</td></tr>
+                    <tr style="background:#fff"><td style="padding:10px 20px;color:#6b6880;font-size:13px">Shipping</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#1a1829;font-size:13px">%s</td></tr>
+                    <tr style="background:#faf9f6"><td style="padding:10px 20px;color:#6b6880;font-size:13px">Discounts</td><td style="padding:10px 20px;text-align:right;font-weight:700;color:#1a1829;font-size:13px">-%s</td></tr>
+                    <tr><td colspan="2" style="height:1px;background:#ede9fe"></td></tr>
+                    <tr style="background:#f5f3ff"><td style="padding:14px 20px;font-size:17px;font-weight:900;color:#4c1d95">Total paid</td><td style="padding:14px 20px;text-align:right;font-size:22px;font-weight:900;color:#7c3aed">%s</td></tr>
                   </table>
                 </div>
                 """.formatted(
@@ -118,6 +152,7 @@ public class SendOrderReceiptEmailUseCase {
                 "Receipt",
                 "Thanks for your order!",
                 EmailTemplates.paragraph("Hi " + EmailTemplates.escape(user.getFirstName()) + ", your payment was successful and your order is confirmed.")
+                        + itemsSection
                         + summaryTable
                         + EmailTemplates.paragraph("We'll notify you when your order ships. Check the order page any time for live status updates."),
                 "View my order",

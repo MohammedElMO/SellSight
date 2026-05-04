@@ -1,5 +1,6 @@
 package org.example.sellsight.config.security;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +44,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // ASYNC dispatches are server-initiated (SSE event writes) — no client auth possible
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         // Public — auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         // Public — SpringDoc / Swagger UI
