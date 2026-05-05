@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { authApi } from '@/lib/services';
+import { useAuthStore } from '@/store/auth';
 
 const POLL_INTERVAL = 30;
 
@@ -14,6 +15,11 @@ function AccountSuspendedInner() {
   const searchParams = useSearchParams();
   const router       = useRouter();
   const email        = searchParams.get('email') ?? '';
+
+  useEffect(() => {
+    useAuthStore.getState().logout();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [countdown, setCountdown] = useState(POLL_INTERVAL);
   const [checking, setChecking]   = useState(false);

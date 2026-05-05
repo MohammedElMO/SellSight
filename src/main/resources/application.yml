@@ -112,6 +112,10 @@ app:
     password-reset-ttl-minutes: 60
   verification:
     bypass-emails: ${APP_VERIFICATION_BYPASS_EMAILS:}
+  totp:
+    # 32-byte AES-256 key, base64-encoded. MUST be set in production via TOTP_ENCRYPTION_KEY env var.
+    # The default below is a dev-only zero key — DO NOT use in production.
+    encryption-key: ${TOTP_ENCRYPTION_KEY:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
 
 # JWT Configuration
 jwt:

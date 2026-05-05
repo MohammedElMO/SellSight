@@ -25,4 +25,6 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String>,
     Optional<UserJpaEntity> findByAuthProviderAndProviderId(AuthProvider authProvider, String providerId);
 
     List<UserJpaEntity> findAllByRoleAndSellerStatus(Role role, SellerStatus sellerStatus);
+
+    List<UserJpaEntity> findAllByRoleIn(List<Role> roles);
 }

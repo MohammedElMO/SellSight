@@ -16,7 +16,7 @@ import type { Role } from '@shared/types';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 
-const ROLES: { value: Role; label: string; icon: React.ElementType; desc: string }[] = [
+const ROLES: { value: 'CUSTOMER' | 'SELLER'; label: string; icon: React.ElementType; desc: string }[] = [
   { value: 'CUSTOMER', label: 'Customer', icon: ShoppingBag, desc: 'Shop & discover' },
   { value: 'SELLER',   label: 'Seller',   icon: Store,       desc: 'List & sell'     },
 ];
@@ -26,7 +26,7 @@ export default function RegisterPage() {
   const login  = useAuthStore((s) => s.login);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialRole = useMemo<Role>(() => {
+  const initialRole = useMemo<'CUSTOMER' | 'SELLER'>(() => {
     return searchParams.get('role')?.toUpperCase() === 'SELLER' ? 'SELLER' : 'CUSTOMER';
   }, [searchParams]);
   const initialEmail = searchParams.get('email') ?? '';

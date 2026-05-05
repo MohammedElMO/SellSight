@@ -41,6 +41,8 @@ public class CreateAdminUseCase {
                 LocalDateTime.now()
         );
         admin.markEmailVerified();
+        admin.requireAdmin2faSetup();
+        admin.approveAdmin2faSetup(); // auto-approved at creation time
         User saved = userRepository.save(admin);
         log.info("Admin account created: id={} email={}", saved.getId().getValue(), saved.getEmail().getValue());
 

@@ -53,11 +53,14 @@ public class AdminSeeder implements ApplicationRunner {
                 lastName,
                 adminEmail,
                 new Password(passwordEncoder.encode(password)),
-                Role.ADMIN,
+                Role.SUPER_ADMIN,
                 LocalDateTime.now()
         );
         admin.markEmailVerified();
+        admin.requireAdmin2faSetup();
+        admin.approveAdmin2faSetup(); // bootstrap: self-approved
+        admin.requirePasswordChange(); // must change temp password before 2FA setup
         userRepository.save(admin);
-        log.info("Initial admin seeded: {}", email);
+        log.info("Initial SUPER_ADMIN seeded: {}", email);
     }
 }

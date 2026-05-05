@@ -10,13 +10,21 @@ import { useAuthStore } from '@/store/auth';
 import { loginSchema, type LoginFormValues } from '@/lib/schemas';
 import { startGoogleOAuth, startSlackOAuth } from '@/lib/oauth';
 import { toast } from 'sonner';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ShieldCheck, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
+import type { AuthResponse, Admin2faSetupRequiredResponse } from '@shared/types';
+
+type Step = 'login' | 'totp';
 
 export default function LoginPage() {
   const [showPwd, setShowPwd] = useState(false);
+  const [step, setStep] = useState<Step>('login');
+  const [challengeToken, setChallengeToken] = useState('');
+  const [totpFirstName, setTotpFirstName] = useState('');
+  const [totpCode, setTotpCode] = useState('');
+  const [totpSubmitting, setTotpSubmitting] = useState(false);
   const login  = useAuthStore((s) => s.login);
   const router = useRouter();
 
@@ -29,10 +37,24 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const data = await authApi.login(values);
-      login(data);
-      toast.success(`Welcome back, ${data.firstName}!`);
-      if (data.role === 'ADMIN')       router.push('/admin/dashboard');
-      else if (data.role === 'SELLER') router.push('/seller/dashboard');
+      if ('requires2fa' in data && data.requires2fa) {
+        setChallengeToken((data as { challengeToken: string }).challengeToken);
+        setTotpFirstName(data.firstName);
+        setStep('totp');
+        return;
+      }
+      if ('requires2faSetup' in data && (data as Admin2faSetupRequiredResponse).requires2faSetup) {
+        const setupData = data as Admin2faSetupRequiredResponse;
+        toast.info(`Hi ${setupData.firstName}, complete 2FA setup to access your dashboard.`);
+        router.push(`/admin/2fa-setup?setup_token=${encodeURIComponent(setupData.setupToken)}`);
+        return;
+      }
+      const auth = data as AuthResponse;
+      login(auth);
+      toast.success(`Welcome back, ${auth.firstName}!`);
+      if (auth.role === 'SUPER_ADMIN') router.push('/super-admin/dashboard');
+      else if (auth.role === 'ADMIN')  router.push('/admin/dashboard');
+      else if (auth.role === 'SELLER') router.push('/seller/dashboard');
       else                             router.push('/products');
     } catch (err: unknown) {
       const errData = (err as { response?: { data?: { message?: string; errorCode?: string } } })?.response?.data;
@@ -49,9 +71,102 @@ export default function LoginPage() {
         toast.error(errData.message ?? 'Your seller application was rejected. Contact support.');
         return;
       }
+      if (errData?.errorCode === 'ACCOUNT_DELETED') {
+        router.push(`/account-deleted?email=${encodeURIComponent(values.email)}`);
+        return;
+      }
+      if (errData?.errorCode === 'ACCOUNT_DISABLED') {
+        router.push(`/account-suspended?email=${encodeURIComponent(values.email)}`);
+        return;
+      }
+      if (errData?.errorCode === 'ADMIN_2FA_SETUP_PENDING') {
+        toast.error('Your 2FA setup requires Super Admin approval before you can log in.');
+        return;
+      }
       toast.error(errData?.message ?? 'Invalid email or password');
     }
   };
+
+  const onSubmitTotp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!totpCode.trim()) return;
+    setTotpSubmitting(true);
+    try {
+      const auth = await authApi.verify2fa({ challengeToken, code: totpCode.trim() });
+      login(auth);
+      toast.success(`Welcome back, ${auth.firstName}!`);
+      router.push(auth.role === 'SUPER_ADMIN' ? '/super-admin/dashboard' : '/admin/dashboard');
+    } catch (err: unknown) {
+      const errData = (err as { response?: { data?: { message?: string } } })?.response?.data;
+      toast.error(errData?.message ?? 'Invalid code. Please try again.');
+      setTotpCode('');
+    } finally {
+      setTotpSubmitting(false);
+    }
+  };
+
+  if (step === 'totp') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--background)' }}>
+        <Reveal className="w-full max-w-[380px]">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-xl)] p-8 shadow-lg">
+            <div className="flex items-center justify-center mb-6">
+              <div
+                className="h-16 w-16 rounded-full flex items-center justify-center"
+                style={{ background: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}
+              >
+                <ShieldCheck className="h-8 w-8" style={{ color: 'var(--accent)' }} />
+              </div>
+            </div>
+            <h2 className="font-display font-bold text-[22px] text-[var(--text-primary)] text-center mb-1.5 tracking-[-0.02em]">
+              Two-Factor Authentication
+            </h2>
+            <p className="text-[13px] text-[var(--text-secondary)] text-center mb-6">
+              Hi {totpFirstName}, enter the 6-digit code from your authenticator app, or a backup code.
+            </p>
+            <form onSubmit={onSubmitTotp} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="totp-code" className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  Verification code
+                </label>
+                <input
+                  id="totp-code"
+                  type="text"
+                  autoFocus
+                  autoComplete="one-time-code"
+                  placeholder="000000"
+                  maxLength={10}
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\s/g, ''))}
+                  className="h-11 px-3.5 text-sm text-center tracking-[0.2em] font-mono bg-[var(--bg-input)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:tracking-normal outline-none transition-all focus:ring-2 focus:ring-[var(--accent-muted)] focus:border-[var(--accent)]"
+                />
+              </div>
+              <MagButton
+                type="submit"
+                variant="primary"
+                size="md"
+                disabled={totpSubmitting || !totpCode.trim()}
+                className="w-full h-[48px]"
+              >
+                {totpSubmitting ? (
+                  <div className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                ) : (
+                  <>Verify <ArrowRight className="h-4 w-4" /></>
+                )}
+              </MagButton>
+            </form>
+            <button
+              type="button"
+              onClick={() => { setStep('login'); setTotpCode(''); }}
+              className="mt-4 w-full flex items-center justify-center gap-1.5 text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" /> Back to sign in
+            </button>
+          </div>
+        </Reveal>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>

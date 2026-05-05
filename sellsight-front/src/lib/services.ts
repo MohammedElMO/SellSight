@@ -9,6 +9,15 @@ import type {
   RegisterRequest,
   OAuthLoginRequest,
   AuthResponse,
+  TotpChallengeResponse,
+  Admin2faSetupRequiredResponse,
+  Setup2faCompleteResponse,
+  AdminManagementDto,
+  Verify2faRequest,
+  TotpSetupResponse,
+  BootstrapChangePasswordRequest,
+  Enable2faResponse,
+  TotpStatusResponse,
   UserDto,
   UpdateProfileRequest,
   ProductDto,
@@ -51,7 +60,9 @@ export const authApi = {
   register: (req: RegisterRequest) =>
     api.post<AuthResponse>('/auth/register', req).then((r) => r.data),
   login: (req: LoginRequest) =>
-    api.post<AuthResponse>('/auth/login', req).then((r) => r.data),
+    api.post<AuthResponse | TotpChallengeResponse | Admin2faSetupRequiredResponse>('/auth/login', req).then((r) => r.data),
+  verify2fa: (req: Verify2faRequest) =>
+    api.post<AuthResponse>('/auth/verify-2fa', req).then((r) => r.data),
   oauthLogin: (req: OAuthLoginRequest) =>
     api.post<AuthResponse>('/auth/oauth', req).then((r) => r.data),
   getProfile: () =>
@@ -110,8 +121,8 @@ export const productApi = {
     api.get<ProductPageDto>(`/products/seller/${sellerId}`, { params: { page, size } }).then((r) => r.data),
   search: (query: string, page = 0, size = 12) =>
     api.get<ProductPageDto>('/products/search', { params: { q: query, page, size } }).then((r) => r.data),
-  autocomplete: (query: string, limit = 8) =>
-    api.get<AutocompleteDto[]>('/products/autocomplete', { params: { q: query, limit } }).then((r) => r.data),
+  autocomplete: (query: string, limit = 8, signal?: AbortSignal) =>
+    api.get<AutocompleteDto[]>('/products/autocomplete', { params: { q: query, limit }, signal }).then((r) => r.data),
   create: (req: CreateProductRequest) =>
     api.post<ProductDto>('/products', req).then((r) => r.data),
   update: (id: string, req: UpdateProductRequest) =>
@@ -295,6 +306,44 @@ export const paymentApi = {
     api.post<{ clientSecret: string | null }>('/payments/create-intent', req).then((r) => r.data),
   confirmFree: (orderId: string) =>
     api.post<OrderDto>(`/payments/confirm-free/${orderId}`).then((r) => r.data),
+};
+
+// ── Admin 2FA ─────────────────────────────────────────────────
+
+export const admin2faApi = {
+  status: () =>
+    api.get<TotpStatusResponse>('/admin/2fa/status').then((r) => r.data),
+  disable: (code: string) =>
+    api.delete<void>('/admin/2fa', { data: { code } }),
+  // Setup-token flow (unauthenticated — only setup token required)
+  initiateSetup: (setupToken: string) =>
+    api.post<TotpSetupResponse>('/auth/2fa-setup/start', { setupToken }).then((r) => r.data),
+  completeSetup: (setupToken: string, code: string) =>
+    api.post<Setup2faCompleteResponse>('/auth/2fa-setup/complete', { setupToken, code }).then((r) => r.data),
+  // Bootstrap: change temp password then receive QR code (forcePasswordChange=true accounts only)
+  bootstrapChangePassword: (req: BootstrapChangePasswordRequest) =>
+    api.post<TotpSetupResponse>('/auth/bootstrap/change-password', req).then((r) => r.data),
+};
+
+// ── Super Admin ───────────────────────────────────────────────
+
+export const superAdminApi = {
+  listAdmins: () =>
+    api.get<AdminManagementDto[]>('/super-admin/admins').then((r) => r.data),
+  force2faSetup: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/force-2fa-setup`).then((r) => r.data),
+  reset2fa: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/reset-2fa`).then((r) => r.data),
+  approve2faSetup: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/approve-2fa-setup`).then((r) => r.data),
+  disableAdmin: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/disable`).then((r) => r.data),
+  enableAdmin: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/enable`).then((r) => r.data),
+  revokeSessions: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/revoke-sessions`).then((r) => r.data),
+  reset2faAttempts: (userId: string) =>
+    api.post<void>(`/super-admin/admins/${userId}/reset-2fa-attempts`).then((r) => r.data),
 };
 
 // ── Admin ─────────────────────────────────────────────────────

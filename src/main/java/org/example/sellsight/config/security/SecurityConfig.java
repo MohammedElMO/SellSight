@@ -46,8 +46,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ASYNC dispatches are server-initiated (SSE event writes) — no client auth possible
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                        // Public — auth endpoints
+                        // Public — auth endpoints (includes /api/auth/2fa-setup/* setup-token flow)
                         .requestMatchers("/api/auth/**").permitAll()
+                        // SUPER_ADMIN only — admin management
+                        .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
                         // Public — SpringDoc / Swagger UI
                         .requestMatchers(
                                 "/v3/api-docs/**",

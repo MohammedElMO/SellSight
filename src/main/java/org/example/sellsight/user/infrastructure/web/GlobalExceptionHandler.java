@@ -8,12 +8,14 @@ import org.example.sellsight.product.domain.exception.UnauthorizedProductAccessE
 import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.domain.exception.AccountDeletedException;
 import org.example.sellsight.user.domain.exception.AccountDisabledException;
+import org.example.sellsight.user.domain.exception.Admin2faSetupPendingException;
 import org.example.sellsight.user.domain.exception.EmailNotVerifiedException;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
 import org.example.sellsight.user.domain.exception.SellerApprovalRequiredException;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
 import org.example.sellsight.user.domain.exception.InvalidTokenException;
 import org.example.sellsight.user.domain.exception.OAuthEmailConflictException;
+import org.example.sellsight.user.domain.exception.TwoFactorLockedException;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
 import org.example.sellsight.user.infrastructure.oauth.OAuthException;
 import org.springframework.http.HttpStatus;
@@ -45,6 +47,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(409, ex.getMessage()));
+    }
+
+    @ExceptionHandler(Admin2faSetupPendingException.class)
+    public ResponseEntity<ErrorResponse> handleAdmin2faSetupPending(Admin2faSetupPendingException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage(), "ADMIN_2FA_SETUP_PENDING"));
+    }
+
+    @ExceptionHandler(TwoFactorLockedException.class)
+    public ResponseEntity<ErrorResponse> handle2faLocked(TwoFactorLockedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage(), "2FA_LOCKED"));
     }
 
     @ExceptionHandler(AccountDisabledException.class)

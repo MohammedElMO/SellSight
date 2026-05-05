@@ -37,6 +37,70 @@ export interface AuthResponse {
   sellerStatus: string | null;
 }
 
+export interface TotpChallengeResponse {
+  requires2fa: true;
+  challengeToken: string;
+  firstName: string;
+}
+
+export interface Admin2faSetupRequiredResponse {
+  requires2faSetup: true;
+  setupToken: string;
+  firstName: string;
+}
+
+export interface Setup2faCompleteResponse {
+  email: string;
+  role: Role;
+  firstName: string;
+  lastName: string;
+  emailVerified: boolean;
+  sellerStatus: string | null;
+  backupCodes: string[];
+}
+
+export interface AdminManagementDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  disabled: boolean;
+  deleted: boolean;
+  totpEnabled: boolean;
+  setupRequired: boolean;
+  setupApproved: boolean;
+  resetRequired: boolean;
+  failed2faAttempts: number;
+  last2faVerifiedAt: string | null;
+  createdAt: string;
+  activeSessionCount: number;
+}
+
+export interface Verify2faRequest {
+  challengeToken: string;
+  code: string;
+}
+
+export interface TotpSetupResponse {
+  requiresPasswordChange: boolean;
+  qrCode: string | null;   // null when requiresPasswordChange=true or secret already generated
+  secret: string | null;   // null in the same cases above
+}
+
+export interface BootstrapChangePasswordRequest {
+  setupToken: string;
+  newPassword: string;
+}
+
+export interface Enable2faResponse {
+  backupCodes: string[];
+}
+
+export interface TotpStatusResponse {
+  enabled: boolean;
+}
+
 export type SellerStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface SessionDto {
@@ -65,7 +129,7 @@ export interface SellerApplicationDto {
 
 // ── User ────────────────────────────────────────────────────
 
-export type Role = 'ADMIN' | 'SELLER' | 'CUSTOMER';
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'SELLER' | 'CUSTOMER';
 
 export interface UserDto {
   id: string;

@@ -36,6 +36,15 @@ public interface UserPersistenceMapper {
         if (e.isDisabled()) {
             user.disable();
         }
+        user.rehydrateTotp(e.getTotpSecret(), e.isTotpEnabled(), e.getTotpBackupCodes());
+        user.rehydrateAdmin2faFlags(
+                e.isAdmin2faSetupRequired(),
+                e.isAdmin2faSetupApproved(),
+                e.isAdmin2faResetRequired(),
+                e.getFailed2faAttempts(),
+                e.getLast2faVerifiedAt(),
+                e.isForcePasswordChange()
+        );
         return user;
     }
 }

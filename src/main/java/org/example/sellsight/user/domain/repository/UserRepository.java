@@ -28,4 +28,6 @@ public interface UserRepository {
     List<User> findPendingSellers();
 
     Page<User> findAllForAdmin(String search, Role role, String status, Pageable pageable);
+
+    List<User> findPrivilegedUsers();
 }

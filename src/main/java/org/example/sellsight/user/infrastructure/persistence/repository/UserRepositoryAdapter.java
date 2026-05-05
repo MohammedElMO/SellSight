@@ -62,4 +62,10 @@ public class UserRepositoryAdapter implements UserRepository {
         return jpaRepository.findAll(UserSpec.forAdmin(search, role, status), pageable)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public List<User> findPrivilegedUsers() {
+        return jpaRepository.findAllByRoleIn(List.of(Role.ADMIN, Role.SUPER_ADMIN))
+                .stream().map(mapper::toDomain).toList();
+    }
 }

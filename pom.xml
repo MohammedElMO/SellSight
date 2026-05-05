@@ -192,6 +192,13 @@
 			<version>2.0.3</version>
 		</dependency>
 
+		<!-- TOTP 2FA (RFC 6238) — Google Authenticator compatible -->
+		<dependency>
+			<groupId>dev.samstevens.totp</groupId>
+			<artifactId>totp</artifactId>
+			<version>1.7.1</version>
+		</dependency>
+
 		<!-- Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

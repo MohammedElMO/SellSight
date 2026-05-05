@@ -22,13 +22,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Authentication", description = "Register, login, OAuth, email verification, password reset")
+@Tag(name = "Authentication", description = "Register, login, OAuth, email verification, password reset, admin 2FA setup")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
+    private final Verify2faUseCase verify2faUseCase;
+    private final Initiate2faSetupUseCase initiate2faSetupUseCase;
+    private final Complete2faSetupUseCase complete2faSetupUseCase;
+    private final BootstrapPasswordChangeUseCase bootstrapPasswordChangeUseCase;
     private final OAuthLoginUseCase oAuthLoginUseCase;
     private final VerifyEmailUseCase verifyEmailUseCase;
     private final ResendVerificationUseCase resendVerificationUseCase;
@@ -43,6 +47,10 @@ public class AuthController {
 
     public AuthController(RegisterUserUseCase registerUserUseCase,
                           LoginUserUseCase loginUserUseCase,
+                          Verify2faUseCase verify2faUseCase,
+                          Initiate2faSetupUseCase initiate2faSetupUseCase,
+                          Complete2faSetupUseCase complete2faSetupUseCase,
+                          BootstrapPasswordChangeUseCase bootstrapPasswordChangeUseCase,
                           OAuthLoginUseCase oAuthLoginUseCase,
                           VerifyEmailUseCase verifyEmailUseCase,
                           ResendVerificationUseCase resendVerificationUseCase,
@@ -56,6 +64,10 @@ public class AuthController {
                           UserRepository userRepository) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
+        this.verify2faUseCase = verify2faUseCase;
+        this.initiate2faSetupUseCase = initiate2faSetupUseCase;
+        this.complete2faSetupUseCase = complete2faSetupUseCase;
+        this.bootstrapPasswordChangeUseCase = bootstrapPasswordChangeUseCase;
         this.oAuthLoginUseCase = oAuthLoginUseCase;
         this.verifyEmailUseCase = verifyEmailUseCase;
         this.resendVerificationUseCase = resendVerificationUseCase;
@@ -71,7 +83,7 @@ public class AuthController {
 
     @Operation(operationId = "register", summary = "Register a new user")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Account created — JWT returned",
+            @ApiResponse(responseCode = "200", description = "Account created",
                     content = @Content(schema = @Schema(implementation = AuthResponse.class))),
             @ApiResponse(responseCode = "409", description = "Email already in use",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -83,12 +95,67 @@ public class AuthController {
         return buildAuthResponse(bundle, httpRequest);
     }
 
-    @Operation(operationId = "login", summary = "Authenticate")
+    @Operation(operationId = "login", summary = "Authenticate — returns AuthResponse, TotpChallengeResponse (2FA), or Admin2faSetupRequiredResponse (first-time setup)")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
-                                               HttpServletRequest httpRequest) {
-        AuthBundle bundle = loginUserUseCase.execute(request, extractIp(httpRequest), extractUserAgent(httpRequest));
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                    HttpServletRequest httpRequest) {
+        LoginOutcome outcome = loginUserUseCase.execute(request, extractIp(httpRequest), extractUserAgent(httpRequest));
+        return switch (outcome) {
+            case LoginOutcome.Success s -> buildAuthResponse(s.bundle(), httpRequest);
+            case LoginOutcome.Requires2fa r -> ResponseEntity.ok(
+                    new TotpChallengeResponse(true, r.challengeToken(), r.firstName()));
+            case LoginOutcome.Requires2faSetup s -> ResponseEntity.ok(
+                    new Admin2faSetupRequiredResponse(true, s.setupToken(), s.firstName()));
+        };
+    }
+
+    @Operation(operationId = "verify2fa", summary = "Submit TOTP code to complete admin login")
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<AuthResponse> verify2fa(@Valid @RequestBody Verify2faRequest request,
+                                                   HttpServletRequest httpRequest) {
+        AuthBundle bundle = verify2faUseCase.execute(
+                request.challengeToken(), request.code(),
+                extractIp(httpRequest), extractUserAgent(httpRequest));
         return buildAuthResponse(bundle, httpRequest);
+    }
+
+    @Operation(operationId = "initiate2faSetup", summary = "Initiate 2FA setup using setup token — returns QR code and secret")
+    @PostMapping("/2fa-setup/start")
+    public ResponseEntity<TotpSetupResponse> initiate2faSetup(
+            @Valid @RequestBody InitiateAdmin2faSetupRequest request) {
+        return ResponseEntity.ok(initiate2faSetupUseCase.execute(request.setupToken()));
+    }
+
+    @Operation(operationId = "complete2faSetup", summary = "Complete 2FA setup — verify TOTP code, issue full auth cookies, return backup codes")
+    @PostMapping("/2fa-setup/complete")
+    public ResponseEntity<Setup2faCompleteResponse> complete2faSetup(
+            @Valid @RequestBody CompleteAdmin2faSetupRequest request,
+            HttpServletRequest httpRequest) {
+        SetupCompleteBundle result = complete2faSetupUseCase.execute(
+                request.setupToken(), request.code(),
+                extractIp(httpRequest), extractUserAgent(httpRequest));
+        AuthBundle bundle = result.authBundle();
+        AuthResponse auth = bundle.authResponse();
+        boolean secure = isSecure(httpRequest);
+        Setup2faCompleteResponse body = new Setup2faCompleteResponse(
+                auth.email(), auth.role(), auth.firstName(), auth.lastName(),
+                auth.emailVerified(), auth.sellerStatus(),
+                result.backupCodes()
+        );
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildCookie(bundle.rawRefreshToken(), secure).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildAccessCookie(auth.token(), secure).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildSessionCookie(auth.role(), auth.emailVerified(), auth.sellerStatus(), secure).toString())
+                .body(body);
+    }
+
+    @Operation(operationId = "bootstrapChangePassword",
+               summary = "Bootstrap: change temporary password and initiate 2FA setup — returns QR code. Public endpoint gated by setup token.")
+    @PostMapping("/bootstrap/change-password")
+    public ResponseEntity<TotpSetupResponse> bootstrapChangePassword(
+            @Valid @RequestBody BootstrapChangePasswordRequest request) {
+        return ResponseEntity.ok(bootstrapPasswordChangeUseCase.execute(
+                request.setupToken(), request.newPassword()));
     }
 
     @Operation(operationId = "oauthLogin", summary = "OAuth2 login/signup")
@@ -107,7 +174,7 @@ public class AuthController {
         return buildAuthResponse(bundle, httpRequest);
     }
 
-    @Operation(operationId = "accountStatus", summary = "Check account status by email (for polling on suspended/deleted screens)")
+    @Operation(operationId = "accountStatus", summary = "Check account status by email")
     @GetMapping("/account-status")
     public ResponseEntity<AccountStatusDto> accountStatus(@RequestParam String email) {
         return userRepository.findByEmail(new Email(email))
@@ -190,23 +257,23 @@ public class AuthController {
     // ── Helpers ───────────────────────────────────────────────
 
     private ResponseEntity<AuthResponse> buildAuthResponse(AuthBundle bundle, HttpServletRequest httpRequest) {
-        boolean secure = "https".equalsIgnoreCase(httpRequest.getScheme())
-                || httpRequest.getServerName().endsWith(".sellsights.com");
+        boolean secure = isSecure(httpRequest);
         AuthResponse auth = bundle.authResponse();
-
-        // Access JWT travels as HttpOnly cookie — strip it from the response body
-        // so JS cannot read it. Credentials are only accessible via cookies.
         AuthResponse safeAuth = new AuthResponse(
                 null, auth.email(), auth.role(),
                 auth.firstName(), auth.lastName(),
                 auth.emailVerified(), auth.sellerStatus()
         );
-
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildCookie(bundle.rawRefreshToken(), secure).toString())
                 .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildAccessCookie(auth.token(), secure).toString())
                 .header(HttpHeaders.SET_COOKIE, refreshTokenService.buildSessionCookie(auth.role(), auth.emailVerified(), auth.sellerStatus(), secure).toString())
                 .body(safeAuth);
+    }
+
+    private boolean isSecure(HttpServletRequest request) {
+        return "https".equalsIgnoreCase(request.getScheme())
+                || request.getServerName().endsWith(".sellsights.com");
     }
 
     private String extractIp(HttpServletRequest request) {

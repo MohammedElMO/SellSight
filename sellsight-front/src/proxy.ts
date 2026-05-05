@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // app_session cookie format: "ROLE|emailVerified|sellerStatus"
-// Set by the backend on every auth response — contains only routing metadata, no secrets.
-// The actual JWT lives in the HttpOnly app_token cookie and is never readable here.
 interface SessionPayload {
   role: string;
   emailVerified: boolean;
@@ -25,9 +23,10 @@ function parseSession(value: string): SessionPayload | null {
 }
 
 const ROLE_HOME: Record<string, string> = {
-  CUSTOMER: '/products',
-  SELLER:   '/seller/dashboard',
-  ADMIN:    '/admin/orders',
+  CUSTOMER:    '/products',
+  SELLER:      '/seller/dashboard',
+  ADMIN:       '/admin/orders',
+  SUPER_ADMIN: '/super-admin/dashboard',
 };
 
 export function proxy(request: NextRequest) {
@@ -45,14 +44,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(path, request.url));
   }
 
-  // Always pass through — OAuth exchange, verification, seller-pending, and account-status screens
+  // Always pass through — OAuth, verification, seller-pending, account-status screens
+  // Also allow /admin/2fa-setup for unauthenticated users (setup-token flow)
   if (
     pathname.startsWith('/oauth/callback') ||
     pathname === '/pending-verification' ||
     pathname === '/verify-email' ||
     pathname === '/seller/pending-approval' ||
     pathname === '/account-suspended' ||
-    pathname === '/account-deleted'
+    pathname === '/account-deleted' ||
+    pathname === '/admin/2fa-setup'
   ) {
     return NextResponse.next();
   }
@@ -63,44 +64,50 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Authenticated but unverified → hold at pending-verification for all
-  // routes that require a login (orders, seller/*, admin/*)
+  // Authenticated but unverified → hold at pending-verification
   const requiresAuth =
     pathname === '/orders' ||
     pathname.startsWith('/orders/') ||
     pathname.startsWith('/seller/') ||
-    pathname.startsWith('/admin/');
+    pathname.startsWith('/admin/') ||
+    pathname.startsWith('/super-admin/');
 
   if (authed && requiresAuth && !emailVerified) {
     return redirectTo('/pending-verification');
   }
 
-  // Cart: sellers/admins don't shop
+  // Cart: sellers/admins/super-admins don't shop
   if (pathname === '/cart' || pathname.startsWith('/cart/')) {
-    if (role === 'SELLER' || role === 'ADMIN') return redirectTo(roleHome);
+    if (role === 'SELLER' || role === 'ADMIN' || role === 'SUPER_ADMIN') return redirectTo(roleHome);
     return NextResponse.next();
   }
 
   // Orders: customers only
   if (pathname === '/orders' || pathname.startsWith('/orders/')) {
     if (!authed)                               return redirectTo('/login');
-    if (role === 'SELLER' || role === 'ADMIN') return redirectTo(roleHome);
+    if (role === 'SELLER' || role === 'ADMIN' || role === 'SUPER_ADMIN') return redirectTo(roleHome);
     return NextResponse.next();
   }
 
-  // Seller routes: authenticated sellers or admins
+  // Seller routes: authenticated sellers or admins/super-admins
   if (pathname.startsWith('/seller/')) {
     if (!authed)             return redirectTo('/login');
     if (role === 'CUSTOMER') return redirectTo('/products');
-    // Pending sellers can only see the pending-approval page (handled above)
     if (role === 'SELLER' && sellerStatus === 'PENDING') return redirectTo('/seller/pending-approval');
     return NextResponse.next();
   }
 
-  // Admin routes: authenticated admins only
+  // Admin routes: authenticated admins or super-admins
   if (pathname.startsWith('/admin/')) {
-    if (!authed)          return redirectTo('/login');
-    if (role !== 'ADMIN') return redirectTo(roleHome);
+    if (!authed)                                    return redirectTo('/login');
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') return redirectTo(roleHome);
+    return NextResponse.next();
+  }
+
+  // Super-admin routes: SUPER_ADMIN only
+  if (pathname.startsWith('/super-admin/')) {
+    if (!authed)                return redirectTo('/login');
+    if (role !== 'SUPER_ADMIN') return redirectTo(roleHome);
     return NextResponse.next();
   }
 

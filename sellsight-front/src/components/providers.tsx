@@ -26,25 +26,26 @@ function AuthStatusGuard({ children }: { children: React.ReactNode }) {
   useNotificationsStream();
   const router   = useRouter();
   const pathname = usePathname();
-  const checked  = useRef(false);
+  const checkedEmail = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Skip check on auth pages or if already ran this session
-    if (AUTH_EXEMPT.some(p => pathname.startsWith(p)) || !isAuthenticated || !email || checked.current) {
+    if (AUTH_EXEMPT.some(p => pathname.startsWith(p)) || !isAuthenticated || !email) {
       setReady(true);
       return;
     }
-    checked.current = true;
+    if (checkedEmail.current === email) {
+      setReady(true);
+      return;
+    }
+    checkedEmail.current = email;
 
     authApi.checkAccountStatus(email).then(({ status }) => {
       if (status === 'DISABLED') {
-        localStorage.removeItem('user');
-        clearSessionCookie();
+        useAuthStore.getState().logout();
         router.replace(`/account-suspended?email=${encodeURIComponent(email)}`);
       } else if (status === 'DELETED') {
-        localStorage.removeItem('user');
-        clearSessionCookie();
+        useAuthStore.getState().logout();
         router.replace(`/account-deleted?email=${encodeURIComponent(email)}`);
       } else {
         setReady(true);

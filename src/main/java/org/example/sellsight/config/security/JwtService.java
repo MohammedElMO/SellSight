@@ -64,6 +64,52 @@ public class JwtService {
         }
     }
 
+    private static final long CHALLENGE_EXPIRY_MS = 2 * 60 * 1000;  // 2 min
+    private static final long SETUP_TOKEN_EXPIRY_MS = 10 * 60 * 1000; // 10 min
+
+    public String generateSetupToken(String userId) {
+        return Jwts.builder()
+                .subject(userId)
+                .claim("type", "2fa_setup")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + SETUP_TOKEN_EXPIRY_MS))
+                .signWith(signingKey)
+                .compact();
+    }
+
+    public String extractUserIdFromSetupToken(String token) {
+        try {
+            Claims claims = extractClaims(token);
+            if (!"2fa_setup".equals(claims.get("type", String.class))) return null;
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String generateChallengeToken(String userId) {
+        return Jwts.builder()
+                .subject(userId)
+                .claim("type", "2fa_challenge")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + CHALLENGE_EXPIRY_MS))
+                .signWith(signingKey)
+                .compact();
+    }
+
+    /**
+     * Returns the userId (sub) from a 2FA challenge token, or null if invalid/expired/wrong type.
+     */
+    public String extractUserIdFromChallengeToken(String token) {
+        try {
+            Claims claims = extractClaims(token);
+            if (!"2fa_challenge".equals(claims.get("type", String.class))) return null;
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private Claims extractClaims(String token) {
         return Jwts.parser()
                 .verifyWith(signingKey)

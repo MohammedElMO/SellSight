@@ -22,6 +22,7 @@ import {
   Store,
   Users,
   ShieldCheck,
+  KeyRound,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn, initials } from '@/lib/utils';
@@ -61,6 +62,16 @@ function useNavLinks(): NavLink[] {
       { label: 'Sessions',  href: '/admin/sessions',         icon: ShieldCheck     },
       { label: 'Coupons',   href: '/admin/coupons',          icon: Tag             },
       { label: 'Sellers',   href: '/admin/sellers/pending',  icon: Store           },
+      { label: '2FA',       href: '/admin/2fa-setup',        icon: KeyRound        },
+    ];
+  if (role === 'SUPER_ADMIN')
+    return [
+      { label: 'Admins',    href: '/super-admin/admins',     icon: ShieldCheck     },
+      { label: 'Orders',    href: '/admin/orders',           icon: ClipboardList   },
+      { label: 'Users',     href: '/admin/users',            icon: Users           },
+      { label: 'Sessions',  href: '/admin/sessions',         icon: ShieldCheck     },
+      { label: 'Sellers',   href: '/admin/sellers/pending',  icon: Store           },
+      { label: '2FA',       href: '/admin/2fa-setup',        icon: KeyRound        },
     ];
   return [];
 }
@@ -83,7 +94,7 @@ export function Navbar() {
   };
 
   const showCart       = role === 'CUSTOMER' || !isAuthenticated;
-  const showSearchBar  = role !== 'ADMIN' && role !== 'SELLER';
+  const showSearchBar  = role !== 'ADMIN' && role !== 'SELLER' && role !== 'SUPER_ADMIN';
   const userInitials = initials(firstName, lastName);
 
   return (

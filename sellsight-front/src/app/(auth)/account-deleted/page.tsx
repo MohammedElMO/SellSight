@@ -1,10 +1,16 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Reveal } from '@/components/ui/reveal';
+import { useAuthStore } from '@/store/auth';
 
 export default function AccountDeletedPage() {
+  useEffect(() => {
+    useAuthStore.getState().logout();
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--background)' }}>
       <Reveal className="w-full max-w-md">

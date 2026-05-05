@@ -18,8 +18,8 @@ public class DisableUserUseCase {
     public void execute(String userId) {
         var user = userRepository.findById(UserId.from(userId))
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        if (user.getRole().name().equals("ADMIN")) {
-            throw new IllegalStateException("Cannot disable an admin account");
+        if (user.getRole() == org.example.sellsight.user.domain.model.Role.SUPER_ADMIN) {
+            throw new IllegalStateException("Cannot disable a SUPER_ADMIN account.");
         }
         user.disable();
         userRepository.save(user);

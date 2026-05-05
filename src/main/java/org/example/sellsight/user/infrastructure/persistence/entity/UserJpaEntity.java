@@ -69,4 +69,31 @@ public class UserJpaEntity {
 
     @Column(nullable = false)
     private boolean disabled = false;
+
+    @Column(name = "force_password_change", nullable = false)
+    private boolean forcePasswordChange = false;
+
+    @Column(name = "totp_secret", length = 256)
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private boolean totpEnabled = false;
+
+    @Column(name = "totp_backup_codes", columnDefinition = "TEXT")
+    private String totpBackupCodes;
+
+    @Column(name = "admin_2fa_setup_required", nullable = false)
+    private boolean admin2faSetupRequired = false;
+
+    @Column(name = "admin_2fa_setup_approved", nullable = false)
+    private boolean admin2faSetupApproved = false;
+
+    @Column(name = "admin_2fa_reset_required", nullable = false)
+    private boolean admin2faResetRequired = false;
+
+    @Column(name = "failed_2fa_attempts", nullable = false)
+    private int failed2faAttempts = 0;
+
+    @Column(name = "last_2fa_verified_at")
+    private LocalDateTime last2faVerifiedAt;
 }

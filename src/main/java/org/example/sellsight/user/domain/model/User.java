@@ -27,6 +27,17 @@ public class User {
     private SellerStatus sellerStatus;  // null for non-SELLER roles
     private String avatarUrl;           // Cloudinary secure_url, nullable
     private boolean disabled;           // admin-initiated suspension
+    private String totpSecret;          // base32 TOTP secret, null until setup
+    private boolean totpEnabled;        // true once admin confirmed 2FA setup
+    private String totpBackupCodes;     // comma-separated SHA-256 hashed backup codes
+
+    // Admin 2FA state machine fields
+    private boolean admin2faSetupRequired;  // must complete 2FA setup before dashboard access
+    private boolean admin2faSetupApproved;  // SUPER_ADMIN approved the setup
+    private boolean admin2faResetRequired;  // SUPER_ADMIN triggered reset
+    private int failed2faAttempts;          // consecutive failed TOTP verifications
+    private LocalDateTime last2faVerifiedAt; // last successful 2FA verification
+    private boolean forcePasswordChange;    // must change temp password before 2FA setup (bootstrap)
 
     /** Convenience ctor for local (email+password) CUSTOMER users. */
     public User(UserId id, String firstName, String lastName,
@@ -89,6 +100,18 @@ public class User {
         } else if (this.sellerStatus == null) {
             this.sellerStatus = SellerStatus.PENDING;
         }
+        // Promote to privileged role → require 2FA setup (auto-approved at promotion time)
+        if (newRole == Role.ADMIN || newRole == Role.SUPER_ADMIN) {
+            if (!this.totpEnabled) {
+                this.admin2faSetupRequired = true;
+                this.admin2faSetupApproved = true;
+            }
+        } else {
+            // Demoted away from admin → clear 2FA admin flags
+            this.admin2faSetupRequired = false;
+            this.admin2faSetupApproved = false;
+            this.admin2faResetRequired = false;
+        }
     }
 
     public void changePassword(Password newPassword) {
@@ -143,6 +166,105 @@ public class User {
         this.avatarUrl = null;
     }
 
+    public void setupTotpPending(String secret) {
+        this.totpSecret = Objects.requireNonNull(secret, "TOTP secret cannot be null");
+        this.totpEnabled = false;
+    }
+
+    public void activateTotp(String backupCodesHashed) {
+        if (this.totpSecret == null) throw new IllegalStateException("TOTP setup not initiated");
+        this.totpEnabled = true;
+        this.totpBackupCodes = backupCodesHashed;
+    }
+
+    public void disableTotp() {
+        this.totpSecret = null;
+        this.totpEnabled = false;
+        this.totpBackupCodes = null;
+    }
+
+    public void consumeBackupCode(String updatedBackupCodesHashed) {
+        this.totpBackupCodes = updatedBackupCodesHashed;
+    }
+
+    /** Used by persistence mapper to rehydrate 2FA state. */
+    public void rehydrateTotp(String secret, boolean enabled, String backupCodes) {
+        this.totpSecret = secret;
+        this.totpEnabled = enabled;
+        this.totpBackupCodes = backupCodes;
+    }
+
+    // ── Admin 2FA state machine ────────────────────────────────
+
+    /** Mark that this admin must complete 2FA setup before dashboard access. */
+    public void requireAdmin2faSetup() {
+        this.admin2faSetupRequired = true;
+        this.admin2faSetupApproved = false;
+    }
+
+    /** SUPER_ADMIN approves a pending 2FA setup request. */
+    public void approveAdmin2faSetup() {
+        this.admin2faSetupApproved = true;
+    }
+
+    /** Called after successful 2FA setup — clears setup requirement. */
+    public void completeAdmin2faSetup() {
+        this.admin2faSetupRequired = false;
+        this.admin2faSetupApproved = false;
+        this.admin2faResetRequired = false;
+        this.failed2faAttempts = 0;
+    }
+
+    /** SUPER_ADMIN resets an admin's 2FA — disables TOTP, forces re-setup. */
+    public void resetAdmin2fa() {
+        disableTotp();
+        this.admin2faSetupRequired = true;
+        this.admin2faSetupApproved = false;
+        this.admin2faResetRequired = true;
+    }
+
+    /** SUPER_ADMIN approves a reset (same as approve setup). */
+    public void approveAdmin2faReset() {
+        this.admin2faSetupApproved = true;
+    }
+
+    public void recordFailed2faAttempt() {
+        this.failed2faAttempts++;
+    }
+
+    public void resetFailed2faAttempts() {
+        this.failed2faAttempts = 0;
+    }
+
+    public void record2faVerified() {
+        this.last2faVerifiedAt = LocalDateTime.now();
+        this.failed2faAttempts = 0;
+    }
+
+    public void requirePasswordChange() {
+        this.forcePasswordChange = true;
+    }
+
+    public void clearForcePasswordChange() {
+        this.forcePasswordChange = false;
+    }
+
+    public boolean isForcePasswordChange() {
+        return forcePasswordChange;
+    }
+
+    /** Used by persistence mapper to rehydrate admin 2FA state fields. */
+    public void rehydrateAdmin2faFlags(boolean setupRequired, boolean setupApproved,
+                                        boolean resetRequired, int failedAttempts,
+                                        LocalDateTime lastVerified, boolean forcePasswordChange) {
+        this.admin2faSetupRequired = setupRequired;
+        this.admin2faSetupApproved = setupApproved;
+        this.admin2faResetRequired = resetRequired;
+        this.failed2faAttempts = failedAttempts;
+        this.last2faVerifiedAt = lastVerified;
+        this.forcePasswordChange = forcePasswordChange;
+    }
+
     /**
      * Link this local account to an OAuth provider. Used when the same email
      * registers first via password, then later signs in via Google/Slack.
@@ -185,4 +307,13 @@ public class User {
     public SellerStatus getSellerStatus() { return sellerStatus; }
     public String getAvatarUrl() { return avatarUrl; }
     public boolean getDisabled() { return disabled; }
+    public String getTotpSecret() { return totpSecret; }
+    public boolean isTotpEnabled() { return totpEnabled; }
+    public String getTotpBackupCodes() { return totpBackupCodes; }
+    public boolean isAdmin2faSetupRequired() { return admin2faSetupRequired; }
+    public boolean isAdmin2faSetupApproved() { return admin2faSetupApproved; }
+    public boolean isAdmin2faResetRequired() { return admin2faResetRequired; }
+    public int getFailed2faAttempts() { return failed2faAttempts; }
+    public LocalDateTime getLast2faVerifiedAt() { return last2faVerifiedAt; }
+    // forcePasswordChange getter is defined above alongside its mutators
 }

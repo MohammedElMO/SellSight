@@ -16,11 +16,11 @@ export function ProductSearchAutocomplete() {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const debouncedQuery = useDebounce(query, 200);
+  const debouncedQuery = useDebounce(query, 300);
 
   const { data: suggestions, isFetching } = useQuery({
     queryKey: ['autocomplete', debouncedQuery],
-    queryFn: () => productApi.autocomplete(debouncedQuery, 8),
+    queryFn: ({ signal }) => productApi.autocomplete(debouncedQuery, 8, signal),
     enabled: debouncedQuery.length >= 2,
     staleTime: 30000,
   });
