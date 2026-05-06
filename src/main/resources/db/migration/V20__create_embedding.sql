@@ -1,2 +1,2 @@
 ALTER TABLE products
-    ADD COLUMN embedding vector(384);
+    ADD COLUMN IF NOT EXISTS embedding vector(384);

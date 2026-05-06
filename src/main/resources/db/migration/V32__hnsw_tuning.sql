@@ -16,7 +16,8 @@
 -- migrations run in a transaction which conflicts with CONCURRENTLY — we use the plain
 -- form and accept a brief exclusive lock. Run during a maintenance window if needed).
 
-SET LOCAL maintenance_work_mem = '1536MB';
+SET LOCAL maintenance_work_mem = '256MB';
+SET LOCAL max_parallel_maintenance_workers = 0;
 
 DROP INDEX IF EXISTS product_embedding_idx;
 

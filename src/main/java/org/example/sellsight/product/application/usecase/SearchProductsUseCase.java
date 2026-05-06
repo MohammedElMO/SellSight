@@ -11,7 +11,6 @@ import org.example.sellsight.product.domain.model.ProductSlice;
 import org.example.sellsight.product.domain.port.EmbeddingPort;
 import org.example.sellsight.product.domain.repository.ProductRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,6 @@ public class SearchProductsUseCase {
         this.productDtoMapper = productDtoMapper;
     }
 
-    @Transactional(readOnly = true)
     public ProductPageDto execute(String query, int page, int size) {
         if (query == null || query.trim().isEmpty()) {
             return new ProductPageDto(List.of(), page, size, false, 0, 0L, "NONE");
