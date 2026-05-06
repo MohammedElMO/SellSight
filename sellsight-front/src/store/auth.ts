@@ -52,6 +52,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       sellerStatus: data.sellerStatus ?? null,
     };
     localStorage.setItem('user', JSON.stringify(meta));
+    // Mirror app_session onto the frontend's own domain so proxy.ts middleware can read it.
+    // The backend sets this cookie too, but cross-origin (api.* subdomain or different port)
+    // so the middleware running on the frontend origin never receives it.
+    // app_session is non-HttpOnly by design and contains no secrets.
+    if (typeof document !== 'undefined') {
+      const sessionValue = `${data.role}|${data.emailVerified}|${data.sellerStatus ?? ''}`;
+      document.cookie = `app_session=${sessionValue}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 30}`;
+    }
     set({ ...meta, isAuthenticated: true });
   },
 

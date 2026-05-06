@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', href: '/super-admin/dashboard', icon: LayoutDashboard },
   { label: 'Admins',    href: '/super-admin/admins',    icon: ShieldCheck     },
   { label: 'Users',     href: '/admin/users',            icon: Users           },
-  { label: 'Sessions',  href: '/super-admin/sessions',   icon: KeyRound        },
+  { label: 'Sessions',  href: '/admin/sessions',          icon: KeyRound        },
 ] as const;
 
 function SuperAdminTopBar() {
