@@ -230,7 +230,7 @@ export function useAllOrders() {
   return useQuery({
     queryKey: ['all-orders'],
     queryFn: orderApi.getAll,
-    enabled: isAuthenticated && role === 'ADMIN',
+    enabled: isAuthenticated && (role === 'ADMIN' || role === 'SUPER_ADMIN'),
   });
 }
 

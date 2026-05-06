@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superAdminApi } from '@/lib/services';
 import { toast } from 'sonner';
-import { ShieldCheck, ShieldOff, RefreshCw, RotateCcw, CheckCircle, XCircle, LogOut, Unlock } from 'lucide-react';
+import { ShieldCheck, ShieldOff, RefreshCw, RotateCcw, CheckCircle, XCircle, LogOut, Unlock, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import type { AdminManagementDto } from '@shared/types';
 
@@ -23,9 +23,115 @@ function StatusBadge({ label, ok }: { label: string; ok: boolean }) {
   );
 }
 
+function CreateAdminModal({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', tempPassword: '' });
+  const [showPw, setShowPw] = useState(false);
+  const [errors, setErrors] = useState<Partial<typeof form>>({});
+
+  const create = useMutation({
+    mutationFn: superAdminApi.createAdmin,
+    onSuccess: (admin) => {
+      toast.success(
+        `Admin ${admin.firstName} ${admin.lastName} created. Share the temporary password out-of-band — they must change it on first login.`,
+        { duration: 7000 }
+      );
+      qc.invalidateQueries({ queryKey: ['super-admin', 'admins'] });
+      onClose();
+    },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg ?? 'Failed to create admin.');
+    },
+  });
+
+  const validate = () => {
+    const e: Partial<typeof form> = {};
+    if (!form.firstName.trim()) e.firstName = 'Required';
+    if (!form.lastName.trim())  e.lastName  = 'Required';
+    if (!form.email.trim() || !form.email.includes('@')) e.email = 'Valid email required';
+    if (form.tempPassword.length < 12) e.tempPassword = 'Minimum 12 characters';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    create.mutate(form);
+  };
+
+  const field = (key: keyof typeof form, label: string, type: string = 'text', extra?: React.ReactNode) => (
+    <div>
+      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{label}</label>
+      <div className="relative">
+        <input
+          type={key === 'tempPassword' ? (showPw ? 'text' : 'password') : type}
+          value={form[key]}
+          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+          className="w-full h-10 px-3 text-sm bg-[var(--bg-input)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none focus:ring-2 focus:ring-[var(--accent-muted)] focus:border-[var(--accent)] transition-all"
+        />
+        {extra}
+      </div>
+      {errors[key] && <p className="text-[11px] text-[var(--danger)] mt-1">{errors[key]}</p>}
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-xl)] p-6 max-w-md w-full">
+        <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Create Admin Account</p>
+        <p className="text-xs text-[var(--text-secondary)] mb-5">
+          The admin must change the temporary password and configure 2FA on first login.
+        </p>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            {field('firstName', 'First name')}
+            {field('lastName',  'Last name')}
+          </div>
+          {field('email', 'Email', 'email')}
+          {field('tempPassword', 'Temporary password', 'password',
+            <button
+              type="button"
+              onClick={() => setShowPw((s) => !s)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+            >
+              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          )}
+          <p className="text-[11px] text-[var(--text-tertiary)] -mt-1">
+            Minimum 12 characters. Share out-of-band — never send via unencrypted channel.
+          </p>
+
+          <div className="flex gap-3 mt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 text-sm border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-secondary)] hover:bg-[var(--surface)] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={create.isPending}
+              className="flex-1 py-2 text-sm font-semibold rounded-[var(--radius-md)] text-white bg-[var(--accent)] hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
+              {create.isPending
+                ? <div className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin mx-auto" />
+                : 'Create admin'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function SuperAdminAdminsPage() {
   const qc = useQueryClient();
   const [confirm, setConfirm] = useState<{ userId: string; action: string } | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const { data: admins, isLoading } = useQuery({
     queryKey: ['super-admin', 'admins'],
@@ -55,12 +161,12 @@ export default function SuperAdminAdminsPage() {
   const executeConfirm = () => {
     if (!confirm) return;
     const { userId, action } = confirm;
-    if (action === 'force2fa')      force2fa.mutate(userId);
-    else if (action === 'reset2fa') reset2fa.mutate(userId);
+    if (action === 'force2fa')        force2fa.mutate(userId);
+    else if (action === 'reset2fa')   reset2fa.mutate(userId);
     else if (action === 'approve2fa') approve2fa.mutate(userId);
-    else if (action === 'disable')  disable.mutate(userId);
-    else if (action === 'enable')   enable.mutate(userId);
-    else if (action === 'revoke')   revoke.mutate(userId);
+    else if (action === 'disable')    disable.mutate(userId);
+    else if (action === 'enable')     enable.mutate(userId);
+    else if (action === 'revoke')     revoke.mutate(userId);
     else if (action === 'resetAttempts') resetAttempts.mutate(userId);
   };
 
@@ -75,13 +181,28 @@ export default function SuperAdminAdminsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <Reveal>
-        <h1 className="font-display font-bold text-[24px] text-[var(--text-primary)] tracking-[-0.02em] mb-1">
-          Admin Management
-        </h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-8">
-          Manage all admin and super-admin accounts. Approve 2FA setup, reset credentials, disable accounts.
-        </p>
+        <div className="flex items-start justify-between mb-8 gap-4">
+          <div>
+            <h1 className="font-display font-bold text-[24px] text-[var(--text-primary)] tracking-[-0.02em] mb-1">
+              Admin Management
+            </h1>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Manage all admin and super-admin accounts. Approve 2FA setup, reset credentials, disable accounts.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity shrink-0"
+            style={{ background: 'var(--gradient)' }}
+          >
+            <UserPlus className="h-4 w-4" />
+            Create Admin
+          </button>
+        </div>
       </Reveal>
+
+      {/* Create admin modal */}
+      {showCreate && <CreateAdminModal onClose={() => setShowCreate(false)} />}
 
       {/* Confirm dialog */}
       {confirm && (
@@ -115,7 +236,7 @@ export default function SuperAdminAdminsPage() {
                       {admin.role}
                     </span>
                     {admin.disabled && <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] text-[var(--danger)] font-medium">Disabled</span>}
-                    {admin.deleted && <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] text-[var(--danger)] font-medium">Deleted</span>}
+                    {admin.deleted  && <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] text-[var(--danger)] font-medium">Deleted</span>}
                   </div>
                   <p className="text-xs text-[var(--text-secondary)] mb-3">{admin.email}</p>
 

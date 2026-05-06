@@ -5,10 +5,13 @@ import { Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Reveal } from '@/components/ui/reveal';
 import { useAuthStore } from '@/store/auth';
+import { authApi } from '@/lib/services';
 
 export default function AccountDeletedPage() {
   useEffect(() => {
     useAuthStore.getState().logout();
+    // Clear HttpOnly cookies (app_token, refresh_token) via backend
+    authApi.logout().catch(() => {});
   }, []);
 
   return (

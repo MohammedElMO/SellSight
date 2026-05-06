@@ -9,7 +9,6 @@ import org.example.sellsight.order.domain.repository.OrderRepository;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
-import org.example.sellsight.shared.realtime.RealtimePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class CreateOrderUseCase {
@@ -28,16 +25,13 @@ public class CreateOrderUseCase {
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
-    private final RealtimePublisher realtimePublisher;
 
     public CreateOrderUseCase(OrderRepository orderRepository,
                                InventoryRepository inventoryRepository,
-                               ProductRepository productRepository,
-                               RealtimePublisher realtimePublisher) {
+                               ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
         this.productRepository = productRepository;
-        this.realtimePublisher = realtimePublisher;
     }
 
     @Transactional
@@ -77,21 +71,7 @@ public class CreateOrderUseCase {
         Order saved = orderRepository.save(order);
         log.info("Order {} created with status PENDING — awaiting payment confirmation", saved.getId().getValue());
 
-        // Notify each unique seller about the new order via SSE
-        OrderDto result = toDto(saved);
-        saved.getItems().stream()
-                .map(OrderItem::getSellerId)
-                .collect(Collectors.toSet())
-                .forEach(sellerId -> {
-                    try {
-                        realtimePublisher.pushToUser(sellerId, "new-order",
-                                Map.of("orderId", saved.getId().getValue(), "total", saved.getTotal()));
-                    } catch (Exception e) {
-                        log.debug("Realtime new-order push skipped for seller {}: {}", sellerId, e.getMessage());
-                    }
-                });
-
-        return result;
+        return toDto(saved);
     }
 
     static OrderDto toDto(Order o) {

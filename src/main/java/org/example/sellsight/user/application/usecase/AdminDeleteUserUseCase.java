@@ -1,6 +1,7 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.RequiredArgsConstructor;
+import org.example.sellsight.user.domain.exception.SuperAdminProtectedException;
 import org.example.sellsight.user.domain.model.Role;
 import org.example.sellsight.user.domain.model.UserId;
 import org.example.sellsight.user.domain.repository.RefreshTokenRepository;
@@ -22,6 +23,9 @@ public class AdminDeleteUserUseCase {
         var user = userRepository.findById(UserId.from(userId))
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
+        if (user.getRole() == Role.SUPER_ADMIN) {
+            throw new SuperAdminProtectedException("delete");
+        }
         if (user.getRole() == Role.ADMIN) {
             throw new IllegalStateException("Cannot delete an admin account");
         }

@@ -23,6 +23,10 @@ public final class UserSpec {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // Never expose SUPER_ADMIN accounts in the regular admin user listing.
+            // SUPER_ADMINs are managed via the /super-admin/* endpoints instead.
+            predicates.add(cb.notEqual(root.get("role"), Role.SUPER_ADMIN));
+
             if (search != null && !search.isBlank()) {
                 String pattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.or(

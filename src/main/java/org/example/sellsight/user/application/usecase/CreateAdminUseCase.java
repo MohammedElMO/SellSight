@@ -1,7 +1,7 @@
 package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.sellsight.user.application.dto.AuthResponse;
+import org.example.sellsight.user.application.dto.AdminManagementDto;
 import org.example.sellsight.user.application.dto.CreateAdminRequest;
 import org.example.sellsight.user.domain.exception.UserAlreadyExistsException;
 import org.example.sellsight.user.domain.model.*;
@@ -25,7 +25,7 @@ public class CreateAdminUseCase {
     }
 
     @Transactional
-    public AuthResponse execute(CreateAdminRequest request) {
+    public AdminManagementDto execute(CreateAdminRequest request) {
         Email email = new Email(request.email());
         if (userRepository.existsByEmail(email)) {
             throw new UserAlreadyExistsException(request.email());
@@ -36,19 +36,18 @@ public class CreateAdminUseCase {
                 request.firstName(),
                 request.lastName(),
                 email,
-                new Password(passwordEncoder.encode(request.password())),
+                new Password(passwordEncoder.encode(request.tempPassword())),
                 Role.ADMIN,
                 LocalDateTime.now()
         );
         admin.markEmailVerified();
         admin.requireAdmin2faSetup();
-        admin.approveAdmin2faSetup(); // auto-approved at creation time
-        User saved = userRepository.save(admin);
-        log.info("Admin account created: id={} email={}", saved.getId().getValue(), saved.getEmail().getValue());
+        admin.approveAdmin2faSetup();    // auto-approved at creation by SUPER_ADMIN
+        admin.requirePasswordChange();   // must change temp password before 2FA setup
 
-        // No token in response — admin must log in separately to get session cookies
-        return new AuthResponse(
-                null, saved.getEmail().getValue(), saved.getRole().name(),
-                saved.getFirstName(), saved.getLastName(), true, null);
+        User saved = userRepository.save(admin);
+        log.info("Admin account created by SUPER_ADMIN: id={} email={}", saved.getId().getValue(), saved.getEmail().getValue());
+
+        return ListAdminsUseCase.toDto(saved, 0L);
     }
 }

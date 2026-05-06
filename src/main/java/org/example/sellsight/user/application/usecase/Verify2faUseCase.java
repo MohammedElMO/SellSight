@@ -55,8 +55,19 @@ public class Verify2faUseCase {
 
         boolean isTotpCode = code.matches("\\d{6}");
 
+        if (user.getTotpSecret() == null || user.getTotpSecret().isBlank()) {
+            log.warn("2FA verify failed — no TOTP secret configured for userId={}", userId);
+            throw new InvalidCredentialsException("2FA not properly configured. Contact your administrator.");
+        }
+
         if (isTotpCode) {
-            String plainSecret = totpService.decryptSecret(user.getTotpSecret());
+            String plainSecret;
+            try {
+                plainSecret = totpService.decryptSecret(user.getTotpSecret());
+            } catch (Exception e) {
+                log.error("TOTP secret decryption failed for userId={}", userId, e);
+                throw new InvalidCredentialsException("2FA configuration error. Contact your administrator.");
+            }
             if (!totpService.verifyCode(plainSecret, code)) {
                 log.warn("2FA verify failed — wrong TOTP code for userId={}", userId);
                 user.recordFailed2faAttempt();

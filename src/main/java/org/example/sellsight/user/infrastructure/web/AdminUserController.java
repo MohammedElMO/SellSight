@@ -32,7 +32,7 @@ public class AdminUserController {
     @Operation(operationId = "adminListUsers", summary = "List all users (paginated + filtered)",
                security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<AdminUserPageDto> listUsers(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String role,
@@ -46,7 +46,7 @@ public class AdminUserController {
     @Operation(operationId = "adminGetUser", summary = "Get user details (with session count)",
                security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<AdminUserDto> getUser(@PathVariable String userId) {
         return ResponseEntity.ok(getAdminUserUseCase.execute(userId));
     }
@@ -54,7 +54,7 @@ public class AdminUserController {
     @Operation(operationId = "adminDisableUser", summary = "Disable user account and revoke all sessions",
                security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/{userId}/disable")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> disableUser(@PathVariable String userId) {
         disableUserUseCase.execute(userId);
         return ResponseEntity.noContent().build();
@@ -63,7 +63,7 @@ public class AdminUserController {
     @Operation(operationId = "adminEnableUser", summary = "Re-enable a disabled user account",
                security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/{userId}/enable")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> enableUser(@PathVariable String userId) {
         enableUserUseCase.execute(userId);
         return ResponseEntity.noContent().build();
@@ -72,7 +72,7 @@ public class AdminUserController {
     @Operation(operationId = "adminChangeUserRole", summary = "Change user role",
                security = @SecurityRequirement(name = "bearerAuth"))
     @PatchMapping("/{userId}/role")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<AdminUserDto> changeRole(
             @PathVariable String userId,
             @Valid @RequestBody ChangeRoleRequest request) {
@@ -82,7 +82,7 @@ public class AdminUserController {
     @Operation(operationId = "adminDeleteUser", summary = "Soft-delete a user account",
                security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> deleteUser(
             @PathVariable String userId,
             Authentication authentication) {
@@ -93,7 +93,7 @@ public class AdminUserController {
     @Operation(operationId = "adminRestoreUser", summary = "Restore a soft-deleted user account",
                security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/{userId}/restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> restoreUser(@PathVariable String userId) {
         restoreUserUseCase.execute(userId);
         return ResponseEntity.noContent().build();
@@ -102,7 +102,7 @@ public class AdminUserController {
     @Operation(operationId = "adminRevokeUserSessions", summary = "Revoke all sessions for a user",
                security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/{userId}/sessions/revoke-all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> revokeAllSessions(@PathVariable String userId) {
         revokeAllUserSessionsUseCase.execute(userId);
         return ResponseEntity.noContent().build();

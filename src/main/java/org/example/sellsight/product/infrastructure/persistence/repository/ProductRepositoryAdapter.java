@@ -28,32 +28,55 @@ import java.util.stream.Collectors;
 @Component
 public class ProductRepositoryAdapter implements ProductRepository {
 
-    // FTS filter uses GIN index (fast). Vector similarity is computed only on FTS
-    // matches for re-ranking — avoids the full-table vector range scan that bypasses HNSW.
+    // TWO-PHASE HYBRID SEARCH
+    // Phase 1: HNSW ANN scan finds the top CANDIDATE_K most semantically similar products.
+    //          The HNSW index is used here (ORDER BY embedding <=> vec LIMIT k).
+    // Phase 2: Re-rank only those candidates using a combined vector + FTS score.
+    //          FTS re-scoring on 200 rows is trivial vs computing distances on 50k+ FTS matches.
+    //
+    // This avoids the previous bottleneck: filtering 500k rows by FTS then computing vector
+    // distance for every match before sorting — which bypasses the HNSW index entirely.
+    private static final int CANDIDATE_K = 200; // over-fetch factor for re-ranking
+
     private static final String HYBRID_SEARCH_SQL = """
-            WITH q AS (
-                SELECT CAST(? AS vector) AS vec,
-                       websearch_to_tsquery('english', ?) AS ts
+            WITH ann AS (
+                SELECT id,
+                       1.0 - (embedding <=> CAST(? AS vector)) AS vector_score
+                FROM products
+                WHERE active = true AND embedding IS NOT NULL
+                ORDER BY embedding <=> CAST(? AS vector)
+                LIMIT ?
+            ),
+            ranked AS (
+                SELECT p.id, p.name, p.description, p.price, p.category, p.seller_id,
+                       p.image_url, p.brand, p.rating_avg, p.rating_count, p.sold_count,
+                       p.active, p.created_at, p.updated_at,
+                       ann.vector_score * 0.7
+                         + COALESCE(ts_rank(p.search_vector, websearch_to_tsquery('english', ?)), 0.0) * 0.3 AS score
+                FROM products p
+                JOIN ann ON p.id = ann.id
+                WHERE p.search_vector @@ websearch_to_tsquery('english', ?)
             )
-            SELECT p.id, p.name, p.description, p.price, p.category, p.seller_id,
-                   p.image_url, p.brand, p.rating_avg, p.rating_count, p.sold_count,
-                   p.active, p.created_at, p.updated_at
-            FROM products p
-            CROSS JOIN q
-            WHERE p.active = true
-              AND p.search_vector @@ q.ts
-            ORDER BY
-              COALESCE(CASE WHEN p.embedding IS NOT NULL THEN 1.0 - (p.embedding <=> q.vec) ELSE 0.0 END, 0.0) * 0.7
-              + COALESCE(ts_rank(p.search_vector, q.ts), 0.0) * 0.3 DESC
+            SELECT id, name, description, price, category, seller_id,
+                   image_url, brand, rating_avg, rating_count, sold_count,
+                   active, created_at, updated_at
+            FROM ranked
+            ORDER BY score DESC
             LIMIT ? OFFSET ?
             """;
 
-    // COUNT uses GIN index via FTS filter — no vector scan needed.
+    // Capped COUNT: stop counting after COUNT_CAP+1 matches to avoid full FTS scans.
+    // For broad terms ("phone") this prevents counting all 400k matches.
+    private static final int COUNT_CAP = 10_000;
+
     private static final String HYBRID_COUNT_SQL = """
-            SELECT COUNT(*)
-            FROM products p
-            WHERE p.active = true
-              AND p.search_vector @@ websearch_to_tsquery('english', ?)
+            SELECT COUNT(*) FROM (
+                SELECT 1
+                FROM products p
+                WHERE p.active = true
+                  AND p.search_vector @@ websearch_to_tsquery('english', ?)
+                LIMIT ?
+            ) sub
             """;
 
     private final ProductJpaRepository jpaRepository;
@@ -163,21 +186,25 @@ public class ProductRepositoryAdapter implements ProductRepository {
         String ftsQuery = toOrFtsQuery(query);
         int offset = page * size;
 
+        // Phase-1 params: vectorStr (ANN ordering), vectorStr again (score computation)
+        // Phase-2 params: CANDIDATE_K, ftsQuery (ts_rank), ftsQuery (FTS filter), size, offset
         List<Product> products = jdbcTemplate.query(
             HYBRID_SEARCH_SQL,
             (rs, rowNum) -> mapRow(rs),
-            vectorStr, ftsQuery, size, offset
+            vectorStr, vectorStr, CANDIDATE_K, ftsQuery, ftsQuery, size, offset
         );
 
-        Long total = jdbcTemplate.queryForObject(
+        // Capped count — stop scanning after COUNT_CAP+1 rows
+        Long rawCount = jdbcTemplate.queryForObject(
             HYBRID_COUNT_SQL,
             Long.class,
-            ftsQuery
+            ftsQuery, COUNT_CAP + 1
         );
-        long totalElements = total != null ? total : 0L;
+        long totalElements = rawCount != null ? Math.min(rawCount, COUNT_CAP + 1L) : 0L;
         boolean hasMore = (long) (page + 1) * size < totalElements;
         return new ProductSlice(products, hasMore, totalElements);
     }
+
 
     /**
      * Converts a raw user query to OR-based websearch_to_tsquery syntax.

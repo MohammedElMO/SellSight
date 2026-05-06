@@ -2,6 +2,7 @@
 
 import { useAllOrders, useUpdateOrderStatus } from '@/lib/hooks';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
@@ -21,6 +22,7 @@ const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 };
 
 export default function AdminOrdersPage() {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
 
   const { data: orders, isLoading } = useAllOrders();
@@ -104,7 +106,8 @@ export default function AdminOrdersPage() {
                 return (
                   <div
                     key={order.id}
-                    className="grid grid-cols-[1fr_1fr_0.5fr_0.8fr_1fr_0.8fr_1.2fr] gap-2 px-5 py-3.5 border-b border-[var(--border-subtle)] last:border-0 items-center hover:bg-[var(--surface)] transition-colors"
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
+                    className="grid grid-cols-[1fr_1fr_0.5fr_0.8fr_1fr_0.8fr_1.2fr] gap-2 px-5 py-3.5 border-b border-[var(--border-subtle)] last:border-0 items-center hover:bg-[var(--surface)] transition-colors cursor-pointer"
                   >
                     <span className="font-mono text-[12px] font-bold text-[var(--text-primary)]">
                       #{order.id.slice(0, 8).toUpperCase()}
@@ -124,7 +127,7 @@ export default function AdminOrdersPage() {
                       {transitions.length > 0 ? transitions.map((nextStatus) => (
                         <button
                           key={nextStatus}
-                          onClick={() => updateStatus({ id: order.id, status: nextStatus })}
+                          onClick={(e) => { e.stopPropagation(); updateStatus({ id: order.id, status: nextStatus }); }}
                           disabled={isPending}
                           className="h-7 px-2.5 text-[11px] font-medium rounded-[var(--radius-xs)] border transition-all disabled:opacity-40"
                           style={nextStatus === 'CANCELLED'

@@ -11,6 +11,7 @@ import org.example.sellsight.user.domain.exception.AccountDisabledException;
 import org.example.sellsight.user.domain.exception.Admin2faSetupPendingException;
 import org.example.sellsight.user.domain.exception.EmailNotVerifiedException;
 import org.example.sellsight.user.domain.exception.InvalidCredentialsException;
+import org.example.sellsight.user.domain.exception.SuperAdminProtectedException;
 import org.example.sellsight.user.domain.exception.SellerApprovalRequiredException;
 import org.example.sellsight.user.domain.exception.InvalidEmailException;
 import org.example.sellsight.user.domain.exception.InvalidTokenException;
@@ -112,6 +113,13 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(400, ex.getMessage()));
     }
 
+    @ExceptionHandler(SuperAdminProtectedException.class)
+    public ResponseEntity<ErrorResponse> handleSuperAdminProtected(SuperAdminProtectedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(403, ex.getMessage(), "SUPER_ADMIN_PROTECTED"));
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
         return ResponseEntity
@@ -195,11 +203,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
-        // Log the FULL stack trace so we can actually debug 500 errors
         org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
                 .error("Unhandled exception in controller", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(500, "Internal error: " + ex.getMessage()));
+                .body(ErrorResponse.of(500, "An unexpected error occurred. Please try again."));
     }
 }

@@ -93,6 +93,13 @@ export interface BootstrapChangePasswordRequest {
   newPassword: string;
 }
 
+export interface CreateAdminRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  tempPassword: string;
+}
+
 export interface Enable2faResponse {
   backupCodes: string[];
 }
@@ -571,4 +578,17 @@ export interface ErrorResponse {
 
 export interface AccountStatusResponse {
   status: 'ACTIVE' | 'DISABLED' | 'DELETED';
+}
+
+// ── Bulk Product Upload ──────────────────────────────────────
+
+export interface BulkRowError {
+  row: number;
+  message: string;
+}
+
+export interface BulkCreateResult {
+  created: number;
+  failed: number;
+  errors: BulkRowError[];
 }

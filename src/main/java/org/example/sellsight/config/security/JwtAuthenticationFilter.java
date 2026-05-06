@@ -59,13 +59,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String finalJwt = jwt;
 
+        // Auth endpoints are permitAll() and handle blocked accounts internally.
+        // Skipping the disabled/deleted check here prevents a redirect loop where
+        // the stale HttpOnly app_token cookie causes the filter to block login,
+        // logout, and register — trapping the user on /account-suspended.
+        boolean isAuthPath = request.getRequestURI().startsWith("/api/auth/");
+
         try {
             final String email = jwtService.extractEmail(finalJwt);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                if (userDetails instanceof AppUserDetails appUser) {
+                if (!isAuthPath && userDetails instanceof AppUserDetails appUser) {
                     if (appUser.isAccountDeleted()) {
                         writeBlockedResponse(response, "ACCOUNT_DELETED", "This account has been deleted.");
                         return;

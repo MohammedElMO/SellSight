@@ -54,6 +54,12 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepository {
         jpaRepository.revokeAllByFamilyId(UUID.fromString(familyId));
     }
 
+    @Override
+    @Transactional
+    public void deleteAllByUserId(String userId) {
+        jpaRepository.deleteAllByUserId(userId);
+    }
+
     // ── Mapping ──────────────────────────────────────────────
 
     private RefreshToken toDomain(RefreshTokenJpaEntity e) {

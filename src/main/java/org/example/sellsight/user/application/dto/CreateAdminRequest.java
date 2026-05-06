@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Size;
 
 public record CreateAdminRequest(
         @NotBlank @Email String email,
-        @NotBlank @Size(min = 6) String password,
         @NotBlank String firstName,
-        @NotBlank String lastName
+        @NotBlank String lastName,
+        @NotBlank @Size(min = 12, max = 128,
+                message = "Temporary password must be at least 12 characters") String tempPassword
 ) {}

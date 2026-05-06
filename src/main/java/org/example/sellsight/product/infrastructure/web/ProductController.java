@@ -16,11 +16,16 @@ import org.example.sellsight.shared.exception.ErrorResponse;
 import org.example.sellsight.user.application.dto.UserDto;
 import org.example.sellsight.user.application.usecase.GetUserProfileUseCase;
 import org.springframework.http.ResponseEntity;
+import org.example.sellsight.product.application.dto.BulkCreateResult;
+import org.example.sellsight.product.application.usecase.BulkCreateProductsUseCase;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * REST controller for product CRUD operations.
@@ -39,6 +44,7 @@ public class ProductController {
     private final GetUserProfileUseCase getUserProfileUseCase;
     private final AutocompleteProductsUseCase autocompleteProductsUseCase;
     private final GetLandingUseCase getLandingUseCase;
+    private final BulkCreateProductsUseCase bulkCreateProductsUseCase;
 
     public ProductController(CreateProductUseCase createProductUseCase,
                               UpdateProductUseCase updateProductUseCase,
@@ -48,7 +54,8 @@ public class ProductController {
                               GetProductByIdUseCase getProductByIdUseCase,
                               GetUserProfileUseCase getUserProfileUseCase,
                               AutocompleteProductsUseCase autocompleteProductsUseCase,
-                              GetLandingUseCase getLandingUseCase) {
+                              GetLandingUseCase getLandingUseCase,
+                              BulkCreateProductsUseCase bulkCreateProductsUseCase) {
         this.createProductUseCase = createProductUseCase;
         this.updateProductUseCase = updateProductUseCase;
         this.deleteProductUseCase = deleteProductUseCase;
@@ -58,6 +65,7 @@ public class ProductController {
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.autocompleteProductsUseCase = autocompleteProductsUseCase;
         this.getLandingUseCase = getLandingUseCase;
+        this.bulkCreateProductsUseCase = bulkCreateProductsUseCase;
     }
 
     // ── Public read endpoints ────────────────────────────────
@@ -266,6 +274,32 @@ public class ProductController {
         UserDto user = getUserProfile(authentication);
         deleteProductUseCase.execute(id, user.id(), user.role());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+        operationId = "bulkCreateProducts",
+        summary     = "Bulk create products from CSV",
+        description = "Upload a CSV file to create up to 100 products at once. "
+                    + "Required columns: name, description, price, category, stock. Optional: imageUrl. "
+                    + "Requires SELLER or ADMIN role.",
+        security    = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    public ResponseEntity<BulkCreateResult> bulkCreate(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+        UserDto user = getUserProfile(authentication);
+        try {
+            BulkCreateResult result = bulkCreateProductsUseCase.execute(file, user.id());
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new BulkCreateResult(0, 0, List.of(new BulkCreateResult.BulkRowError(0, e.getMessage()))));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new BulkCreateResult(0, 0, List.of(new BulkCreateResult.BulkRowError(0, "Failed to process CSV file."))));
+        }
     }
 
     private UserDto getUserProfile(Authentication authentication) {

@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import { createSseConnection } from '@/lib/realtime/sse-client';
+import { toast } from 'sonner';
 import type { NotificationDto, MessageDto, OrderDto } from '@shared/types';
 
 const SSE_EVENTS = [
@@ -11,6 +12,7 @@ const SSE_EVENTS = [
   'notification',
   'new-message',
   'order-status-changed',
+  'order-placed',
   'new-order',
   'refund-approved',
   'refund-rejected',
@@ -87,7 +89,7 @@ export function useNotificationsStream() {
             case 'order-status-changed': {
               try {
                 const { orderId, status } = JSON.parse(data) as { orderId: string; status: string };
-
+                // Optimistically update in-memory cache
                 queryClient.setQueryData<OrderDto>(
                   ['order', orderId],
                   (old) => old ? { ...old, status: status as OrderDto['status'] } : old,
@@ -99,17 +101,48 @@ export function useNotificationsStream() {
                       ? old.map((o) => o.id === orderId ? { ...o, status: status as OrderDto['status'] } : o)
                       : old,
                 );
-                queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-                queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+                // Force refetch to confirm server state
+                queryClient.refetchQueries({ queryKey: ['order', orderId] });
+                queryClient.refetchQueries({ queryKey: ['my-orders'] });
+                queryClient.refetchQueries({ queryKey: ['seller-orders'] });
+                queryClient.refetchQueries({ queryKey: ['all-orders'] });
               } catch {
-                queryClient.invalidateQueries({ queryKey: ['order'] });
-                queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+                queryClient.refetchQueries({ queryKey: ['order'] });
+                queryClient.refetchQueries({ queryKey: ['my-orders'] });
+              }
+              break;
+            }
+
+            case 'order-placed': {
+              try {
+                const { orderId } = JSON.parse(data) as { orderId: string; status: string };
+                // Force immediate refetch — staleTime would otherwise suppress a re-fetch
+                queryClient.refetchQueries({ queryKey: ['my-orders'] });
+                queryClient.refetchQueries({ queryKey: ['order', orderId] });
+                toast.success('Your order has been placed!', {
+                  duration: 5000,
+                  id: `order-placed-${orderId}`,
+                });
+              } catch {
+                queryClient.refetchQueries({ queryKey: ['my-orders'] });
               }
               break;
             }
 
             case 'new-order': {
-              queryClient.invalidateQueries({ queryKey: ['seller-orders'] });
+              // Force immediate refetch on seller orders list AND admin all-orders
+              queryClient.refetchQueries({ queryKey: ['seller-orders'] });
+              queryClient.refetchQueries({ queryKey: ['all-orders'] });
+              // Show a toast so the seller/admin is visually alerted
+              try {
+                const { orderId, total } = JSON.parse(data) as { orderId: string; total: number };
+                toast.success(
+                  `New order received! #${String(orderId).slice(-6).toUpperCase()} — $${Number(total).toFixed(2)}`,
+                  { duration: 6000, id: `new-order-${orderId}` },
+                );
+              } catch {
+                toast.success('New order received!', { duration: 5000 });
+              }
               break;
             }
 

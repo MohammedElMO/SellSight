@@ -2,8 +2,10 @@ package org.example.sellsight.user.infrastructure.web;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.sellsight.user.application.dto.AdminManagementDto;
+import org.example.sellsight.user.application.dto.CreateAdminRequest;
 import org.example.sellsight.user.application.usecase.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +20,7 @@ import java.util.List;
 public class SuperAdmin2faController {
 
     private final ListAdminsUseCase listAdminsUseCase;
+    private final CreateAdminUseCase createAdminUseCase;
     private final Force2faSetupOnAdminUseCase force2faSetupOnAdminUseCase;
     private final Reset2faForAdminUseCase reset2faForAdminUseCase;
     private final Approve2faSetupUseCase approve2faSetupUseCase;
@@ -31,6 +34,13 @@ public class SuperAdmin2faController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<AdminManagementDto>> listAdmins() {
         return ResponseEntity.ok(listAdminsUseCase.execute());
+    }
+
+    @Operation(operationId = "createAdmin", summary = "Create a new ADMIN account with a temporary password — admin must change password and set up 2FA on first login")
+    @PostMapping("/admins")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<AdminManagementDto> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        return ResponseEntity.status(201).body(createAdminUseCase.execute(request));
     }
 
     @Operation(operationId = "force2faSetup", summary = "Force 2FA setup on an admin — revokes sessions, disables old TOTP, requires re-setup")

@@ -45,6 +45,9 @@ api.interceptors.response.use(
         } catch { /* ignore */ }
         localStorage.removeItem('user');
         clearSessionCookie();
+        // Fire-and-forget: ask backend to clear HttpOnly cookies (app_token, refresh_token)
+        // so the stale app_token doesn't cause a redirect loop on next login attempt.
+        axios.post(`${BASE_URL}/auth/logout`, {}, { withCredentials: true }).catch(() => {});
         const dest = code === 'ACCOUNT_DELETED' ? '/account-deleted' : '/account-suspended';
         window.location.href = email ? `${dest}?email=${encodeURIComponent(email)}` : dest;
         return Promise.reject(error);

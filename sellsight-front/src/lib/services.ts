@@ -13,6 +13,7 @@ import type {
   Admin2faSetupRequiredResponse,
   Setup2faCompleteResponse,
   AdminManagementDto,
+  CreateAdminRequest,
   Verify2faRequest,
   TotpSetupResponse,
   BootstrapChangePasswordRequest,
@@ -52,6 +53,7 @@ import type {
   AdminUserPageDto,
   ChangeRoleRequest,
   LandingDto,
+  BulkCreateResult,
 } from '@shared/types';
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -131,6 +133,13 @@ export const productApi = {
     api.delete<void>(`/products/${id}`),
   getLanding: () =>
     api.get<LandingDto>('/products/landing').then((r) => r.data),
+  bulkCreate: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post<BulkCreateResult>('/products/bulk', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data);
+  },
 };
 
 // ── Orders ───────────────────────────────────────────────────
@@ -330,6 +339,8 @@ export const admin2faApi = {
 export const superAdminApi = {
   listAdmins: () =>
     api.get<AdminManagementDto[]>('/super-admin/admins').then((r) => r.data),
+  createAdmin: (req: CreateAdminRequest) =>
+    api.post<AdminManagementDto>('/super-admin/admins', req).then((r) => r.data),
   force2faSetup: (userId: string) =>
     api.post<void>(`/super-admin/admins/${userId}/force-2fa-setup`).then((r) => r.data),
   reset2fa: (userId: string) =>

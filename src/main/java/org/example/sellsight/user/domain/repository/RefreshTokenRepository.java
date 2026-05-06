@@ -13,4 +13,6 @@ public interface RefreshTokenRepository {
     List<RefreshToken> findActiveByUserId(String userId);
     void revokeAllByUserId(String userId);
     void revokeAllByFamilyId(String familyId);
+    /** Hard-delete all tokens for a user — removes rows entirely (no audit trail). */
+    void deleteAllByUserId(String userId);
 }

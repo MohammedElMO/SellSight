@@ -97,7 +97,13 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${auth.firstName}!`);
       router.push(auth.role === 'SUPER_ADMIN' ? '/super-admin/dashboard' : '/admin/dashboard');
     } catch (err: unknown) {
-      const errData = (err as { response?: { data?: { message?: string } } })?.response?.data;
+      const errData = (err as { response?: { data?: { message?: string; errorCode?: string } } })?.response?.data;
+      if (errData?.errorCode === '2FA_LOCKED') {
+        toast.error('Account locked after too many failed attempts. Contact your Super Admin.');
+        setStep('login');
+        setTotpCode('');
+        return;
+      }
       toast.error(errData?.message ?? 'Invalid code. Please try again.');
       setTotpCode('');
     } finally {

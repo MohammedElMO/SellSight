@@ -18,6 +18,8 @@ function AccountSuspendedInner() {
 
   useEffect(() => {
     useAuthStore.getState().logout();
+    // Clear HttpOnly cookies (app_token, refresh_token) via backend
+    authApi.logout().catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

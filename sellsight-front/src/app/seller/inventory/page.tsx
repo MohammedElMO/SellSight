@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
 import { MagButton } from '@/components/ui/mag-button';
 import { useSellerProducts, useProfile } from '@/lib/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { productApi, inventoryApi } from '@/lib/services';
 import { formatPrice } from '@/lib/utils';
-import { Package, AlertTriangle, Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Package, AlertTriangle, Search, ArrowUpDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { inventoryApi } from '@/lib/services';
 
 type SortKey = 'name' | 'price' | 'stock';
 type SortDir = 'asc' | 'desc';
@@ -19,17 +20,54 @@ const PAGE_SIZE = 25;
 export default function InventoryPage() {
   const { data: profile } = useProfile();
   const [page, setPage] = useState(0);
-  const { data: productsData, isLoading, refetch } = useSellerProducts(profile?.id, page, PAGE_SIZE);
-  const products = productsData?.products ?? [];
-  const totalPages = productsData?.totalPages ?? 0;
-  const totalElements = productsData?.totalElements ?? 0;
-
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce search input — resets to page 0 on new query
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 350);
+    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
+  }, [search]);
+
+  // Server-side search: when a query is present use the hybrid search endpoint scoped to
+  // this seller (client-filters by sellerId). When empty, fall back to seller pagination.
+  const isSearching = debouncedSearch.trim().length > 0;
+
+  const { data: pagedData, isLoading: pagedLoading, refetch: refetchPaged } = useSellerProducts(
+    profile?.id,
+    page,
+    PAGE_SIZE,
+  );
+
+  // Search across all seller products — productApi.search returns up to `size` results
+  // filtered server-side via the hybrid search; we then further client-filter by sellerId.
+  const { data: searchData, isLoading: searchLoading, refetch: refetchSearch } = useQuery({
+    queryKey: ['seller-inventory-search', debouncedSearch, profile?.id],
+    queryFn: () => productApi.search(debouncedSearch.trim(), 0, 50),
+    enabled: isSearching && !!profile?.id,
+    staleTime: 30_000,
+  });
+
+  // Merge: when searching, use search results filtered to this seller; else use paginated page
+  const rawProducts = isSearching
+    ? (searchData?.products ?? []).filter(p => p.sellerId === profile?.id)
+    : (pagedData?.products ?? []);
+
+  const isLoading = isSearching ? searchLoading : pagedLoading;
+  const totalPages = isSearching ? 1 : (pagedData?.totalPages ?? 0);
+  const totalElements = isSearching ? rawProducts.length : (pagedData?.totalElements ?? 0);
+
+  const refetch = isSearching ? refetchSearch : refetchPaged;
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -78,9 +116,9 @@ export default function InventoryPage() {
     }
   };
 
-  // Client-side filter and sort within current page
-  const filtered = products
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+  // Client-side sort within the current result set
+  const filtered = rawProducts
+    .slice()
     .sort((a, b) => {
       let cmp = 0;
       if (sortKey === 'name') cmp = a.name.localeCompare(b.name);
@@ -89,7 +127,7 @@ export default function InventoryPage() {
       return sortDir === 'desc' ? -cmp : cmp;
     });
 
-  const lowStockCount = products.filter(p => p.stockQuantity <= 5).length;
+  const lowStockCount = rawProducts.filter(p => p.stockQuantity <= 5).length;
 
   return (
     <PageLayout>
@@ -119,7 +157,7 @@ export default function InventoryPage() {
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">In Stock</p>
             <p className="font-display font-extrabold text-2xl text-[var(--text-primary)] mt-1">
-              {products.filter(p => p.stockQuantity > 5).length}
+              {rawProducts.filter(p => p.stockQuantity > 5).length}
             </p>
           </div>
           <div className={`bg-[var(--bg-card)] border rounded-[var(--radius)] p-4 ${lowStockCount > 0 ? 'border-[var(--warning)]' : 'border-[var(--border)]'}`}>
@@ -134,7 +172,7 @@ export default function InventoryPage() {
         </div>
       </Reveal>
 
-      {/* Search */}
+      {/* Search — server-side hybrid search across all seller products */}
       <Reveal delay={60}>
         <div className="relative mb-5">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-tertiary)]" />
@@ -142,20 +180,35 @@ export default function InventoryPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search products…"
-            className="w-full h-10 pl-9 pr-3 text-sm border border-[var(--border)] rounded-[var(--radius)] bg-[var(--bg-input)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors"
+            placeholder="Search all products (semantic + full-text)…"
+            className="w-full h-10 pl-9 pr-8 text-sm border border-[var(--border)] rounded-[var(--radius)] bg-[var(--bg-input)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors"
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
+        {isSearching && !isLoading && (
+          <p className="text-xs text-[var(--text-tertiary)] mb-3">
+            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &quot;{debouncedSearch}&quot; · semantic + full-text
+          </p>
+        )}
       </Reveal>
 
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(6)].map((_, i) => <div key={i} className="h-16 skeleton rounded-[var(--radius)]" />)}
         </div>
-      ) : products.length === 0 && page === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <Package className="h-12 w-12 mx-auto mb-3 text-[var(--text-tertiary)]" />
-          <p className="text-[var(--text-secondary)] font-medium">No products found</p>
+          <p className="text-[var(--text-secondary)] font-medium">
+            {isSearching ? `No products found for "${debouncedSearch}"` : 'No products found'}
+          </p>
         </div>
       ) : (
         <>
@@ -230,8 +283,8 @@ export default function InventoryPage() {
             </div>
           </Reveal>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+          {/* Pagination — hidden during search (all results shown) */}
+          {!isSearching && totalPages > 1 && (
             <Reveal delay={100}>
               <div className="flex items-center justify-between mt-5">
                 <p className="text-[12px] text-[var(--text-tertiary)]">

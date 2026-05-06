@@ -66,12 +66,7 @@ function useNavLinks(): NavLink[] {
     ];
   if (role === 'SUPER_ADMIN')
     return [
-      { label: 'Admins',    href: '/super-admin/admins',     icon: ShieldCheck     },
-      { label: 'Orders',    href: '/admin/orders',           icon: ClipboardList   },
-      { label: 'Users',     href: '/admin/users',            icon: Users           },
-      { label: 'Sessions',  href: '/admin/sessions',         icon: ShieldCheck     },
-      { label: 'Sellers',   href: '/admin/sellers/pending',  icon: Store           },
-      { label: '2FA',       href: '/admin/2fa-setup',        icon: KeyRound        },
+      { label: 'Admins', href: '/super-admin/admins', icon: ShieldCheck },
     ];
   return [];
 }

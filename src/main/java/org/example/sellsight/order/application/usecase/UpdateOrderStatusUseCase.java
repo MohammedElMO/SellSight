@@ -6,6 +6,7 @@ import org.example.sellsight.order.application.dto.OrderDto;
 import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.order.domain.model.Order;
 import org.example.sellsight.order.domain.model.OrderId;
+import org.example.sellsight.order.domain.model.OrderItem;
 import org.example.sellsight.order.domain.model.OrderStatus;
 import org.example.sellsight.order.domain.repository.OrderRepository;
 import org.example.sellsight.shared.exception.ForbiddenException;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Use case: Update an order's status (state machine transitions).
@@ -88,6 +90,7 @@ public class UpdateOrderStatusUseCase {
 
         String shortId = saved.getId().getValue().substring(0, 8).toUpperCase();
         String notifTitle = switch (target) {
+            case CONFIRMED -> "Order Confirmed";
             case SHIPPED -> "Order Shipped";
             case DELIVERED -> "Order Delivered";
             case CANCELLED -> "Order Cancelled";
@@ -95,6 +98,7 @@ public class UpdateOrderStatusUseCase {
         };
         if (notifTitle != null) {
             String notifBody = switch (target) {
+                case CONFIRMED -> "Your order #" + shortId + " has been confirmed. We're preparing it now!";
                 case SHIPPED -> "Your order #" + shortId + " is on its way!";
                 case DELIVERED -> "Your order #" + shortId + " has been delivered. Enjoy!";
                 case CANCELLED -> "Your order #" + shortId + " has been cancelled.";
@@ -109,7 +113,33 @@ public class UpdateOrderStatusUseCase {
 
         OrderDto result = CreateOrderUseCase.toDto(saved);
 
-        // Push order-status-changed SSE event to the customer
+        // On payment confirmation: notify sellers + admins of the new paid order, and the customer their order is placed
+        if (target == OrderStatus.CONFIRMED) {
+            Map<String, Object> newOrderPayload = Map.of("orderId", saved.getId().getValue(), "total", saved.getTotal());
+            saved.getItems().stream()
+                    .map(OrderItem::getSellerId)
+                    .collect(Collectors.toSet())
+                    .forEach(sellerId -> {
+                        try {
+                            realtimePublisher.pushToUser(sellerId, "new-order", newOrderPayload);
+                        } catch (Exception e) {
+                            log.debug("Realtime new-order push skipped for seller {}: {}", sellerId, e.getMessage());
+                        }
+                    });
+            try {
+                realtimePublisher.pushToAdmins("new-order", newOrderPayload);
+            } catch (Exception e) {
+                log.debug("Realtime new-order admin broadcast skipped: {}", e.getMessage());
+            }
+            try {
+                realtimePublisher.pushToUser(saved.getCustomerId(), "order-placed",
+                        Map.of("orderId", saved.getId().getValue(), "status", "CONFIRMED"));
+            } catch (Exception e) {
+                log.debug("Realtime order-placed push skipped for customer {}: {}", saved.getCustomerId(), e.getMessage());
+            }
+        }
+
+        // Push order-status-changed SSE event to the customer for all transitions
         try {
             realtimePublisher.pushToUser(saved.getCustomerId(), "order-status-changed",
                     Map.of("orderId", saved.getId().getValue(), "status", target.name()));

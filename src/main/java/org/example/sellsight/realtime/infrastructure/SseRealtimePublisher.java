@@ -48,7 +48,9 @@ public class SseRealtimePublisher implements RealtimePublisher {
     public void pushToAdmins(String eventName, Object payload) {
         try {
             String json = objectMapper.writeValueAsString(payload);
-            registry.sendToRole("ADMIN", SseEmitter.event().name(eventName).data(json));
+            SseEmitter.SseEventBuilder event = SseEmitter.event().name(eventName).data(json);
+            registry.sendToRole("ADMIN", event);
+            registry.sendToRole("SUPER_ADMIN", event);
             pushCounter.increment();
         } catch (Exception e) {
             failCounter.increment();

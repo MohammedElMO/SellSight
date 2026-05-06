@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { admin2faApi } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { toast } from 'sonner';
-import { ShieldCheck, ShieldOff, Copy, Check, KeyRound, AlertTriangle, Lock } from 'lucide-react';
+import { ShieldCheck, ShieldOff, Copy, Check, KeyRound, AlertTriangle, Lock, Download } from 'lucide-react';
 import { MagButton } from '@/components/ui/mag-button';
 import { Reveal } from '@/components/ui/reveal';
 import type { TotpSetupResponse } from '@shared/types';
@@ -29,6 +29,7 @@ export default function TwoFactorSetupPage() {
   const [enabled, setEnabled] = useState(false);
   const [disableCode, setDisableCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [backupCopied, setBackupCopied] = useState(false);
 
   // Password-change step state
   const [newPassword, setNewPassword] = useState('');
@@ -332,21 +333,58 @@ export default function TwoFactorSetupPage() {
       {step === 'backup' && (
         <Reveal delay={60}>
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-xl)] p-6">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-2">
               <KeyRound className="h-5 w-5" style={{ color: 'var(--accent)' }} />
               <p className="text-sm font-semibold text-[var(--text-primary)]">Save your backup codes</p>
             </div>
             <p className="text-xs text-[var(--text-secondary)] mb-4">
-              Store these somewhere safe. Each code can be used once if you lose access to your authenticator app.
-              These will not be shown again.
+              Store these somewhere safe. Each code can be used <strong>once</strong> if you lose access to your authenticator app.
+              These will <strong>not</strong> be shown again.
             </p>
 
-            <div className="grid grid-cols-2 gap-2 mb-5">
-              {backupCodes.map((c) => (
-                <code key={c} className="px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[var(--radius-sm)] text-xs font-mono text-[var(--text-primary)] text-center">
-                  {c}
-                </code>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {backupCodes.map((c, i) => (
+                <div key={c} className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-[var(--radius-sm)]">
+                  <span className="text-[10px] text-[var(--text-tertiary)] w-4 shrink-0">{i + 1}.</span>
+                  <code className="flex-1 text-xs font-mono text-[var(--text-primary)] tracking-widest">{c}</code>
+                </div>
               ))}
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(backupCodes.join('\n')).then(() => {
+                    setBackupCopied(true);
+                    toast.success('Backup codes copied to clipboard.');
+                    setTimeout(() => setBackupCopied(false), 2500);
+                  });
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-[var(--radius-md)] border transition-colors"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+              >
+                {backupCopied ? <Check className="h-3.5 w-3.5 text-[var(--success)]" /> : <Copy className="h-3.5 w-3.5" />}
+                {backupCopied ? 'Copied!' : 'Copy all'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const content = `SellSight Admin Backup Codes\n${'='.repeat(30)}\n\n${backupCodes.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nEach code can only be used once.\nStore this file securely.`;
+                  const blob = new Blob([content], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'sellsight-2fa-backup-codes.txt';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-[var(--radius-md)] border transition-colors"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </button>
             </div>
 
             <MagButton variant="primary" size="md" onClick={handleDone} className="w-full">

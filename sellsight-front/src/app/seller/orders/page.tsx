@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useOptimistic, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { TiltCard } from '@/components/ui/tilt-card';
@@ -9,7 +10,6 @@ import { useSellerOrders } from '@/lib/hooks';
 import { orderApi } from '@/lib/services';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { Package, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import type { OrderDto, OrderStatus } from '@shared/types';
@@ -33,6 +33,7 @@ function statusVariant(s: string): 'accent' | 'success' | 'danger' | 'secondary'
 type OptimisticAction = { orderId: string; newStatus: string };
 
 export default function SellerOrdersPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<string>('ALL');
   const { data, isLoading } = useSellerOrders();
   const queryClient = useQueryClient();
@@ -49,7 +50,8 @@ export default function SellerOrdersPage() {
       )
   );
 
-  const handleAdvanceStatus = (orderId: string, currentStatus: string) => {
+  const handleAdvanceStatus = (e: React.MouseEvent, orderId: string, currentStatus: string) => {
+    e.stopPropagation(); // don't navigate to detail
     const nextStatus = NEXT_STATUS[currentStatus];
     if (!nextStatus) return;
 
@@ -116,7 +118,11 @@ export default function SellerOrdersPage() {
             const nextStatus = NEXT_STATUS[order.status];
             return (
               <Reveal key={order.id} delay={i * 40}>
-                <TiltCard intensity={2} className="bg-[var(--bg-card)] rounded-[var(--radius)] p-4 flex items-center gap-5">
+                <TiltCard
+                  intensity={2}
+                  className="bg-[var(--bg-card)] rounded-[var(--radius)] p-4 flex items-center gap-5 cursor-pointer group"
+                  onClick={() => router.push(`/seller/orders/${order.id}`)}
+                >
                   <div className="flex-none">
                     <p className="font-mono text-[13px] font-semibold text-[var(--text-primary)]">#{order.id.toString().slice(-6)}</p>
                     <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">{formatDate(order.createdAt)}</p>
@@ -136,16 +142,14 @@ export default function SellerOrdersPage() {
                   <Pill variant={statusVariant(order.status)} size="sm">{order.status.toLowerCase()}</Pill>
                   {nextStatus && (
                     <button
-                      onClick={(e) => { e.preventDefault(); handleAdvanceStatus(order.id, order.status); }}
+                      onClick={(e) => handleAdvanceStatus(e, order.id, order.status)}
                       disabled={isPending}
                       className="h-7 px-3 text-[11px] font-medium rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all disabled:opacity-40"
                     >
                       → {nextStatus.toLowerCase()}
                     </button>
                   )}
-                  <Link href={`/seller/orders/${order.id}`}>
-                    <ArrowRight className="h-4 w-4 text-[var(--text-tertiary)]" />
-                  </Link>
+                  <ArrowRight className="h-4 w-4 text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </TiltCard>
               </Reveal>
             );
