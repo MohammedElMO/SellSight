@@ -66,12 +66,12 @@ export default function PaymentStep({ amount, onSuccess, isProcessing }: Payment
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 flex items-center justify-between">
+      <div className="bg-[var(--surface)] p-4 rounded-[var(--radius-md)] border border-[var(--border)] mb-6 flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">Amount Due</p>
-          <p className="text-2xl font-bold text-gray-900">${amount.toFixed(2)}</p>
+          <p className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Amount Due</p>
+          <p className="text-2xl font-bold text-[var(--text-primary)]">${amount.toFixed(2)}</p>
         </div>
-        <Lock className="text-gray-400" size={24} />
+        <Lock className="text-[var(--text-tertiary)]" size={22} />
       </div>
 
       <div className="min-h-[200px]">
@@ -91,19 +91,30 @@ export default function PaymentStep({ amount, onSuccess, isProcessing }: Payment
       <button
         type="submit"
         disabled={!stripe || loading || isProcessing}
-        className="btn-primary w-full py-4 text-lg mt-6 relative"
+        className="group cursor-pointer/clear relative w-full mt-6 h-14 rounded-[var(--radius-md)] overflow-hidden text-white font-bold text-base tracking-wide disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ background: 'var(--gradient)' }}
       >
-        {(loading || isProcessing) ? (
-          <span className="flex items-center justify-center gap-2">
-            <Loader2 className="animate-spin" size={20} /> Processing...
-          </span>
-        ) : (
-          `Pay $${amount.toFixed(2)}`
-        )}
+        {/* sliding shimmer on hover */}
+        <span
+          className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"
+          style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)' }}
+        />
+        <span className="relative flex items-center justify-center gap-2">
+          {(loading || isProcessing) ? (
+            <>
+              <Loader2 className="animate-spin" size={20} /> Processing...
+            </>
+          ) : (
+            <>
+              <Lock size={16} className="opacity-80" />
+              Pay ${amount.toFixed(2)}
+            </>
+          )}
+        </span>
       </button>
 
-      <p className="text-xs text-center text-gray-500 mt-4 flex items-center justify-center gap-1">
-        <Lock size={12} /> Payments are secure and encrypted.
+      <p className="text-xs text-center text-[var(--text-tertiary)] mt-3 flex items-center justify-center gap-1">
+        <Lock size={11} /> Payments are secure and encrypted.
       </p>
     </form>
   );

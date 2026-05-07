@@ -909,7 +909,7 @@ export function useAdminUserList(params: {
   return useQuery({
     queryKey: ['admin-users-v2', params],
     queryFn: () => adminApi.listUsers(params),
-    enabled: isAuthenticated && role === 'ADMIN',
+    enabled: isAuthenticated && (role === 'ADMIN' || role === 'SUPER_ADMIN'),
   });
 }
 
@@ -918,7 +918,7 @@ export function useAdminUserDetail(userId: string | null) {
   return useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: () => adminApi.getUser(userId!),
-    enabled: isAuthenticated && role === 'ADMIN' && userId != null,
+    enabled: isAuthenticated && (role === 'ADMIN' || role === 'SUPER_ADMIN') && userId != null,
   });
 }
 
@@ -1000,7 +1000,7 @@ export function useAdminSessions() {
   return useQuery({
     queryKey: ['admin-sessions'],
     queryFn: () => adminApi.listAllSessions(),
-    enabled: isAuthenticated && role === 'ADMIN',
+    enabled: isAuthenticated && (role === 'ADMIN' || role === 'SUPER_ADMIN'),
   });
 }
 

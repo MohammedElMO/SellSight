@@ -28,21 +28,21 @@ public class AdminSessionController {
 
     @Operation(operationId = "adminListAllSessions", summary = "List all sessions across all users")
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<List<SessionDto>> listAllSessions() {
         return ResponseEntity.ok(listAllSessionsUseCase.execute());
     }
 
     @Operation(operationId = "adminListUserSessions", summary = "List sessions for a specific user")
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<List<SessionDto>> listUserSessions(@PathVariable String userId) {
         return ResponseEntity.ok(listUserSessionsUseCase.execute(userId));
     }
 
     @Operation(operationId = "adminRevokeSession", summary = "Revoke a specific session")
     @PostMapping("/{sessionId}/revoke")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> revokeSession(@PathVariable String sessionId) {
         revokeSessionUseCase.execute(sessionId);
         return ResponseEntity.noContent().build();
@@ -50,7 +50,7 @@ public class AdminSessionController {
 
     @Operation(operationId = "adminRevokeAllUserSessions", summary = "Revoke all sessions for a user")
     @PostMapping("/user/{userId}/revoke-all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> revokeAllUserSessions(@PathVariable String userId) {
         revokeAllUserSessionsUseCase.execute(userId);
         return ResponseEntity.noContent().build();
@@ -58,14 +58,14 @@ public class AdminSessionController {
 
     @Operation(operationId = "adminGetSession", summary = "Get session details")
     @GetMapping("/{sessionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<SessionDto> getSession(@PathVariable String sessionId) {
         return ResponseEntity.ok(getSessionUseCase.execute(sessionId));
     }
 
     @Operation(operationId = "adminRevokeFamilySessions", summary = "Revoke all sessions in a token family")
     @PostMapping("/families/{familyId}/revoke")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> revokeFamilySessions(@PathVariable String familyId) {
         revokeFamilyUseCase.execute(familyId);
         return ResponseEntity.noContent().build();

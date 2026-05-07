@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { admin2faApi } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { toast } from 'sonner';
-import { ShieldCheck, ShieldOff, Copy, Check, KeyRound, AlertTriangle, Lock, Download } from 'lucide-react';
+import { ShieldCheck, ShieldOff, Copy, Check, KeyRound, AlertTriangle, Lock, Download, ArrowLeft } from 'lucide-react';
 import { MagButton } from '@/components/ui/mag-button';
 import { Reveal } from '@/components/ui/reveal';
 import type { TotpSetupResponse } from '@shared/types';
@@ -166,6 +166,16 @@ export default function TwoFactorSetupPage() {
     <div className="max-w-xl mx-auto px-4 py-10">
       <Reveal>
         <div className="mb-8">
+          {!isSetupTokenFlow && (
+            <button
+              type="button"
+              onClick={() => router.push(role === 'SUPER_ADMIN' ? '/super-admin/dashboard' : '/admin/dashboard')}
+              className="flex items-center gap-1.5 mb-4 text-[13px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to dashboard
+            </button>
+          )}
           <h1 className="font-display font-bold text-[24px] text-[var(--text-primary)] tracking-[-0.02em] mb-1">
             Two-Factor Authentication
           </h1>
