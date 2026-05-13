@@ -45,7 +45,7 @@ function queueEvent(event: Record<string, unknown>) {
 
 export function useTracker() {
   const pathname = usePathname();
-  const { role } = useAuthStore();
+  const { role, email } = useAuthStore();
   const trackedPageView = useRef(false);
 
   // Expose track manual method
@@ -56,9 +56,10 @@ export function useTracker() {
     queueEvent({
       eventName,
       url: window.location.pathname,
+      userEmail: email,
       ...payload,
     });
-  }, [role]);
+  }, [email, role]);
 
   // Auto-track page views
   useEffect(() => {
@@ -74,7 +75,8 @@ export function useTracker() {
       if (eventQueue.length > 0) {
         // Use keepalive for reliable delivery on navigation
         const blob = new Blob([JSON.stringify({ events: eventQueue })], { type: 'application/json' });
-        navigator.sendBeacon('/api/v1/events', blob);
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api';
+        navigator.sendBeacon(`${apiBaseUrl}/v1/events`, blob);
         eventQueue = [];
       }
     };

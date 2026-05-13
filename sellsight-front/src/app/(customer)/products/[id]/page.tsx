@@ -7,7 +7,7 @@ import {
   usePriceDropSubscription, useTogglePriceDropSubscription,
   useBackInStockSubscription, useToggleBackInStockSubscription,
 } from '@/lib/hooks';
-import { useTracker } from '@/hooks/useTracker';
+import { flushEvents, useTracker } from '@/hooks/useTracker';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { PageLayout } from '@/components/layout/page-layout';
 import { useCartStore } from '@/store/cart';
@@ -63,6 +63,7 @@ export default function ProductDetailPage() {
     addProduct(product);
     const timer = setTimeout(() => {
       track('PRODUCT_VIEW', { productId: product.id, productName: product.name });
+      void flushEvents();
     }, 2000);
     return () => clearTimeout(timer);
   }, [product, track, addProduct]);
@@ -75,6 +76,7 @@ export default function ProductDetailPage() {
         {
           onSuccess: () => {
             track('ADD_TO_CART', { productId: product.id, quantity, price: product.price });
+            void flushEvents();
             toast.success(`${product.name} added to cart`);
             setAdded(true);
             setTimeout(() => setAdded(false), 2000);
@@ -84,6 +86,7 @@ export default function ProductDetailPage() {
     } else {
       addItem(product, quantity);
       track('ADD_TO_CART', { productId: product.id, quantity, price: product.price });
+      void flushEvents();
       toast.success(`${product.name} added to cart`);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);

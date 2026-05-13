@@ -17,6 +17,19 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'm.media-amazon.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'brand.assets.adidas.com',
+      },
+    ],
+  },
+
   turbopack: {
     root: path.resolve(__dirname, '..')
   }

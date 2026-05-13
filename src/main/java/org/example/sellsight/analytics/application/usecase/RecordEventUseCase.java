@@ -6,6 +6,8 @@ import org.example.sellsight.analytics.domain.model.AnalyticsEvent;
 import org.example.sellsight.analytics.domain.model.EventType;
 import org.example.sellsight.analytics.domain.repository.EventRepository;
 import org.example.sellsight.shared.events.EventPublisher;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,11 @@ public class RecordEventUseCase {
         this.userEventsTopic = userEventsTopic;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "analytics-summary", key = "'admin-summary'"),
+            @CacheEvict(value = "consumer-recommendations", key = "'customer-home'"),
+            @CacheEvict(value = "seller-analytics", allEntries = true)
+    })
     public void execute(String userId,
                         String productId,
                         EventType eventType,

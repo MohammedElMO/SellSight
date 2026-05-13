@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import AddressStep from './address-step';
 import PaymentStep from './payment-step';
 import { formatPrice } from '@/lib/utils';
-import { useTracker } from '@/hooks/useTracker';
+import { flushEvents, useTracker } from '@/hooks/useTracker';
 import { CheckCircle2, MapPin, CreditCard, ShoppingBag, Tag, Loader2, Award } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 
@@ -75,7 +75,16 @@ export default function CheckoutClient() {
 
       if (finalTotal === 0) {
         await paymentApi.confirmFree(order.id);
-        track('PURCHASE', { orderId: order.id, total: 0 });
+        cartItems.forEach((item) => {
+          track('PURCHASE', {
+            orderId: order.id,
+            total: 0,
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.unitPrice,
+          });
+        });
+        await flushEvents();
         await cartApi.clear().catch(() => {});
         setCurrentStep(3);
         return;
@@ -102,7 +111,16 @@ export default function CheckoutClient() {
       if (pointsToRedeem >= 100 && pendingOrderId) {
         loyaltyApi.redeem(pointsToRedeem, pendingOrderId).catch(() => {});
       }
-      track('PURCHASE', { orderId: pendingOrderId, total: finalTotal });
+      cartItems.forEach((item) => {
+        track('PURCHASE', {
+          orderId: pendingOrderId,
+          total: finalTotal,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.unitPrice,
+        });
+      });
+      await flushEvents();
       await cartApi.clear().catch(() => {});
       setCurrentStep(3);
     } catch {

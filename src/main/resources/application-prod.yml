@@ -8,10 +8,9 @@ spring:
     virtual:
       enabled: true
   # Flyway runs in prod; never auto-migrate schema via JPA
-
   flyway:
     enabled: true
-    baseline-on-migrate: false
+    baseline-on-migrate: true
 
 server:
   port: 8081

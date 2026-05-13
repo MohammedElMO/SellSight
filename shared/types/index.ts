@@ -401,6 +401,133 @@ export interface TrackingEvent {
   timestamp: string;
 }
 
+// ── Analytics ─────────────────────────────────────────────────
+
+export interface TopProductDto {
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  unitsSold: number;
+  revenue: number;
+  views: number;
+  addToCarts: number;
+  purchases: number;
+  viewToPurchaseRate: number;
+}
+
+export interface ConsumerRecommendationDto {
+  productId: string;
+  productName: string;
+  score: number;
+  reason: string;
+}
+
+export interface HistoricalDailySalesDto {
+  salesDay: string;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface HistoricalEventFunnelDto {
+  eventType: string;
+  eventCount: number;
+}
+
+export interface CategorySalesDto {
+  category: string;
+  orderCount: number;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface SellerPerformanceDto {
+  sellerId: string;
+  sellerName: string;
+  productCount: number;
+  orderCount: number;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface InventoryRiskDto {
+  productId: string;
+  productName: string;
+  category: string;
+  sellerId: string | null;
+  stockQuantity: number;
+  reorderThreshold: number;
+  unitsSold: number;
+  viewCount: number;
+  riskScore: number;
+}
+
+export interface MonthlySalesDto {
+  salesMonth: string;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface CustomerValueDto {
+  customerId: string;
+  customerName: string;
+  email: string | null;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderAt: string | null;
+}
+
+export interface AnalyticsSummaryDto {
+  revenueToday: number;
+  revenue7d: number;
+  revenue30d: number;
+  ordersToday: number;
+  orders7d: number;
+  orders30d: number;
+  activeUsersLastHour: number;
+  activeUsers7d: number;
+  newUsers7d: number;
+  cancelledOrders7d: number;
+  averageOrderValue7d: number;
+  conversion7d: number;
+  productViews7d: number;
+  addToCart7d: number;
+  purchases7d: number;
+  viewToCartRate7d: number;
+  cartToPurchaseRate7d: number;
+  consumerRecommendations: ConsumerRecommendationDto[];
+  topProducts: TopProductDto[];
+  historicalDailySales: HistoricalDailySalesDto[];
+  historicalTopProducts: TopProductDto[];
+  historicalEventFunnel: HistoricalEventFunnelDto[];
+  categorySales: CategorySalesDto[];
+  sellerPerformance: SellerPerformanceDto[];
+  inventoryRisk: InventoryRiskDto[];
+  monthlySales: MonthlySalesDto[];
+  customerValue: CustomerValueDto[];
+}
+
+export interface SellerProductAnalyticsDto {
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  active: boolean;
+  views: number;
+  addToCarts: number;
+  purchases: number;
+  viewToCartRate: number;
+  viewToPurchaseRate: number;
+}
+
+export interface SellerAnalyticsDto {
+  days: number;
+  totalViews: number;
+  totalAddToCarts: number;
+  totalPurchases: number;
+  viewToCartRate: number;
+  viewToPurchaseRate: number;
+  products: SellerProductAnalyticsDto[];
+}
+
 // ── Messaging ────────────────────────────────────────────────
 
 export interface MessageDto {

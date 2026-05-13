@@ -1,5 +1,5 @@
 /**
- * Behavioral event tracking hook — batches events and fires them to Kafka
+ * Behavioral event tracking hook — batches events and sends them to the backend
  * via the /api/v1/events endpoint on flush or when the batch size threshold is reached.
  */
 

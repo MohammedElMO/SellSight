@@ -1,0 +1,153 @@
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: sellsight-namenode
+    environment:
+      CLUSTER_NAME: sellsight-hadoop
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    restart: unless-stopped
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: sellsight-datanode
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      SERVICE_PRECONDITION: namenode:9870
+    ports:
+      - "9864:9864"
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    depends_on:
+      - namenode
+    restart: unless-stopped
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: sellsight-resourcemanager
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      YARN_CONF_yarn_resourcemanager_hostname: resourcemanager
+      SERVICE_PRECONDITION: namenode:9000 datanode:9864
+    ports:
+      - "8088:8088"
+    depends_on:
+      - namenode
+      - datanode
+    restart: unless-stopped
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: sellsight-nodemanager
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      YARN_CONF_yarn_resourcemanager_hostname: resourcemanager
+      YARN_CONF_yarn_nodemanager_aux___services: mapreduce_shuffle
+      YARN_CONF_yarn_nodemanager_aux___services_mapreduce_shuffle_class: org.apache.hadoop.mapred.ShuffleHandler
+      SERVICE_PRECONDITION: namenode:9000 datanode:9864 resourcemanager:8088
+    depends_on:
+      - namenode
+      - datanode
+      - resourcemanager
+    restart: unless-stopped
+
+  hive-metastore-postgresql:
+    image: bde2020/hive-metastore-postgresql:2.3.0
+    container_name: sellsight-hive-metastore-db
+    volumes:
+      - hive_metastore_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: sellsight-hive-metastore
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionURL: jdbc:postgresql://hive-metastore-postgresql/metastore
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName: org.postgresql.Driver
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionUserName: hive
+      HIVE_SITE_CONF_javax_jdo_option_ConnectionPassword: hive
+      SERVICE_PRECONDITION: namenode:9000 datanode:9864 hive-metastore-postgresql:5432
+    ports:
+      - "9083:9083"
+    depends_on:
+      - namenode
+      - datanode
+      - hive-metastore-postgresql
+    restart: unless-stopped
+
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: sellsight-hive-server
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HIVE_SITE_CONF_hive_metastore_uris: thrift://hive-metastore:9083
+      SERVICE_PRECONDITION: hive-metastore:9083
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    depends_on:
+      - hive-metastore
+    restart: unless-stopped
+
+  spark-master:
+    image: bde2020/spark-master:3.2.1-hadoop3.2
+    container_name: sellsight-spark-master
+    environment:
+      INIT_DAEMON_STEP: setup_spark
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HADOOP_CONF_DIR: /etc/hadoop
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    volumes:
+      - ./bigdata/hadoop-conf:/etc/hadoop
+      - ./bigdata/spark/conf/hive-site.xml:/spark/conf/hive-site.xml
+    depends_on:
+      - namenode
+      - datanode
+    restart: unless-stopped
+
+  spark-worker:
+    image: bde2020/spark-worker:3.2.1-hadoop3.2
+    container_name: sellsight-spark-worker
+    environment:
+      SPARK_MASTER: spark://spark-master:7077
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HADOOP_CONF_DIR: /etc/hadoop
+    volumes:
+      - ./bigdata/hadoop-conf:/etc/hadoop
+      - ./bigdata/spark/conf/hive-site.xml:/spark/conf/hive-site.xml
+    ports:
+      - "8082:8081"
+    depends_on:
+      - spark-master
+    restart: unless-stopped
+
+  sqoop:
+    image: applysq/sqoop:1.4.7_hadoop_3.1.2_v3.1
+    container_name: sellsight-sqoop
+    environment:
+      HADOOP_CONF_DIR: /etc/hadoop
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+    volumes:
+      - ./bigdata/sqoop:/opt/sellsight/sqoop
+      - ./bigdata/jdbc:/opt/sellsight/jdbc
+      - ./bigdata/jdbc/postgresql.jar:/usr/lib/sqoop/lib/postgresql.jar
+      - ./bigdata/hadoop-conf:/etc/hadoop
+    depends_on:
+      - namenode
+      - datanode
+      - postgres
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: unless-stopped
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hive_metastore_pgdata:

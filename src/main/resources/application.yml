@@ -54,14 +54,17 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       properties:
         enable.idempotence: true
     consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:sellsight-analytics}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
 
   data:
     redis:
@@ -175,6 +178,13 @@ resilience4j:
           - org.springframework.web.client.RestClientException
         ignore-exceptions:
           - org.springframework.web.client.HttpClientErrorException
+ 
+    # Enable debug logging for MVC to trace handler selection during diagnostics
+    logging:
+      level:
+        org.springframework.web: DEBUG
+        org.springframework.web.servlet: DEBUG
+        org.example.sellsight: DEBUG
   circuitbreaker:
     instances:
       outbound-http:
