@@ -94,7 +94,7 @@ public class EventController {
         return UserActivityEvent.builder()
                 .userId(userId)
                 .eventType(activityType)
-                .productId(asString(event.get("productId")))
+                .productId(asLong(event.get("productId")))
                 .categoryId(asLong(event.get("categoryId")))
                 .sellerId(asLong(event.get("sellerId")))
                 .sessionId(asString(event.get("sessionId")))
