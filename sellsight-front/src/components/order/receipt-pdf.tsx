@@ -1,31 +1,37 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { OrderDto } from '@shared/types';
 
+const ACCENT  = '#6366f1'; // indigo
+const TEXT    = '#1a1a1a';
+const MUTED   = '#6b7280';
+const ROW_ALT = '#f8f8ff';
+const BORDER  = '#e8e8f0';
+
 const styles = StyleSheet.create({
   page: {
     backgroundColor: '#ffffff',
     fontFamily: 'Helvetica',
     padding: 40,
     fontSize: 10,
-    color: '#1a2e2b',
+    color: TEXT,
   },
   header: {
     marginBottom: 24,
     paddingBottom: 16,
     borderBottomWidth: 2,
-    borderBottomColor: '#0f766e',
+    borderBottomColor: ACCENT,
     borderBottomStyle: 'solid',
   },
   brand: {
     fontSize: 22,
     fontFamily: 'Helvetica-Bold',
-    color: '#0f766e',
+    color: ACCENT,
     letterSpacing: 2,
     marginBottom: 4,
   },
   brandSub: {
     fontSize: 10,
-    color: '#6b7280',
+    color: MUTED,
   },
   metaRow: {
     flexDirection: 'row',
@@ -36,16 +42,16 @@ const styles = StyleSheet.create({
   metaBox: {
     flex: 1,
     minWidth: 140,
-    backgroundColor: '#f0fdf9',
+    backgroundColor: '#f5f5ff',
     borderRadius: 6,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#d1fae5',
+    borderColor: '#ddd8fc',
     borderStyle: 'solid',
   },
   metaLabel: {
     fontSize: 8,
-    color: '#6b7280',
+    color: MUTED,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 3,
@@ -53,10 +59,10 @@ const styles = StyleSheet.create({
   metaValue: {
     fontSize: 11,
     fontFamily: 'Helvetica-Bold',
-    color: '#0f1a18',
+    color: TEXT,
   },
   statusBadge: {
-    backgroundColor: '#d1fae5',
+    backgroundColor: '#ede9fe',
     borderRadius: 999,
     paddingVertical: 3,
     paddingHorizontal: 8,
@@ -65,13 +71,13 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
-    color: '#065f46',
+    color: '#4f46e5',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#0f766e',
+    backgroundColor: ACCENT,
     borderRadius: 4,
     marginBottom: 1,
   },
@@ -86,11 +92,11 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0faf7',
+    borderBottomColor: BORDER,
     borderBottomStyle: 'solid',
   },
   tableRowAlt: {
-    backgroundColor: '#f8fffd',
+    backgroundColor: ROW_ALT,
   },
   tableCell: {
     padding: '8 10',
@@ -113,41 +119,41 @@ const styles = StyleSheet.create({
   },
   totalsLabel: {
     fontSize: 10,
-    color: '#6b7280',
+    color: MUTED,
   },
   totalsValue: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: '#0f1a18',
+    color: TEXT,
   },
   grandRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderTopWidth: 2,
-    borderTopColor: '#0f766e',
+    borderTopColor: ACCENT,
     borderTopStyle: 'solid',
     marginTop: 4,
   },
   grandLabel: {
     fontSize: 13,
     fontFamily: 'Helvetica-Bold',
-    color: '#065f46',
+    color: TEXT,
   },
   grandValue: {
     fontSize: 15,
     fontFamily: 'Helvetica-Bold',
-    color: '#0f766e',
+    color: ACCENT,
   },
   footer: {
     marginTop: 32,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#d1fae5',
+    borderTopColor: BORDER,
     borderTopStyle: 'solid',
     textAlign: 'center',
     fontSize: 9,
-    color: '#9ca3af',
+    color: MUTED,
   },
 });
 
@@ -223,7 +229,7 @@ export function ReceiptDocument({ order, paymentMethod = 'Credit / Debit Card' }
           </View>
           <View style={styles.totalsRow}>
             <Text style={styles.totalsLabel}>Shipping</Text>
-            <Text style={[styles.totalsValue, { color: '#0f766e' }]}>Free</Text>
+            <Text style={[styles.totalsValue, { color: ACCENT }]}>Free</Text>
           </View>
           <View style={styles.grandRow}>
             <Text style={styles.grandLabel}>Total paid</Text>

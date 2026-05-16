@@ -70,6 +70,7 @@ export default function CheckoutClient() {
           quantity: i.quantity,
           unitPrice: i.unitPrice,
         })),
+        couponCode: couponCode || undefined,
       });
       setPendingOrderId(order.id);
 
@@ -104,10 +105,12 @@ export default function CheckoutClient() {
   };
 
   // Called after Stripe confirms the payment client-side.
-  // Order fulfillment (CONFIRMED status, inventory, loyalty earn) is handled server-side via webhook.
   const handleOrderComplete = async (_paymentIntentId: string) => {
     setIsProcessing(true);
     try {
+      if (pendingOrderId) {
+        await paymentApi.confirmPaid(pendingOrderId).catch(() => {});
+      }
       if (pointsToRedeem >= 100 && pendingOrderId) {
         loyaltyApi.redeem(pointsToRedeem, pendingOrderId).catch(() => {});
       }
@@ -145,15 +148,27 @@ export default function CheckoutClient() {
 
   if (currentStep === 3) {
     return (
-      <div className="glass-card p-12 text-center max-w-2xl mx-auto mt-12 mb-24">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-lg)] p-12 text-center max-w-2xl mx-auto mt-12 mb-24 shadow-[var(--shadow-lg)]">
         <CheckCircle2 className="mx-auto h-20 w-20 text-[var(--success)] mb-6" />
         <h1 className="text-3xl font-bold mb-4">Order Confirmed!</h1>
         <p className="text-[var(--text-secondary)] mb-8 text-lg">
           Thank you for your purchase. We&apos;ve sent a confirmation email with your order details.
         </p>
-        <button onClick={() => router.push('/orders')} className="btn-primary px-8 py-3 text-lg">
-          View My Orders
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => router.push('/orders')}
+            className="px-10 py-3.5 text-lg font-semibold text-white rounded-xl flex items-center gap-2 transition-opacity hover:opacity-90"
+            style={{ background: 'var(--gradient)' }}
+          >
+            <ShoppingBag className="h-5 w-5" /> View My Orders
+          </button>
+          <button
+            onClick={() => router.push('/products')}
+            className="px-8 py-3.5 text-base font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-xl hover:bg-[var(--surface)] transition-colors"
+          >
+            Continue Shopping
+          </button>
+        </div>
       </div>
     );
   }
@@ -163,7 +178,7 @@ export default function CheckoutClient() {
       {/* Left Column: Flow */}
       <div className="lg:col-span-2 space-y-6">
         {/* Stepper */}
-        <div className="flex items-center justify-between mb-8 px-4">
+        <div className="flex items-center mb-8 px-4">
           {steps.map((step, idx) => (
             <div key={step.id} className="flex items-center flex-1">
               <div
@@ -196,7 +211,7 @@ export default function CheckoutClient() {
         </div>
 
         {/* Steps Content */}
-        <div className="glass-card p-6 min-h-[400px]">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-lg)] p-6 min-h-[400px]">
           {currentStep === 1 && (
             <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
               <AddressStep

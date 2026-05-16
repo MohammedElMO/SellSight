@@ -11,6 +11,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   role?: 'ADMIN' | 'SELLER' | 'CUSTOMER';
+  referralCode?: string;
 }
 
 export interface LoginRequest {
@@ -273,6 +274,7 @@ export interface OrderItemRequest {
 
 export interface CreateOrderRequest {
   items: OrderItemRequest[];
+  couponCode?: string;
 }
 
 export interface CreatePaymentIntentRequest {

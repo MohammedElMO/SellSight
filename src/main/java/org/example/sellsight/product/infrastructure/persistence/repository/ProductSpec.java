@@ -25,7 +25,7 @@ final class ProductSpec {
             predicates.add(cb.isTrue(root.get("active")));
 
             if (category != null && !category.isBlank()) {
-                predicates.add(cb.equal(root.get("category"), category));
+                predicates.add(cb.equal(cb.lower(root.get("category")), category.toLowerCase()));
             }
             if (minPrice != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));

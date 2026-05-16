@@ -1,5 +1,6 @@
 package org.example.sellsight.config;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -137,6 +138,7 @@ public class KafkaConfig {
 
     @Bean
     public com.fasterxml.jackson.databind.ObjectMapper objectMapper() {
-        return new com.fasterxml.jackson.databind.ObjectMapper();
+        return new com.fasterxml.jackson.databind.ObjectMapper()
+                .registerModule(new JavaTimeModule());
     }
 }

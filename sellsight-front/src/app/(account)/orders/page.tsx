@@ -46,7 +46,7 @@ export default function OrdersPage() {
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .map((order, i) => (
               <Reveal key={order.id} delay={i * 50}>
-                <OrderCard order={order} />
+                <OrderCard order={order} isLatest={i === 0} />
               </Reveal>
             ))}
         </div>

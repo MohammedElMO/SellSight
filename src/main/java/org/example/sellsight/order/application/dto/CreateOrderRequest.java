@@ -13,5 +13,7 @@ public record CreateOrderRequest(
         @Valid
         List<OrderItemRequest> items,
         
-        String paymentIntentId
+        String paymentIntentId,
+
+        String couponCode
 ) {}

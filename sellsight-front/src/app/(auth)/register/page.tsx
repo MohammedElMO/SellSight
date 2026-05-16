@@ -30,6 +30,7 @@ export default function RegisterPage() {
     return searchParams.get('role')?.toUpperCase() === 'SELLER' ? 'SELLER' : 'CUSTOMER';
   }, [searchParams]);
   const initialEmail = searchParams.get('email') ?? '';
+  const referralCode = searchParams.get('ref') ?? undefined;
 
   const {
     register,
@@ -49,7 +50,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (values: RegisterFormValues) => {
     try {
-      const data = await authApi.register(values);
+      const data = await authApi.register({ ...values, referralCode });
       login(data);
       if (!data.emailVerified) {
         toast.success('Account created! Check your inbox to verify your email.');

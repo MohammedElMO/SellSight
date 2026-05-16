@@ -100,14 +100,13 @@ export default function AddressStep({ selectedId, onSelect, onNext, isNextLoadin
           })}
 
           <button
-            className="btn-primary w-full mt-8 py-3 text-lg"
+            className="w-full mt-8 py-3 text-lg font-semibold text-white rounded-xl flex items-center justify-center gap-2 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: 'var(--gradient)' }}
             disabled={(!selectedId && !addresses.some(a => a.isDefaultShipping)) || isNextLoading}
             onClick={onNext}
           >
             {isNextLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <Loader2 className="animate-spin" size={20} /> Preparing checkout...
-              </span>
+              <><Loader2 className="animate-spin" size={20} /> Preparing checkout...</>
             ) : (
               'Continue to Payment'
             )}

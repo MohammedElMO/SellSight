@@ -1,16 +1,19 @@
 'use client';
 
 import { Bell } from 'lucide-react';
-import { useUnreadCount, useNotifications, useMarkAllNotificationsRead } from '@/lib/hooks';
+import { useUnreadCount, useNotifications, useMarkAllNotificationsRead, useMarkNotificationRead } from '@/lib/hooks';
 import { useAuthStore } from '@/store/auth';
 import { useState, useRef, useEffect } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import { formatDistanceToNow } from '@/lib/utils';
 
 export function NotificationBell() {
   const { isAuthenticated } = useAuthStore();
   const { data: count } = useUnreadCount();
   const { data: notifications } = useNotifications();
   const markAllRead = useMarkAllNotificationsRead();
+  const markRead = useMarkNotificationRead();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -59,7 +62,12 @@ export function NotificationBell() {
               notifications.slice(0, 20).map((n) => (
                 <div
                   key={n.id}
-                  className={`px-4 py-3 border-b border-[#f0f0ee] last:border-0 transition-colors ${
+                  onClick={() => {
+                    if (!n.read) markRead.mutate(n.id);
+                    setOpen(false);
+                    router.push(`/notifications?highlight=${n.id}`);
+                  }}
+                  className={`px-4 py-3 border-b border-[#f0f0ee] last:border-0 transition-colors cursor-pointer hover:bg-[#f7f6f2] ${
                     !n.read ? 'bg-blue-50/40' : ''
                   }`}
                 >
@@ -73,7 +81,7 @@ export function NotificationBell() {
                     <p className="text-xs text-[#666] mt-0.5 line-clamp-2">{n.body}</p>
                   )}
                   <span className="text-[10px] text-[#aaa] mt-1 block">
-                    {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(n.createdAt)}
                   </span>
                 </div>
               ))

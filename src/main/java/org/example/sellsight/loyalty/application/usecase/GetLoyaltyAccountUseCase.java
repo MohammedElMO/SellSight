@@ -47,7 +47,12 @@ public class GetLoyaltyAccountUseCase {
     @Transactional
     public LoyaltyAccountDto earnPoints(String userId, BigDecimal orderTotal, String orderId) {
         LoyaltyAccount account = loyaltyRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalStateException("Loyalty account not found"));
+                .orElseGet(() -> {
+                    LoyaltyAccount newAccount = new LoyaltyAccount(
+                            userId, 0, BigDecimal.ZERO, Tier.BRONZE,
+                            generateReferralCode(), LocalDateTime.now());
+                    return loyaltyRepository.save(newAccount);
+                });
 
         LoyaltyTransaction tx = account.earnFromPurchase(orderTotal, orderId);
         loyaltyRepository.save(account);

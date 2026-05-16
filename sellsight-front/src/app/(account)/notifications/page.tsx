@@ -1,15 +1,33 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { notificationApi } from '@/lib/services';
 import { Reveal } from '@/components/ui/reveal';
 import { MagButton } from '@/components/ui/mag-button';
 import { Bell, CheckCheck, Mail, MailOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from '@/lib/utils';
+import type { NotificationDto } from '@shared/types';
+
+function resolveNavTarget(n: NotificationDto): string | null {
+  if (!n.dataJson) return null;
+  try {
+    const data = JSON.parse(n.dataJson);
+    if (n.type === 'BACK_IN_STOCK' && data.productId) return `/products/${data.productId}`;
+    if (n.type.startsWith('ORDER_') && data.orderId) return `/orders/${data.orderId}`;
+  } catch { /* ignore malformed JSON */ }
+  return null;
+}
 
 export default function NotificationsPage() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get('highlight');
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const highlightRef = useRef<HTMLDivElement | null>(null);
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -28,6 +46,19 @@ export default function NotificationsPage() {
       toast.success('All notifications marked as read');
     },
   });
+
+  useEffect(() => {
+    if (!highlightId || !notifications?.length) return;
+    setFlashId(highlightId);
+    const timer = setTimeout(() => setFlashId(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightId, notifications]);
+
+  useEffect(() => {
+    if (flashId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [flashId]);
 
   const unread = notifications?.filter((n) => !n.read).length ?? 0;
 
@@ -74,12 +105,25 @@ export default function NotificationsPage() {
         </Reveal>
       ) : (
         <div className="space-y-2">
-          {notifications.map((n, i) => (
+          {notifications.map((n, i) => {
+            const isFlashing = flashId === n.id;
+            return (
             <Reveal key={n.id} delay={i * 40}>
               <div
-                className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-4 flex items-start gap-3 cursor-pointer hover:bg-[var(--surface)] transition-all"
-                style={!n.read ? { borderLeft: '3px solid var(--accent)' } : { opacity: 0.75 }}
-                onClick={() => !n.read && markReadMutation.mutate(n.id)}
+                ref={isFlashing ? highlightRef : null}
+                className="bg-[var(--bg-card)] border rounded-[var(--radius)] p-4 flex items-start gap-3 cursor-pointer hover:bg-[var(--surface)] transition-all"
+                style={
+                  isFlashing
+                    ? { borderLeftWidth: '3px', borderLeftStyle: 'solid', borderLeftColor: 'var(--accent)', borderTopColor: 'var(--accent)', borderRightColor: 'var(--accent)', borderBottomColor: 'var(--accent)', background: 'oklch(from var(--accent) 0.97 0.02 h)', outline: '2px solid var(--accent)', outlineOffset: '2px' }
+                    : !n.read
+                      ? { borderLeftWidth: '3px', borderLeftStyle: 'solid', borderLeftColor: 'var(--accent)', borderTopColor: 'var(--border)', borderRightColor: 'var(--border)', borderBottomColor: 'var(--border)' }
+                      : { opacity: 0.75, borderColor: 'var(--border)' }
+                }
+                onClick={() => {
+                  if (!n.read) markReadMutation.mutate(n.id);
+                  const target = resolveNavTarget(n);
+                  if (target) router.push(target);
+                }}
               >
                 <div className="mt-0.5 shrink-0">
                   {n.read
@@ -105,7 +149,8 @@ export default function NotificationsPage() {
                 )}
               </div>
             </Reveal>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

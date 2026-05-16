@@ -9,6 +9,9 @@ import org.example.sellsight.order.domain.repository.OrderRepository;
 import org.example.sellsight.product.domain.model.Product;
 import org.example.sellsight.product.domain.model.ProductId;
 import org.example.sellsight.product.domain.repository.ProductRepository;
+import org.example.sellsight.promotions.infrastructure.persistence.entity.CouponUsageJpaEntity;
+import org.example.sellsight.promotions.infrastructure.persistence.repository.CouponJpaRepository;
+import org.example.sellsight.promotions.infrastructure.persistence.repository.CouponUsageJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,13 +28,19 @@ public class CreateOrderUseCase {
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
+    private final CouponJpaRepository couponJpaRepository;
+    private final CouponUsageJpaRepository couponUsageJpaRepository;
 
     public CreateOrderUseCase(OrderRepository orderRepository,
                                InventoryRepository inventoryRepository,
-                               ProductRepository productRepository) {
+                               ProductRepository productRepository,
+                               CouponJpaRepository couponJpaRepository,
+                               CouponUsageJpaRepository couponUsageJpaRepository) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
         this.productRepository = productRepository;
+        this.couponJpaRepository = couponJpaRepository;
+        this.couponUsageJpaRepository = couponUsageJpaRepository;
     }
 
     @Transactional
@@ -70,6 +79,14 @@ public class CreateOrderUseCase {
 
         Order saved = orderRepository.save(order);
         log.info("Order {} created with status PENDING — awaiting payment confirmation", saved.getId().getValue());
+
+        if (request.couponCode() != null && !request.couponCode().isBlank()) {
+            couponJpaRepository.findByCode(request.couponCode()).ifPresent(coupon ->
+                    couponUsageJpaRepository.save(new CouponUsageJpaEntity(
+                            coupon.getId(), customerId, saved.getId().getValue()
+                    ))
+            );
+        }
 
         return toDto(saved);
     }

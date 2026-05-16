@@ -214,3 +214,8 @@ body {
   pointer-events: none;
   filter: blur(80px);
 }
+
+@keyframes border-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--accent); }
+  50%       { box-shadow: 0 0 0 4px oklch(from var(--accent) l c h / 0.3); }
+}

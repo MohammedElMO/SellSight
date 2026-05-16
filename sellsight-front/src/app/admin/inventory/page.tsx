@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { useDebounce } from '@/lib/hooks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
@@ -22,7 +23,7 @@ type StockStatus = 'out' | 'low' | 'ok';
 
 function stockStatus(qty: number): StockStatus {
   if (qty === 0) return 'out';
-  if (qty <= 5)  return 'low';
+  if (qty <= 20)  return 'low';
   return 'ok';
 }
 
@@ -41,25 +42,17 @@ export default function AdminInventoryPage() {
   const qc = useQueryClient();
 
   const [search, setSearch]             = useState('');
-  const [debouncedSearch, setDebounced] = useState('');
+  const debouncedSearch                 = useDebounce(search, 400);
   const [filter, setFilter]             = useState<'all' | 'out' | 'low'>('all');
   const [pendingQty, setPendingQty]     = useState<Record<string, number>>({});
   const [selected, setSelected]         = useState<Set<string>>(new Set());
   const [batchQtyInput, setBatchQtyInput] = useState('');
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Debounce search input
-  useEffect(() => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => setDebounced(search), 400);
-    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
-  }, [search]);
 
   const { data: productsData, isLoading, refetch } = useQuery({
     queryKey: ['admin-inventory', debouncedSearch],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       debouncedSearch.trim()
-        ? productApi.search(debouncedSearch, 0, 50)
+        ? productApi.search(debouncedSearch, 0, 50, signal)
         : productApi.getAll(0, 100),
     staleTime: 30_000,
   });
@@ -69,12 +62,12 @@ export default function AdminInventoryPage() {
 
   const displayed = useMemo(() => {
     if (filter === 'out') return products.filter((p) => p.stockQuantity === 0);
-    if (filter === 'low') return products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 5);
+    if (filter === 'low') return products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 20);
     return products;
   }, [products, filter]);
 
   const outCount = products.filter((p) => p.stockQuantity === 0).length;
-  const lowCount = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 5).length;
+  const lowCount = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 20).length;
 
   // ── Mutations ───────────────────────────────────────────────
 

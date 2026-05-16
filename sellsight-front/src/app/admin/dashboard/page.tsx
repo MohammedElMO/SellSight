@@ -12,19 +12,13 @@ import { orderApi, inventoryApi } from '@/lib/services';
 import { formatPrice } from '@/lib/utils';
 import {
   TrendingUp, Package, Users,
-  ArrowRight, AlertTriangle, RefreshCw, Clock3,
+  ArrowRight, RefreshCw, Clock3,
   ShoppingCart, Truck, Warehouse,
   BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { analyticsApi } from '@/lib/services';
 import type { AnalyticsSummaryDto } from '@shared/types';
-
-const ALERTS = [
-  { type: 'warning', msg: '3 seller applications pending review',         link: '/admin/sellers/pending'  },
-  { type: 'danger',  msg: '7 products flagged for moderation',            link: '/admin/products/flagged' },
-  { type: 'warning', msg: '2 reviews reported as inappropriate',          link: '/admin/reviews/flagged'  },
-];
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -260,20 +254,6 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
 
-              <h3 className="font-display font-semibold text-[13px] text-[var(--text-primary)] mb-3">Alerts & Actions</h3>
-              <div className="space-y-3">
-                {ALERTS.map((a, i) => (
-                  <Link key={i} href={a.link}
-                    className="flex items-start gap-3 p-3 rounded-[var(--radius-xs)] hover:bg-[var(--surface)] transition-colors group"
-                  >
-                    {a.type === 'danger'  && <AlertTriangle className="h-4 w-4 text-[var(--danger)] mt-0.5 flex-none" />}
-                    {a.type === 'warning' && <AlertTriangle className="h-4 w-4 text-[var(--warning)] mt-0.5 flex-none" />}
-                    <p className="text-[13px] text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors leading-snug">
-                      {a.msg}
-                    </p>
-                  </Link>
-                ))}
-              </div>
             </div>
           </Reveal>
         </div>

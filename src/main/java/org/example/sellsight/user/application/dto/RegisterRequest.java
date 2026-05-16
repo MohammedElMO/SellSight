@@ -22,5 +22,6 @@ public record RegisterRequest(
         @NotBlank(message = "Last name is required")
         String lastName,
 
-        String role // Optional — defaults to CUSTOMER if null
+        String role, // Optional — defaults to CUSTOMER if null
+        String referralCode // Optional — referral code of the referring user
 ) {}

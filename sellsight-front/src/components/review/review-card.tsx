@@ -3,7 +3,7 @@
 import { StarRating } from './star-rating';
 import { BadgeCheck, ThumbsUp } from 'lucide-react';
 import type { ReviewDto } from '@shared/types';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth';
 import { useVoteReviewHelpful } from '@/lib/hooks';
 
@@ -36,7 +36,7 @@ export function ReviewCard({ review, productId }: ReviewCardProps) {
           <StarRating rating={review.rating} size="sm" />
         </div>
         <span className="text-xs text-[#999] whitespace-nowrap">
-          {formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}
+          {formatDistanceToNow(review.createdAt)}
         </span>
       </div>
 

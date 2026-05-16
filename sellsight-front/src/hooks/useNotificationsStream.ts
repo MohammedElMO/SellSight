@@ -16,6 +16,7 @@ const SSE_EVENTS = [
   'new-order',
   'refund-approved',
   'refund-rejected',
+  'loyalty-updated',
 ] as const;
 
 /**
@@ -155,6 +156,11 @@ export function useNotificationsStream() {
               } catch {
                 queryClient.invalidateQueries({ queryKey: ['order'] });
               }
+              break;
+            }
+
+            case 'loyalty-updated': {
+              queryClient.invalidateQueries({ queryKey: ['loyalty'] });
               break;
             }
 

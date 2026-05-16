@@ -124,7 +124,7 @@ export function useDeleteAccount() {
 export function useProducts(page: number, size: number, filters?: Record<string, string>) {
   return useQuery({
     queryKey: ['products', page, size, filters],
-    queryFn: () => productApi.getAll(page, size, filters),
+    queryFn: ({ signal }) => productApi.getAll(page, size, filters, signal),
   });
 }
 
@@ -157,7 +157,7 @@ export function useSellerProductAnalytics(days = 7) {
 export function useSearchProducts(query: string, page = 0, size = 12) {
   return useQuery({
     queryKey: ['product-search', query, page, size],
-    queryFn: () => productApi.search(query, page, size),
+    queryFn: ({ signal }) => productApi.search(query, page, size, signal),
     enabled: query.length >= 2,
   });
 }

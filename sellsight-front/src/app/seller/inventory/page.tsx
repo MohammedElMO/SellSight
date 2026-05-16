@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { useDebounce } from '@/lib/hooks';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Reveal } from '@/components/ui/reveal';
 import { Pill } from '@/components/ui/pill';
@@ -21,23 +22,13 @@ export default function InventoryPage() {
   const { data: profile } = useProfile();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 350);
+  useEffect(() => { setPage(0); }, [debouncedSearch]);
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Debounce search input — resets to page 0 on new query
-  useEffect(() => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(0);
-    }, 350);
-    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
-  }, [search]);
 
   // Server-side search: when a query is present use the hybrid search endpoint scoped to
   // this seller (client-filters by sellerId). When empty, fall back to seller pagination.
@@ -53,7 +44,7 @@ export default function InventoryPage() {
   // filtered server-side via the hybrid search; we then further client-filter by sellerId.
   const { data: searchData, isLoading: searchLoading, refetch: refetchSearch } = useQuery({
     queryKey: ['seller-inventory-search', debouncedSearch, profile?.id],
-    queryFn: () => productApi.search(debouncedSearch.trim(), 0, 50),
+    queryFn: ({ signal }) => productApi.search(debouncedSearch.trim(), 0, 50, signal),
     enabled: isSearching && !!profile?.id,
     staleTime: 30_000,
   });
@@ -127,7 +118,7 @@ export default function InventoryPage() {
       return sortDir === 'desc' ? -cmp : cmp;
     });
 
-  const lowStockCount = rawProducts.filter(p => p.stockQuantity <= 5).length;
+  const lowStockCount = rawProducts.filter(p => p.stockQuantity <= 20).length;
 
   return (
     <PageLayout>
@@ -157,7 +148,7 @@ export default function InventoryPage() {
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">In Stock</p>
             <p className="font-display font-extrabold text-2xl text-[var(--text-primary)] mt-1">
-              {rawProducts.filter(p => p.stockQuantity > 5).length}
+              {rawProducts.filter(p => p.stockQuantity > 20).length}
             </p>
           </div>
           <div className={`bg-[var(--bg-card)] border rounded-[var(--radius)] p-4 ${lowStockCount > 0 ? 'border-[var(--warning)]' : 'border-[var(--border)]'}`}>
@@ -231,7 +222,7 @@ export default function InventoryPage() {
                 <span>Action</span>
               </div>
               {filtered.map((product) => {
-                const isLow = product.stockQuantity <= 5;
+                const isLow = product.stockQuantity > 0 && product.stockQuantity <= 20;
                 const isOut = product.stockQuantity === 0;
                 return (
                   <div

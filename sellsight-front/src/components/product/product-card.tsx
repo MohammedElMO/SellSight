@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Package, Check, Heart, Eye, Sparkles } from 'lucide-react';
+import { ShoppingCart, Package, Check, Eye, Sparkles } from 'lucide-react';
 import { useCartStore } from '@/store/cart';
 import { useAuthStore } from '@/store/auth';
 import { useAddToCart } from '@/lib/hooks';
 import { formatPrice, cn } from '@/lib/utils';
 import { Rating } from '@/components/ui/rating';
+import { WishlistButton } from '@/components/wishlist/wishlist-button';
 import type { ProductDto } from '@shared/types';
 import { toast } from 'sonner';
 
@@ -23,11 +24,10 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
   const { isAuthenticated, role } = useAuthStore();
   const { mutate: addToDbCart } = useAddToCart();
   const [added, setAdded] = useState(false);
-  const [favorite, setFavorite] = useState(false);
 
   const canAddToCart = role !== 'SELLER' && role !== 'ADMIN';
   const inStock      = product.active && product.stockQuantity > 0;
-  const lowStock     = inStock && product.stockQuantity <= 5;
+  const lowStock     = inStock && product.stockQuantity <= 20;
   const isFeatured   = variant === 'featured';
   const ratingValue  = product.ratingAvg && product.ratingAvg > 0 ? product.ratingAvg : null;
 
@@ -50,13 +50,6 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
       toast.success('Added to cart', { duration: 1500 });
       flash();
     }
-  };
-
-  const toggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorite((f) => !f);
-    toast.success(favorite ? 'Removed from favorites' : 'Added to favorites', { duration: 1200 });
   };
 
   return (
@@ -111,16 +104,15 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
               )}
             </div>
 
-            <button
-              onClick={toggleFavorite}
-              aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
-              className={cn(
-                'pointer-events-auto h-8 w-8 inline-flex items-center justify-center rounded-full bg-[var(--bg-card)]/90 backdrop-blur border border-[var(--border-subtle)] text-[var(--text-tertiary)] hover:text-[var(--danger)] transition-all',
-                favorite && 'text-[var(--danger)]',
-              )}
+            <div
+              className="pointer-events-auto"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
-              <Heart className={cn('h-4 w-4 transition-all', favorite && 'fill-current scale-110')} />
-            </button>
+              <WishlistButton
+                productId={product.id}
+                className="h-8 w-8 bg-[var(--bg-card)]/90 backdrop-blur border-[var(--border-subtle)]"
+              />
+            </div>
           </div>
 
           {/* Out-of-stock overlay */}

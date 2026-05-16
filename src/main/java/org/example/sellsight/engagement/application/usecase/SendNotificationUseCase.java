@@ -27,8 +27,12 @@ public class SendNotificationUseCase {
     }
 
     public void send(String userId, String type, String title, String body) {
+        send(userId, type, title, body, null);
+    }
+
+    public void send(String userId, String type, String title, String body, String dataJson) {
         Notification n = new Notification(
-                UUID.randomUUID(), userId, type, title, body, null, false, LocalDateTime.now()
+                UUID.randomUUID(), userId, type, title, body, dataJson, false, LocalDateTime.now()
         );
         notificationRepository.save(n);
 

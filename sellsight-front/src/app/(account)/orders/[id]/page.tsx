@@ -4,6 +4,7 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useOrder, useRequestRefund, useRefundStatus, useOrderMessages, useSendMessage } from '@/lib/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { useOrderMessagesSocket } from '@/hooks/useOrderMessagesSocket';
 import { OrderStatusBadge } from '@/components/order/order-status-badge';
 import { Reveal } from '@/components/ui/reveal';
@@ -11,16 +12,16 @@ import { MagButton } from '@/components/ui/mag-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { useCartStore } from '@/store/cart';
-import { Package, ChevronRight, ArrowLeft, RotateCcw, Check, MessageCircle, Send, Download } from 'lucide-react';
+import { cartApi } from '@/lib/services';
+import { Package, ChevronRight, ArrowLeft, RotateCcw, Check, MessageCircle, Send, Download, ShoppingCart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import type { ProductDto } from '@shared/types';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
-  const addItem = useCartStore((s) => s.addItem);
+  const qc      = useQueryClient();
 
   const { data: order, isLoading, isError } = useOrder(id);
   const { data: refund } = useRefundStatus(id);
@@ -31,6 +32,7 @@ export default function OrderDetailPage() {
   const [refundReason, setRefundReason]     = useState('');
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [msgInput, setMsgInput] = useState('');
+  const [reordering, setReordering] = useState(false);
 
   const handleSendMessage = () => {
     const body = msgInput.trim();
@@ -53,19 +55,21 @@ export default function OrderDetailPage() {
     });
   };
 
-  const handleReorder = () => {
+  const handleReorder = async () => {
     if (!order) return;
-    order.items.forEach((item) => {
-      const stub: ProductDto = {
-        id: item.productId, name: item.productName, description: '',
-        price: item.unitPrice, category: '', sellerId: '', imageUrl: null,
-        brand: null, ratingAvg: 0, ratingCount: 0, soldCount: 0,
-        active: true, createdAt: '', updatedAt: null, stockQuantity: 99,
-      };
-      addItem(stub, item.quantity);
-    });
-    toast.success('Items added to cart!');
-    router.push('/cart');
+    setReordering(true);
+    try {
+      await cartApi.clear();
+      for (const item of order.items) {
+        await cartApi.addItem(item.productId, item.quantity);
+      }
+      qc.removeQueries({ queryKey: ['cart'] });
+      await new Promise((r) => setTimeout(r, 1400));
+      router.push('/cart');
+    } catch {
+      toast.error('Failed to add items to cart');
+      setReordering(false);
+    }
   };
 
   const handleDownloadReceipt = async (orderData: typeof order) => {
@@ -117,6 +121,33 @@ export default function OrderDetailPage() {
 
   return (
     <div className="w-full">
+      {/* Reorder overlay */}
+      <AnimatePresence>
+        {reordering && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-[var(--bg-card)] rounded-[var(--radius-lg)] p-10 flex flex-col items-center gap-5 shadow-2xl"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <ShoppingCart className="h-12 w-12 text-[var(--accent-text)]" />
+              </motion.div>
+              <p className="font-display font-semibold text-[18px] text-[var(--text-primary)]">Adding to cart…</p>
+              <p className="text-[13px] text-[var(--text-secondary)]">Restoring your order</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Breadcrumb */}
       <Reveal>
         <nav className="flex items-center gap-1.5 text-[13px] text-[var(--text-tertiary)] mb-7">
@@ -157,9 +188,19 @@ export default function OrderDetailPage() {
                     Request Return
                   </MagButton>
                 )}
-                {refund && (
-                  <span className="h-9 px-3 text-[12px] font-medium flex items-center rounded-[var(--radius-xs)] border border-[var(--border)] text-[var(--text-secondary)]">
-                    Refund {refund.status.toLowerCase()}
+                {refund?.status === 'PENDING' && (
+                  <span className="h-9 px-3 text-[12px] font-medium flex items-center rounded-[var(--radius-xs)] border border-[var(--warning-border)] text-[var(--warning)] bg-[var(--warning-bg)] cursor-default">
+                    Refund Pending
+                  </span>
+                )}
+                {refund?.status === 'APPROVED' && (
+                  <span className="h-9 px-3 text-[12px] font-medium flex items-center gap-1.5 rounded-[var(--radius-xs)] border border-green-200 text-green-700 bg-green-50 cursor-default">
+                    <Check className="h-3.5 w-3.5" /> Refund Approved
+                  </span>
+                )}
+                {refund?.status === 'REJECTED' && (
+                  <span className="h-9 px-3 text-[12px] font-medium flex items-center rounded-[var(--radius-xs)] border border-red-200 text-red-600 bg-red-50 cursor-default">
+                    Refund Rejected
                   </span>
                 )}
               </div>

@@ -1,15 +1,15 @@
 'use client';
 
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { loyaltyApi } from '@/lib/services';
 import { Reveal } from '@/components/ui/reveal';
 import { TiltCard } from '@/components/ui/tilt-card';
 import { AnimCounter } from '@/components/ui/anim-counter';
 import { Pill } from '@/components/ui/pill';
-import { Star, ArrowUp, ArrowDown, Gift, Users, Trophy, Copy, Check, Share2 } from 'lucide-react';
+import { Star, ArrowUp, ArrowDown, Trophy, Award, Medal } from 'lucide-react';
+
 import { formatDistanceToNow } from '@/lib/utils';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 const TIER_GRADIENT: Record<string, string> = {
   BRONZE: 'linear-gradient(135deg, #92400e, #d97706)',
@@ -17,24 +17,13 @@ const TIER_GRADIENT: Record<string, string> = {
   GOLD:   'linear-gradient(135deg, #d97706, #fef08a)',
 };
 
-const TIER_ICONS: Record<string, string> = { BRONZE: '🥉', SILVER: '🥈', GOLD: '🥇' };
+const TIER_ICONS: Record<string, React.ElementType> = { BRONZE: Award, SILVER: Medal, GOLD: Trophy };
 
 export default function LoyaltyPage() {
-  const [copied, setCopied] = useState(false);
   const { data: account, isLoading } = useQuery({
     queryKey: ['loyalty'],
     queryFn: loyaltyApi.getAccount,
   });
-
-  const copyReferralCode = () => {
-    if (!account?.referralCode) return;
-    const shareUrl = `${window.location.origin}/register?ref=${account.referralCode}`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      setCopied(true);
-      toast.success('Referral link copied!');
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
 
   return (
     <div className="w-full">
@@ -73,7 +62,8 @@ export default function LoyaltyPage() {
                 <div>
                   <p className="text-sm opacity-75 mb-1">Your Tier</p>
                   <h2 className="font-display font-bold text-[32px] flex items-center gap-2">
-                    {TIER_ICONS[account.tier]} {account.tier}
+                    {React.createElement(TIER_ICONS[account.tier] ?? Trophy, { className: 'h-8 w-8 opacity-90' })}
+                    {account.tier}
                   </h2>
                 </div>
                 <div className="text-right">
@@ -88,49 +78,17 @@ export default function LoyaltyPage() {
           </Reveal>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            {[
-              { label: 'Lifetime Spend', value: `$${account.lifetimeSpend.toFixed(2)}`, icon: Star, },
-              { label: 'Redeemable Value', value: `$${account.balanceAsDollars.toFixed(2)}`, icon: Gift, },
-            ].map(({ label, value, icon: Icon }, i) => (
-              <Reveal key={label} delay={120 + i * 60}>
-                <TiltCard intensity={4} className="bg-[var(--bg-card)] rounded-[var(--radius)] p-5 cursor-default">
-                  <div className="w-8 h-8 rounded-[var(--radius-xs)] flex items-center justify-center mb-3" style={{ background: 'var(--accent-muted)' }}>
-                    <Icon className="h-4 w-4 text-[var(--accent-text)]" />
-                  </div>
-                  <p className="text-[11px] text-[var(--text-tertiary)] mb-1">{label}</p>
-                  <p className="font-display font-bold text-[17px] text-[var(--text-primary)]">{value}</p>
-                </TiltCard>
-              </Reveal>
-            ))}
-          </div>
-
-          {/* Referral section */}
-          <Reveal delay={240}>
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius)] p-5 mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Share2 className="h-4 w-4 text-[var(--accent-text)]" />
-                <h3 className="font-display font-semibold text-[14px] text-[var(--text-primary)]">Refer a Friend</h3>
-              </div>
-              <p className="text-[12px] text-[var(--text-secondary)] mb-3">
-                Share your referral link and earn 100 bonus points for every friend who makes their first purchase.
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-2 h-10 px-3 rounded-[var(--radius-xs)] border border-[var(--border)] bg-[var(--surface)]">
-                  <Users className="h-3.5 w-3.5 text-[var(--text-tertiary)] shrink-0" />
-                  <code className="text-[12px] font-mono text-[var(--text-primary)] truncate">{account.referralCode}</code>
+          <div className="mb-4">
+            <Reveal delay={120}>
+              <TiltCard intensity={4} className="bg-[var(--bg-card)] rounded-[var(--radius)] p-5 cursor-default">
+                <div className="w-8 h-8 rounded-[var(--radius-xs)] flex items-center justify-center mb-3" style={{ background: 'var(--accent-muted)' }}>
+                  <Star className="h-4 w-4 text-[var(--accent-text)]" />
                 </div>
-                <button
-                  onClick={copyReferralCode}
-                  className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-xs)] border border-[var(--border)] transition-all hover:bg-[var(--surface)]"
-                  style={copied ? { borderColor: 'var(--success)', color: 'var(--success)' } : { color: 'var(--text-secondary)' }}
-                  aria-label="Copy referral link"
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-          </Reveal>
+                <p className="text-[11px] text-[var(--text-tertiary)] mb-1">Lifetime Spend</p>
+                <p className="font-display font-bold text-[17px] text-[var(--text-primary)]">${account.lifetimeSpend.toFixed(2)}</p>
+              </TiltCard>
+            </Reveal>
+          </div>
 
           {/* Transactions */}
           <Reveal delay={360}>

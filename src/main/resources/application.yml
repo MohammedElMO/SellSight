@@ -23,6 +23,12 @@ spring:
       leak-detection-threshold: 30000
       keepalive-time: 60000
 
+  jackson:
+    find-and-add-modules: true
+    datatype:
+      datetime:
+        WRITE_DATES_AS_TIMESTAMPS: false
+
   jpa:
     open-in-view: false
     hibernate:
@@ -84,7 +90,7 @@ spring:
       max-request-size: 8MB
 
 server:
-  port: 8080
+  port: 8085
   address: 0.0.0.0
 
 # Embedding microservice

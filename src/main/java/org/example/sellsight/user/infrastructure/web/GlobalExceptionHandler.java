@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
@@ -195,10 +196,32 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AsyncRequestNotUsableException.class)
     public ResponseEntity<Void> handleDisconnectedClient(AsyncRequestNotUsableException ex) {
-        // Client closed the SSE connection before the server finished writing — expected noise, not an error.
         org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
-                .debug("SSE client disconnected: {}", ex.getMessage());
+                .debug("Client disconnected (SSE/async): {}", ex.getMessage());
         return ResponseEntity.noContent().build();
+    }
+
+    @ExceptionHandler(HttpMessageNotWritableException.class)
+    public ResponseEntity<Void> handleMessageNotWritable(HttpMessageNotWritableException ex) {
+        if (isBrokenPipe(ex)) {
+            org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                    .debug("Client disconnected before response write completed");
+            return ResponseEntity.noContent().build();
+        }
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                .error("Could not write HTTP response", ex);
+        return ResponseEntity.internalServerError().build();
+    }
+
+    private boolean isBrokenPipe(Throwable t) {
+        Throwable cause = t;
+        while (cause != null) {
+            if (cause instanceof AsyncRequestNotUsableException) return true;
+            String msg = cause.getMessage();
+            if (msg != null && msg.contains("Broken pipe")) return true;
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     @ExceptionHandler(Exception.class)

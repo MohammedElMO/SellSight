@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useProductQuestions, useAskQuestion, useAnswerQuestion } from '@/lib/hooks';
 import { useAuthStore } from '@/store/auth';
 import { MessageSquare, Send } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from '@/lib/utils';
 
 interface QASectionProps {
   productId: string;
@@ -75,7 +75,7 @@ export function QASection({ productId }: QASectionProps) {
               <div className="px-5 py-4">
                 <p className="text-sm font-medium text-[#111] mb-1">Q: {q.body}</p>
                 <span className="text-xs text-[#999]">
-                  {formatDistanceToNow(new Date(q.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(q.createdAt)}
                 </span>
               </div>
 
@@ -86,7 +86,7 @@ export function QASection({ productId }: QASectionProps) {
                     <div key={a.id} className="px-5 py-3 bg-[#fafaf8]">
                       <p className="text-sm text-[#555]">A: {a.body}</p>
                       <span className="text-xs text-[#999]">
-                        {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(a.createdAt)}
                       </span>
                     </div>
                   ))}

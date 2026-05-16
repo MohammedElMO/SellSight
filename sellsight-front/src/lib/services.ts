@@ -118,14 +118,14 @@ export const authApi = {
 // ── Products ─────────────────────────────────────────────────
 
 export const productApi = {
-  getAll: (page = 0, size = 12, filters?: Record<string, string>) =>
-    api.get<ProductPageDto>('/products', { params: { page, size, ...filters } }).then((r) => r.data),
+  getAll: (page = 0, size = 12, filters?: Record<string, string>, signal?: AbortSignal) =>
+    api.get<ProductPageDto>('/products', { params: { page, size, ...filters }, signal }).then((r) => r.data),
   getById: (id: string) =>
     api.get<ProductDto>(`/products/${id}`).then((r) => r.data),
   getBySeller: (sellerId: string, page = 0, size = 100) =>
     api.get<ProductPageDto>(`/products/seller/${sellerId}`, { params: { page, size } }).then((r) => r.data),
-  search: (query: string, page = 0, size = 12) =>
-    api.get<ProductPageDto>('/products/search', { params: { q: query, page, size } }).then((r) => r.data),
+  search: (query: string, page = 0, size = 12, signal?: AbortSignal) =>
+    api.get<ProductPageDto>('/products/search', { params: { q: query, page, size }, signal }).then((r) => r.data),
   autocomplete: (query: string, limit = 8, signal?: AbortSignal) =>
     api.get<AutocompleteDto[]>('/products/autocomplete', { params: { q: query, limit }, signal }).then((r) => r.data),
   create: (req: CreateProductRequest) =>
@@ -323,6 +323,8 @@ export const paymentApi = {
     api.post<{ clientSecret: string | null }>('/payments/create-intent', req).then((r) => r.data),
   confirmFree: (orderId: string) =>
     api.post<OrderDto>(`/payments/confirm-free/${orderId}`).then((r) => r.data),
+  confirmPaid: (orderId: string) =>
+    api.post<OrderDto>(`/payments/confirm/${orderId}`).then((r) => r.data),
 };
 
 // ── Admin 2FA ─────────────────────────────────────────────────

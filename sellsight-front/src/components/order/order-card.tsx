@@ -6,26 +6,37 @@ import type { OrderDto } from '@shared/types';
 
 interface OrderCardProps {
   order: OrderDto;
+  isLatest?: boolean;
 }
 
-export function OrderCard({ order }: OrderCardProps) {
+export function OrderCard({ order, isLatest }: OrderCardProps) {
   const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <Link
       href={`/orders/${order.id}`}
       className={[
-        'block border border-[#e5e4e0] rounded-[14px] p-5 bg-white',
-        'hover:border-[#ccc9c2] hover:shadow-[0_4px_16px_rgba(0,0,0,0.07)]',
+        'block border rounded-[14px] p-5 bg-white',
+        'hover:shadow-[0_4px_16px_rgba(0,0,0,0.07)]',
         'transition-all duration-150 group',
+        isLatest
+          ? 'border-[var(--accent)] shadow-[0_0_0_2px_var(--accent)] animate-[border-pulse_2s_ease-in-out_3]'
+          : 'border-[#e5e4e0] hover:border-[#ccc9c2]',
       ].join(' ')}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <p className="text-xs font-mono text-[#999] mb-0.5">
-            #{order.id.slice(0, 8).toUpperCase()}
-          </p>
+          <div className="flex items-center gap-2 mb-0.5">
+            <p className="text-xs font-mono text-[#999]">
+              #{order.id.slice(0, 8).toUpperCase()}
+            </p>
+            {isLatest && (
+              <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: 'var(--accent)' }}>
+                New
+              </span>
+            )}
+          </div>
           <p className="text-sm text-[#666]">{formatDate(order.createdAt)}</p>
         </div>
         <OrderStatusBadge status={order.status} />

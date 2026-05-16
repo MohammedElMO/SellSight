@@ -36,7 +36,7 @@ public class GetProductsUseCase {
         this.productDtoMapper = productDtoMapper;
     }
 
-    @Transactional(readOnly = true)
+    @Cacheable(value = "product-offset-listings", key = "#page + '-' + #size", condition = "#page < 5", sync = true)
     public ProductPageDto execute(int page, int size) {
         ProductSlice slice = productRepository.findAll(page, size);
         return toPageDto(slice, page, size);

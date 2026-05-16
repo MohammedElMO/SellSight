@@ -2,6 +2,7 @@ package org.example.sellsight.user.application.usecase;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.sellsight.config.security.TokenPairHelper;
+import org.example.sellsight.loyalty.domain.repository.LoyaltyRepository;
 import org.example.sellsight.shared.events.EventPublisher;
 import org.example.sellsight.user.application.dto.AuthBundle;
 import org.example.sellsight.user.application.dto.RegisterRequest;
@@ -26,6 +27,7 @@ public class RegisterUserUseCase {
     private final TokenPairHelper tokenPairHelper;
     private final SendVerificationEmailUseCase sendVerificationEmail;
     private final EventPublisher eventPublisher;
+    private final LoyaltyRepository loyaltyRepository;
     private final String userEventsTopic;
 
     @Value("${app.verification.bypass-emails:}")
@@ -36,12 +38,14 @@ public class RegisterUserUseCase {
                                TokenPairHelper tokenPairHelper,
                                SendVerificationEmailUseCase sendVerificationEmail,
                                EventPublisher eventPublisher,
+                               LoyaltyRepository loyaltyRepository,
                                @Value("${app.kafka.topics.user-events:user-events}") String userEventsTopic) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenPairHelper = tokenPairHelper;
         this.sendVerificationEmail = sendVerificationEmail;
         this.eventPublisher = eventPublisher;
+        this.loyaltyRepository = loyaltyRepository;
         this.userEventsTopic = userEventsTopic;
     }
 
@@ -128,6 +132,15 @@ public class RegisterUserUseCase {
 
         eventPublisher.publish(userEventsTopic,
                 new UserRegistered(user.getId().getValue(), user.getEmail().getValue(), user.getRole().name()));
+
+        if (request.referralCode() != null && !request.referralCode().isBlank()) {
+            loyaltyRepository.findByReferralCode(request.referralCode()).ifPresent(referrer -> {
+                var tx = referrer.awardBonus(100, "Referral bonus — new user signed up");
+                loyaltyRepository.save(referrer);
+                loyaltyRepository.saveTransaction(tx);
+                log.info("Referral bonus: +100 points credited to userId={}", referrer.getUserId());
+            });
+        }
 
         return tokenPairHelper.issue(user, ipAddress, userAgent);
     }

@@ -2,6 +2,7 @@ package org.example.sellsight.order.application.usecase;
 
 import org.example.sellsight.engagement.application.usecase.SendNotificationUseCase;
 import org.example.sellsight.inventory.domain.repository.InventoryRepository;
+import org.example.sellsight.loyalty.application.usecase.GetLoyaltyAccountUseCase;
 import org.example.sellsight.order.application.dto.OrderDto;
 import org.example.sellsight.order.domain.exception.OrderNotFoundException;
 import org.example.sellsight.order.domain.model.Order;
@@ -31,15 +32,18 @@ public class UpdateOrderStatusUseCase {
     private final InventoryRepository inventoryRepository;
     private final SendNotificationUseCase sendNotificationUseCase;
     private final RealtimePublisher realtimePublisher;
+    private final GetLoyaltyAccountUseCase getLoyaltyAccountUseCase;
 
     public UpdateOrderStatusUseCase(OrderRepository orderRepository,
                                      InventoryRepository inventoryRepository,
                                      SendNotificationUseCase sendNotificationUseCase,
-                                     RealtimePublisher realtimePublisher) {
+                                     RealtimePublisher realtimePublisher,
+                                     GetLoyaltyAccountUseCase getLoyaltyAccountUseCase) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
         this.sendNotificationUseCase = sendNotificationUseCase;
         this.realtimePublisher = realtimePublisher;
+        this.getLoyaltyAccountUseCase = getLoyaltyAccountUseCase;
     }
 
     /**
@@ -51,15 +55,20 @@ public class UpdateOrderStatusUseCase {
         Order order = orderRepository.findById(OrderId.from(orderId))
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-        // Ownership check: sellers can only update orders containing their items
+        // Ownership check: sellers can only update orders containing their items;
+        // customers can only confirm their own orders.
         if ("SELLER".equals(callerRole)) {
             boolean ownsItem = order.getItems().stream()
                     .anyMatch(item -> callerId.equals(item.getSellerId()));
             if (!ownsItem) {
                 throw new ForbiddenException("You can only update orders containing your products");
             }
+        } else if ("CUSTOMER".equals(callerRole)) {
+            if (!order.getCustomerId().equals(callerId)) {
+                throw new ForbiddenException("You can only confirm your own orders");
+            }
         }
-        // ADMIN can update any order (supervision override)
+        // ADMIN / SYSTEM can update any order
 
         OrderStatus target = OrderStatus.valueOf(newStatus.toUpperCase());
 
@@ -72,6 +81,18 @@ public class UpdateOrderStatusUseCase {
         }
 
         Order saved = orderRepository.save(order);
+
+        // Award loyalty points and push SSE update when payment is confirmed
+        if (target == OrderStatus.CONFIRMED) {
+            try {
+                getLoyaltyAccountUseCase.earnPoints(
+                        saved.getCustomerId(), saved.getTotal(), saved.getId().getValue());
+                realtimePublisher.pushToUser(saved.getCustomerId(), "loyalty-updated",
+                        Map.of("orderId", saved.getId().getValue()));
+            } catch (Exception e) {
+                log.warn("Loyalty points award skipped for order {}: {}", saved.getId().getValue(), e.getMessage());
+            }
+        }
 
         // Restore inventory when order is cancelled
         if (target == OrderStatus.CANCELLED) {

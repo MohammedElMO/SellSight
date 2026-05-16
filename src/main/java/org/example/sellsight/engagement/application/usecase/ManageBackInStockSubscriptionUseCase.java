@@ -42,12 +42,14 @@ public class ManageBackInStockSubscriptionUseCase {
     public void notifyAndClear(String productId, String productName) {
         List<BackInStockSubscriptionJpaEntity> subs = repo.findByProductId(productId);
         if (subs.isEmpty()) return;
+        String dataJson = "{\"productId\":\"" + productId + "\"}";
         for (BackInStockSubscriptionJpaEntity sub : subs) {
             notificationUseCase.send(
                     sub.getUserId(),
                     "BACK_IN_STOCK",
                     "Back in stock!",
-                    productName + " is now available. Grab it before it sells out."
+                    productName + " is now available. Grab it before it sells out.",
+                    dataJson
             );
         }
         repo.deleteByProductId(productId);
