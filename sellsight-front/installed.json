@@ -1,0 +1,204 @@
+[
+  {
+    "name": "sellsight-front",
+    "version": "0.1.0",
+    "path": "/home/unkown-map/Desktop/SellSight/sellsight-front",
+    "private": true,
+    "dependencies": {
+      "@headlessui/react": {
+        "from": "@headlessui/react",
+        "version": "2.2.10",
+        "resolved": "https://registry.npmjs.org/@headlessui/react/-/react-2.2.10.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/@headlessui/react"
+      },
+      "@hookform/resolvers": {
+        "from": "@hookform/resolvers",
+        "version": "5.2.2",
+        "resolved": "https://registry.npmjs.org/@hookform/resolvers/-/resolvers-5.2.2.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@hookform+resolvers@5.2.2_react-hook-form@7.72.1_react@19.2.4_/node_modules/@hookform/resolvers"
+      },
+      "@react-pdf/renderer": {
+        "from": "@react-pdf/renderer",
+        "version": "4.5.1",
+        "resolved": "https://registry.npmjs.org/@react-pdf/renderer/-/renderer-4.5.1.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@react-pdf+renderer@4.5.1_react@19.2.4/node_modules/@react-pdf/renderer"
+      },
+      "@stomp/stompjs": {
+        "from": "@stomp/stompjs",
+        "version": "7.1.1",
+        "resolved": "https://registry.npmjs.org/@stomp/stompjs/-/stompjs-7.1.1.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@stomp+stompjs@7.1.1/node_modules/@stomp/stompjs"
+      },
+      "@stripe/react-stripe-js": {
+        "from": "@stripe/react-stripe-js",
+        "version": "6.2.0",
+        "resolved": "https://registry.npmjs.org/@stripe/react-stripe-js/-/react-stripe-js-6.2.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@stripe+react-stripe-js@6.2.0_@stripe+stripe-js@9.2.0_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/@stripe/react-stripe-js"
+      },
+      "@stripe/stripe-js": {
+        "from": "@stripe/stripe-js",
+        "version": "9.2.0",
+        "resolved": "https://registry.npmjs.org/@stripe/stripe-js/-/stripe-js-9.2.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@stripe+stripe-js@9.2.0/node_modules/@stripe/stripe-js"
+      },
+      "@tanstack/react-query": {
+        "from": "@tanstack/react-query",
+        "version": "5.99.0",
+        "resolved": "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.99.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@tanstack+react-query@5.99.0_react@19.2.4/node_modules/@tanstack/react-query"
+      },
+      "axios": {
+        "from": "axios",
+        "version": "1.15.2",
+        "resolved": "https://registry.npmjs.org/axios/-/axios-1.15.2.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/axios@1.15.2/node_modules/axios"
+      },
+      "clsx": {
+        "from": "clsx",
+        "version": "2.1.1",
+        "resolved": "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/clsx@2.1.1/node_modules/clsx"
+      },
+      "date-fns": {
+        "from": "date-fns",
+        "version": "4.1.0",
+        "resolved": "https://registry.npmjs.org/date-fns/-/date-fns-4.1.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/date-fns@4.1.0/node_modules/date-fns"
+      },
+      "embla-carousel-react": {
+        "from": "embla-carousel-react",
+        "version": "8.6.0",
+        "resolved": "https://registry.npmjs.org/embla-carousel-react/-/embla-carousel-react-8.6.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/embla-carousel-react@8.6.0_react@19.2.4/node_modules/embla-carousel-react"
+      },
+      "framer-motion": {
+        "from": "framer-motion",
+        "version": "12.38.0",
+        "resolved": "https://registry.npmjs.org/framer-motion/-/framer-motion-12.38.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/framer-motion@12.38.0_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/framer-motion"
+      },
+      "lucide-react": {
+        "from": "lucide-react",
+        "version": "1.8.0",
+        "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.8.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/lucide-react@1.8.0_react@19.2.4/node_modules/lucide-react"
+      },
+      "next": {
+        "from": "next",
+        "version": "16.2.3",
+        "resolved": "https://registry.npmjs.org/next/-/next-16.2.3.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/next@16.2.3_@babel+core@7.29.0_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/next"
+      },
+      "nuqs": {
+        "from": "nuqs",
+        "version": "2.8.9",
+        "resolved": "https://registry.npmjs.org/nuqs/-/nuqs-2.8.9.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/nuqs@2.8.9_next@16.2.3_@babel+core@7.29.0_react-dom@19.2.6_react@19.2.4__react@19.2.4__react@19.2.4/node_modules/nuqs"
+      },
+      "react": {
+        "from": "react",
+        "version": "19.2.4",
+        "resolved": "https://registry.npmjs.org/react/-/react-19.2.4.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/react@19.2.4/node_modules/react"
+      },
+      "react-dom": {
+        "from": "react-dom",
+        "version": "19.2.6",
+        "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.6.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/react-dom@19.2.6_react@19.2.4/node_modules/react-dom"
+      },
+      "react-hook-form": {
+        "from": "react-hook-form",
+        "version": "7.72.1",
+        "resolved": "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.72.1.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/react-hook-form@7.72.1_react@19.2.4/node_modules/react-hook-form"
+      },
+      "react-hot-toast": {
+        "from": "react-hot-toast",
+        "version": "2.6.0",
+        "resolved": "https://registry.npmjs.org/react-hot-toast/-/react-hot-toast-2.6.0.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/react-hot-toast@2.6.0_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/react-hot-toast"
+      },
+      "react-intersection-observer": {
+        "from": "react-intersection-observer",
+        "version": "10.0.3",
+        "resolved": "https://registry.npmjs.org/react-intersection-observer/-/react-intersection-observer-10.0.3.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/react-intersection-observer@10.0.3_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/react-intersection-observer"
+      },
+      "sonner": {
+        "from": "sonner",
+        "version": "2.0.7",
+        "resolved": "https://registry.npmjs.org/sonner/-/sonner-2.0.7.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.6_react@19.2.4__react@19.2.4/node_modules/sonner"
+      },
+      "tailwind-merge": {
+        "from": "tailwind-merge",
+        "version": "3.3.1",
+        "resolved": "https://registry.npmjs.org/tailwind-merge/-/tailwind-merge-3.3.1.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/tailwind-merge@3.3.1/node_modules/tailwind-merge"
+      },
+      "zod": {
+        "from": "zod",
+        "version": "4.3.6",
+        "resolved": "https://registry.npmjs.org/zod/-/zod-4.3.6.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/zod@4.3.6/node_modules/zod"
+      },
+      "zustand": {
+        "from": "zustand",
+        "version": "5.0.12",
+        "resolved": "https://registry.npmjs.org/zustand/-/zustand-5.0.12.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.4_use-sync-external-store@1.6.0_react@19.2.4_/node_modules/zustand"
+      }
+    },
+    "devDependencies": {
+      "@tailwindcss/postcss": {
+        "from": "@tailwindcss/postcss",
+        "version": "4.2.2",
+        "resolved": "https://registry.npmjs.org/@tailwindcss/postcss/-/postcss-4.2.2.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@tailwindcss+postcss@4.2.2/node_modules/@tailwindcss/postcss"
+      },
+      "@types/node": {
+        "from": "@types/node",
+        "version": "20.19.39",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.39.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@types+node@20.19.39/node_modules/@types/node"
+      },
+      "@types/react": {
+        "from": "@types/react",
+        "version": "19.2.14",
+        "resolved": "https://registry.npmjs.org/@types/react/-/react-19.2.14.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@types+react@19.2.14/node_modules/@types/react"
+      },
+      "@types/react-dom": {
+        "from": "@types/react-dom",
+        "version": "19.2.3",
+        "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-19.2.3.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/@types+react-dom@19.2.3_@types+react@19.2.14/node_modules/@types/react-dom"
+      },
+      "eslint": {
+        "from": "eslint",
+        "version": "9.39.4",
+        "resolved": "https://registry.npmjs.org/eslint/-/eslint-9.39.4.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/eslint@9.39.4_jiti@2.6.1/node_modules/eslint"
+      },
+      "eslint-config-next": {
+        "from": "eslint-config-next",
+        "version": "16.2.3",
+        "resolved": "https://registry.npmjs.org/eslint-config-next/-/eslint-config-next-16.2.3.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/eslint-config-next@16.2.3_@typescript-eslint+parser@8.58.1_eslint@9.39.4_jiti@2.6.1__ty_1b36e5edd5e44533899ccb3b9fc930aa/node_modules/eslint-config-next"
+      },
+      "tailwindcss": {
+        "from": "tailwindcss",
+        "version": "4.2.2",
+        "resolved": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-4.2.2.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/tailwindcss@4.2.2/node_modules/tailwindcss"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/home/unkown-map/Desktop/SellSight/sellsight-front/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      }
+    }
+  }
+]
