@@ -25,6 +25,14 @@ public class CacheConfig {
         // Filtered/sorted listing pages — was missing, causing uncached scans on every request
         cm.registerCustomCache("product-filter-listings",
                 Caffeine.newBuilder().maximumSize(1000).expireAfterWrite(2, TimeUnit.MINUTES).build());
+        // Admin analytics summary — expensive aggregates, short TTL keeps the page responsive
+        cm.registerCustomCache("analytics-summary",
+                Caffeine.newBuilder().maximumSize(100).expireAfterWrite(30, TimeUnit.SECONDS).build());
+        // Consumer recommendations — short TTL so new events appear in recommendations quickly
+        cm.registerCustomCache("consumer-recommendations",
+                Caffeine.newBuilder().maximumSize(100).expireAfterWrite(30, TimeUnit.SECONDS).build());
+        cm.registerCustomCache("seller-analytics",
+                Caffeine.newBuilder().maximumSize(500).expireAfterWrite(30, TimeUnit.SECONDS).build());
         // Landing page bundle — single cached entry, TTL matches shortest dependency (trending=2min)
         cm.registerCustomCache("product-landing",
                 Caffeine.newBuilder().maximumSize(1).expireAfterWrite(2, TimeUnit.MINUTES).build());

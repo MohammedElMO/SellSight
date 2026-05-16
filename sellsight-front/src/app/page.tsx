@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
-import { productApi } from '@/lib/services';
+import { productApi, recommendationApi } from '@/lib/services';
 import { useCart } from '@/lib/hooks';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { Navbar } from '@/components/layout/navbar';
@@ -67,12 +68,17 @@ function InstaGrid({ products, isLoading }: { products?: ProductDto[]; isLoading
   );
 }
 
+function isFulfilled<T>(result: PromiseSettledResult<T>): result is PromiseFulfilledResult<T> {
+  return result.status === 'fulfilled';
+}
+
 export default function HomePage() {
   const { isAuthenticated, role, firstName } = useAuthStore();
   const dashboardHref = role ? ROLE_HOME[role] || '/products' : '/';
   const { products: recentlyViewed } = useRecentlyViewed();
   const { data: cart } = useCart();
   const cartItems = cart?.items ?? [];
+  const isCustomer = isAuthenticated && role === 'CUSTOMER';
 
   const { data: landing, isLoading: loadingLanding } = useQuery({
     queryKey: ['products', 'landing'],
@@ -85,6 +91,41 @@ export default function HomePage() {
   const loadingPopular  = loadingLanding;
   const loadingNew      = loadingLanding;
   const loadingTrending = loadingLanding;
+
+  const { data: recommendations, isLoading: loadingRecommendations } = useQuery({
+    queryKey: ['recommendations', 'customer-home'],
+    queryFn: recommendationApi.getMyRecommendations,
+    enabled: isCustomer,
+    staleTime: 30_000,       // Fresh data every 30 seconds
+    refetchInterval: 30_000, // Poll every 30 seconds
+  });
+
+  const recommendationIds = useMemo(
+    () => recommendations?.map((recommendation) => recommendation.productId) ?? [],
+    [recommendations],
+  );
+
+  const { data: recommendationProducts, isLoading: loadingRecommendationProducts } = useQuery({
+    queryKey: ['products', 'recommendation-details', recommendationIds],
+    queryFn: async () => {
+      const results = await Promise.allSettled(
+        recommendationIds.map((id) => productApi.getById(id)),
+      );
+      return results.filter(isFulfilled).map((result) => result.value);
+    },
+    enabled: recommendationIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const recommendationProductsForRail = useMemo(() => {
+    if (!recommendations || !recommendationProducts) return [];
+
+    const productById = new Map(recommendationProducts.map((product) => [product.id, product]));
+
+    return recommendations
+      .map((recommendation) => productById.get(recommendation.productId))
+      .filter((product): product is ProductDto => Boolean(product));
+  }, [recommendationProducts, recommendations]);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
@@ -150,6 +191,18 @@ export default function HomePage() {
             description="Top-selling products this week"
             products={trendingProducts}
             isLoading={loadingTrending}
+          />
+        </div>
+      )}
+
+      {/* ── Personalized recommendations rail ── */}
+      {isCustomer && (loadingRecommendations || loadingRecommendationProducts || recommendationProductsForRail.length > 0) && (
+        <div className="max-w-[1200px] mx-auto w-full px-5 sm:px-10 pb-8">
+          <ProductRail
+            title="Recommended for you"
+            description="Picked from products you viewed, added to cart, or purchased"
+            products={recommendationProductsForRail}
+            isLoading={loadingRecommendations || loadingRecommendationProducts}
           />
         </div>
       )}

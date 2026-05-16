@@ -9,6 +9,7 @@ import {
   authApi, productApi, orderApi, reviewApi, wishlistApi,
   questionApi, notificationApi, couponApi, loyaltyApi, addressApi,
   cartApi, refundApi, subscriptionApi, adminApi, messageApi, recentlyViewedApi,
+  analyticsApi,
 } from '@/lib/services';
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
@@ -140,6 +141,16 @@ export function useSellerProducts(sellerId: string | undefined, page = 0, size =
     queryKey: ['seller-products', sellerId, page, size],
     queryFn: () => productApi.getBySeller(sellerId!, page, size),
     enabled: !!sellerId,
+  });
+}
+
+export function useSellerProductAnalytics(days = 7) {
+  const { isAuthenticated, role } = useAuthStore();
+  return useQuery({
+    queryKey: ['seller-product-analytics', days],
+    queryFn: () => analyticsApi.getSellerProductAnalytics(days),
+    enabled: isAuthenticated && role === 'SELLER',
+    refetchInterval: 30_000,
   });
 }
 

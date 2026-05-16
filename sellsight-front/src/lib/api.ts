@@ -3,6 +3,10 @@ import { clearSessionCookie } from '@/store/auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
+const fallbackBaseURL = typeof window !== 'undefined'
+  ? 'http://localhost:8081/api'
+  : '/api';
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },

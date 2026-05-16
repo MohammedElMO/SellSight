@@ -48,6 +48,9 @@ import type {
   SellerApplicationDto,
   MessageDto,
   SendMessageRequest,
+  AnalyticsSummaryDto,
+  ConsumerRecommendationDto,
+  SellerAnalyticsDto,
   SessionDto,
   AdminUserDto,
   AdminUserPageDto,
@@ -301,6 +304,11 @@ export const recentlyViewedApi = {
     api.get<ProductDto[]>('/users/me/recently-viewed').then((r) => r.data),
 };
 
+export const recommendationApi = {
+  getMyRecommendations: () =>
+    api.get<ConsumerRecommendationDto[]>('/users/me/recommendations').then((r) => r.data),
+};
+
 // ── Events ───────────────────────────────────────────────────
 
 export const eventApi = {
@@ -419,6 +427,14 @@ export const adminApi = {
     api.post<void>(`/users/sellers/${id}/approve`),
   rejectSeller: (id: string) =>
     api.post<void>(`/users/sellers/${id}/reject`),
+};
+
+// ── Analytics ──────────────────────────────────────────────────
+
+export const analyticsApi = {
+  getSummary: () => api.get<AnalyticsSummaryDto>('/admin/analytics/summary').then((r) => r.data),
+  getSellerProductAnalytics: (days = 7) =>
+    api.get<SellerAnalyticsDto>('/seller/analytics/products', { params: { days } }).then((r) => r.data),
 };
 
 // ── Messaging ────────────────────────────────────────────────
